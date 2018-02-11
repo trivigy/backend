@@ -1,0 +1,32 @@
+### JetBrains IDE ###
+#####################
+.idea/
+
+### Bazel ###
+#############
+*~
+.*.swp
+/.classpath
+/.factorypath
+/.project
+/.settings
+/WORKSPACE.user.bzl
+/bazel-monolith
+/bazel-bazel
+/bazel-bin
+/bazel-genfiles
+/bazel-io_bazel
+/bazel-out
+/bazel-testlogs
+/bazel.iml
+/output/
+
+### Files ###
+#############
+.log
+
+### Folders ###
+###############
+doc/html/
+build/
+deps/

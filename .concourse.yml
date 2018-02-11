@@ -1,0 +1,12 @@
+platform: linux
+
+inputs:
+- name: sync
+
+run:
+  path: /bin/bash
+  args:
+  - -c
+  - |
+    cd sync
+    make test

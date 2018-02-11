@@ -1,0 +1,32 @@
+syntax = "proto3";
+import "peer.proto";
+
+package protos.members;
+
+service Members {
+    rpc gossip(GossipRequest) returns (GossipResponse) {}
+    rpc list(ListRequest) returns (ListResponse) {}
+    rpc status(StatusRequest) returns (StatusResponse) {}
+}
+
+message GossipRequest {
+    repeated string peers = 1;
+}
+
+message GossipResponse {
+    repeated string peers = 1;
+}
+
+message ListRequest {}
+
+message ListResponse {
+    repeated Peer peers = 1;
+}
+
+message StatusRequest {
+    string message = 1;
+}
+
+message StatusResponse {
+    string message = 1;
+}
