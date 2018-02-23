@@ -14,7 +14,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <strings.h>
 #include <tuple>
 
 using namespace std;

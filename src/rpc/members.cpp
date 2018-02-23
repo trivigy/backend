@@ -1,4 +1,3 @@
-#include <server/options.h>
 #include "logging.h"
 #include "rpc/members.h"
 

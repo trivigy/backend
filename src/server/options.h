@@ -4,24 +4,55 @@
 #include "common/options.h"
 
 #include <nlohmann/json.hpp>
+#include <boost/regex.hpp>
+#include <thread>
+
+using namespace std;
 
 namespace server {
     namespace po = boost::program_options;
     namespace cls = po::command_line_style;
-    using json = nlohmann::json;
+    using nlohmann::json;
 
     class Options final : common::Options {
     public:
         const struct {
             const struct {
-                const string bind = "127.0.0.1:8847"; // NOLINT
+                const struct bind_t {
+                    const string address = "127.0.0.1"; // NOLINT
+                    const unsigned short port = 8847;
+
+                    const string netloc() const {
+                        return address + ":" + to_string(port);
+                    }
+                } bind;
+                const struct http_t {
+                    const string address = "127.0.0.1"; // NOLINT
+                    const unsigned short port = 8080;
+
+                    const string netloc() const {
+                        return address + ":" + to_string(port);
+                    }
+                } http;
+                const unsigned int threads = thread::hardware_concurrency();
             } network;
         } defaults;
 
         struct {
             string advertise;
             string bind;
+
+            struct http_t {
+                string address;
+                unsigned short port;
+
+                const string netloc() const {
+                    return address + ":" + to_string(port);
+                }
+            } http;
+
             vector<string> joins;
+            unsigned int threads;
         } network;
 
         struct {
@@ -33,9 +64,13 @@ namespace server {
         bool parse(int argc, const char **argv) override;
 
     private:
-        void on_bind(string bind);
+        void on_bind(string netloc);
+
+        void on_http(string netloc);
 
         void on_joins(vector<string> joins);
+
+        void on_threads(int threads);
     };
 }
 

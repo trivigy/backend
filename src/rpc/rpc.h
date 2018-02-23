@@ -5,8 +5,9 @@
 #include <string>
 #include <vector>
 
+using namespace std;
+
 namespace rpc {
-    using namespace std;
     using json = nlohmann::json;
 
     void log(const string &call, const string &peer);
