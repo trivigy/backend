@@ -54,9 +54,6 @@ void server::Server::http_thread() {
         );
     }
 
-    json extra = {{"http", _cfg->network.http.netloc()}};
-    LOG(info) << logging::add_value("Extra", extra.dump());
-
     auto future = server::exit.http.get_future();
     future.wait();
     _ioc.stop();
@@ -80,9 +77,6 @@ void server::Server::passive_thread() {
     thread runner_thread([&]() {
         _server->Wait();
     });
-
-    json extra = {{"network", _cfg->network.bind}};
-    LOG(info) << logging::add_value("Extra", extra.dump());
 
     auto future = server::exit.passive.get_future();
     future.wait();

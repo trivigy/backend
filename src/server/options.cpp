@@ -91,7 +91,7 @@ bool server::Options::parse(int argc, const char **argv) {
             {
                 {"advertise", this->network.advertise},
                 {"bind", this->network.bind},
-                {"client", this->network.http.netloc()},
+                {"http", this->network.http.netloc()},
                 {"joins", joins}
             }
         },

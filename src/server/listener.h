@@ -3,6 +3,7 @@
 
 #include "server/detect_ssl.h"
 #include "server/ssl_stream.h"
+#include "server/queue.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -149,38 +150,16 @@ namespace server {
 // This uses the Curiously Recurring Template Pattern so that
 // the same code works with both SSL streams and regular sockets.
     template<class Derived>
-    class websocket_session
-    {
-        // Access the derived class, this is part of
-        // the Curiously Recurring Template Pattern idiom.
-        Derived&
-        derived()
-        {
-            return static_cast<Derived&>(*this);
-        }
-
-        boost::beast::multi_buffer buffer_;
-
-    protected:
-        boost::asio::strand<
-            boost::asio::io_context::executor_type> strand_;
-        boost::asio::steady_timer timer_;
-
+    class websocket_session {
     public:
         // Construct the session
-        explicit
-        websocket_session(boost::asio::io_context& ioc)
-            : strand_(ioc.get_executor())
-            , timer_(ioc,
-                (std::chrono::steady_clock::time_point::max)())
-        {
-        }
+        explicit websocket_session(boost::asio::io_context& ioc) :
+            strand_(ioc.get_executor()),
+            timer_(ioc, chrono::time_point<chrono::steady_clock>::max()) {}
 
         // Start the asynchronous operation
         template<class Body, class Allocator>
-        void
-        do_accept(http::request<Body, http::basic_fields<Allocator>> req)
-        {
+        void do_accept(http::request<Body, http::basic_fields<Allocator>> req) {
             // Set the timer
             timer_.expires_after(std::chrono::seconds(15));
 
@@ -196,9 +175,7 @@ namespace server {
         }
 
         // Called when the timer expires.
-        void
-        on_timer(boost::system::error_code ec)
-        {
+        void on_timer(boost::system::error_code ec) {
             if(ec && ec != boost::asio::error::operation_aborted)
                 return fail(ec, "timer");
 
@@ -216,9 +193,7 @@ namespace server {
                         std::placeholders::_1)));
         }
 
-        void
-        on_accept(boost::system::error_code ec)
-        {
+        void on_accept(boost::system::error_code ec) {
             // Happens when the timer closes the socket
             if(ec == boost::asio::error::operation_aborted)
                 return;
@@ -230,9 +205,7 @@ namespace server {
             do_read();
         }
 
-        void
-        do_read()
-        {
+        void do_read() {
             // Set the timer
             timer_.expires_after(std::chrono::seconds(15));
 
@@ -248,11 +221,10 @@ namespace server {
                         std::placeholders::_2)));
         }
 
-        void
-        on_read(
+        void on_read(
             boost::system::error_code ec,
-            std::size_t bytes_transferred)
-        {
+            std::size_t bytes_transferred
+        ) {
             boost::ignore_unused(bytes_transferred);
 
             // Happens when the timer closes the socket
@@ -279,11 +251,10 @@ namespace server {
                         std::placeholders::_2)));
         }
 
-        void
-        on_write(
+        void on_write(
             boost::system::error_code ec,
-            std::size_t bytes_transferred)
-        {
+            std::size_t bytes_transferred
+        ) {
             boost::ignore_unused(bytes_transferred);
 
             // Happens when the timer closes the socket
@@ -299,38 +270,37 @@ namespace server {
             // Do another read
             do_read();
         }
+
+    private:
+        boost::beast::multi_buffer buffer_;
+
+        Derived&derived() {
+            return static_cast<Derived&>(*this);
+        }
+
+    protected:
+        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+        boost::asio::steady_timer timer_;
     };
 
 // Handles a plain WebSocket connection
-    class plain_websocket_session
-        : public websocket_session<plain_websocket_session>
-            , public std::enable_shared_from_this<plain_websocket_session>
-    {
-        websocket::stream<tcp::socket> ws_;
-        bool close_ = false;
-
+    class plain_websocket_session :
+        public websocket_session<plain_websocket_session>,
+        public std::enable_shared_from_this<plain_websocket_session> {
     public:
         // Create the session
-        explicit
-        plain_websocket_session(tcp::socket socket)
-            : websocket_session<plain_websocket_session>(
-            socket.get_executor().context())
-            , ws_(std::move(socket))
-        {
-        }
+        explicit plain_websocket_session(tcp::socket socket) :
+            websocket_session<plain_websocket_session>(socket.get_executor().context()),
+            ws_(std::move(socket)) {}
 
         // Called by the base class
-        websocket::stream<tcp::socket>&
-        ws()
-        {
+        websocket::stream<tcp::socket>&ws() {
             return ws_;
         }
 
         // Start the asynchronous operation
         template<class Body, class Allocator>
-        void
-        run(http::request<Body, http::basic_fields<Allocator>> req)
-        {
+        void run(http::request<Body, http::basic_fields<Allocator>> req) {
             // Run the timer. The timer is operated
             // continuously, this simplifies the code.
             on_timer({});
@@ -339,9 +309,7 @@ namespace server {
             do_accept(std::move(req));
         }
 
-        void
-        do_timeout()
-        {
+        void do_timeout() {
             // This is so the close can have a timeout
             if(close_)
                 return;
@@ -361,9 +329,7 @@ namespace server {
                         std::placeholders::_1)));
         }
 
-        void
-        on_close(boost::system::error_code ec)
-        {
+        void on_close(boost::system::error_code ec) {
             // Happens when close times out
             if(ec == boost::asio::error::operation_aborted)
                 return;
@@ -373,41 +339,31 @@ namespace server {
 
             // At this point the connection is gracefully closed
         }
+
+    private:
+        websocket::stream<tcp::socket> ws_;
+        bool close_ = false;
     };
 
 // Handles an SSL WebSocket connection
-    class ssl_websocket_session
-        : public websocket_session<ssl_websocket_session>
-            , public std::enable_shared_from_this<ssl_websocket_session>
-    {
-        websocket::stream<ssl_stream<tcp::socket>> ws_;
-        boost::asio::strand<
-            boost::asio::io_context::executor_type> strand_;
-        bool eof_ = false;
-
+    class ssl_websocket_session :
+        public websocket_session<ssl_websocket_session>,
+        public std::enable_shared_from_this<ssl_websocket_session> {
     public:
         // Create the http_session
-        explicit
-        ssl_websocket_session(ssl_stream<tcp::socket> stream)
-            : websocket_session<ssl_websocket_session>(
-            stream.get_executor().context())
-            , ws_(std::move(stream))
-            , strand_(ws_.get_executor())
-        {
-        }
+        explicit ssl_websocket_session(ssl_stream<tcp::socket> stream) :
+            websocket_session<ssl_websocket_session>(stream.get_executor().context()),
+            ws_(std::move(stream)),
+            strand_(ws_.get_executor()) {}
 
         // Called by the base class
-        websocket::stream<ssl_stream<tcp::socket>>&
-        ws()
-        {
+        websocket::stream<ssl_stream<tcp::socket>>&ws() {
             return ws_;
         }
 
         // Start the asynchronous operation
         template<class Body, class Allocator>
-        void
-        run(http::request<Body, http::basic_fields<Allocator>> req)
-        {
+        void run(http::request<Body, http::basic_fields<Allocator>> req) {
             // Run the timer. The timer is operated
             // continuously, this simplifies the code.
             on_timer({});
@@ -416,9 +372,7 @@ namespace server {
             do_accept(std::move(req));
         }
 
-        void
-        do_eof()
-        {
+        void do_eof() {
             eof_ = true;
 
             // Set the timer
@@ -434,9 +388,7 @@ namespace server {
                         std::placeholders::_1)));
         }
 
-        void
-        on_shutdown(boost::system::error_code ec)
-        {
+        void on_shutdown(boost::system::error_code ec) {
             // Happens when the shutdown times out
             if(ec == boost::asio::error::operation_aborted)
                 return;
@@ -447,39 +399,37 @@ namespace server {
             // At this point the connection is closed gracefully
         }
 
-        void
-        do_timeout()
-        {
+        void do_timeout() {
             // If this is true it means we timed out performing the shutdown
             if(eof_)
                 return;
 
             // Start the timer again
-            timer_.expires_at(
-                (std::chrono::steady_clock::time_point::max)());
+            timer_.expires_at(chrono::time_point<chrono::steady_clock>::max());
             on_timer({});
             do_eof();
         }
+
+    private:
+        websocket::stream<ssl_stream<tcp::socket>> ws_;
+        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+        bool eof_ = false;
     };
 
     template<class Body, class Allocator>
-    void
-    make_websocket_session(
+    void make_websocket_session(
         tcp::socket socket,
-        http::request<Body, http::basic_fields<Allocator>> req)
-    {
-        std::make_shared<plain_websocket_session>(
-            std::move(socket))->run(std::move(req));
+        http::request<Body, http::basic_fields<Allocator>> req
+    ) {
+        std::make_shared<plain_websocket_session>(std::move(socket))->run(std::move(req));
     }
 
     template<class Body, class Allocator>
-    void
-    make_websocket_session(
+    void make_websocket_session(
         ssl_stream<tcp::socket> stream,
-        http::request<Body, http::basic_fields<Allocator>> req)
-    {
-        std::make_shared<ssl_websocket_session>(
-            std::move(stream))->run(std::move(req));
+        http::request<Body, http::basic_fields<Allocator>> req
+    ) {
+        std::make_shared<ssl_websocket_session>(std::move(stream))->run(std::move(req));
     }
 
 //------------------------------------------------------------------------------
@@ -488,28 +438,16 @@ namespace server {
 // This uses the Curiously Recurring Template Pattern so that
 // the same code works with both SSL streams and regular sockets.
     template<class Derived>
-    class http_session
-    {
-        // Access the derived class, this is part of
-        // the Curiously Recurring Template Pattern idiom.
-        Derived&
-        derived()
-        {
-            return static_cast<Derived&>(*this);
-        }
-
-        // This queue is used for HTTP pipelining.
+    class http_session {
         class queue
         {
-            enum
-            {
+            enum {
                 // Maximum number of responses we will queue
                     limit = 8
             };
 
             // The type-erased, saved work item
-            struct work
-            {
+            struct work {
                 virtual ~work() = default;
                 virtual void operator()() = 0;
             };
@@ -518,26 +456,19 @@ namespace server {
             std::vector<std::unique_ptr<work>> items_;
 
         public:
-            explicit
-            queue(http_session& self)
-                : self_(self)
-            {
+            explicit queue(http_session& self) : self_(self) {
                 static_assert(limit > 0, "queue limit must be positive");
                 items_.reserve(limit);
             }
 
             // Returns `true` if we have reached the queue limit
-            bool
-            is_full() const
-            {
+            bool is_full() const {
                 return items_.size() >= limit;
             }
 
             // Called when a message finishes sending
             // Returns `true` if the caller should initiate a read
-            bool
-            on_write()
-            {
+            bool on_write() {
                 BOOST_ASSERT(! items_.empty());
                 auto const was_full = is_full();
                 items_.erase(items_.begin());
@@ -548,8 +479,7 @@ namespace server {
 
             // Called by the HTTP handler to send a response.
             template<bool isRequest, class Body, class Fields>
-            void
-            operator()(http::message<isRequest, Body, Fields>&& msg)
+            void operator()(http::message<isRequest, Body, Fields>&& msg)
             {
                 // This holds a work item
                 struct work_impl : work
@@ -559,15 +489,11 @@ namespace server {
 
                     work_impl(
                         http_session& self,
-                        http::message<isRequest, Body, Fields>&& msg)
-                        : self_(self)
-                        , msg_(std::move(msg))
-                    {
-                    }
+                        http::message<isRequest, Body, Fields>&& msg
+                    ) : self_(self),
+                        msg_(std::move(msg)) {}
 
-                    void
-                    operator()()
-                    {
+                    void operator()() {
                         http::async_write(
                             self_.derived().stream(),
                             msg_,
@@ -590,34 +516,19 @@ namespace server {
             }
         };
 
-        std::string const& doc_root_;
-        http::request<http::string_body> req_;
-        queue queue_;
-
-    protected:
-        boost::asio::steady_timer timer_;
-        boost::asio::strand<
-            boost::asio::io_context::executor_type> strand_;
-        boost::beast::flat_buffer buffer_;
-
     public:
         // Construct the session
         http_session(
             boost::asio::io_context& ioc,
             boost::beast::flat_buffer buffer,
-            std::string const& doc_root)
-            : doc_root_(doc_root)
-            , queue_(*this)
-            , timer_(ioc,
-                (std::chrono::steady_clock::time_point::max)())
-            , strand_(ioc.get_executor())
-            , buffer_(std::move(buffer))
-        {
-        }
+            std::string const& doc_root
+        ) : doc_root_(doc_root),
+            queue_(*this),
+            timer_(ioc, chrono::time_point<chrono::steady_clock>::max()),
+            strand_(ioc.get_executor()),
+            buffer_(std::move(buffer)) {}
 
-        void
-        do_read()
-        {
+        void do_read() {
             // Set the timer
             timer_.expires_after(std::chrono::seconds(15));
 
@@ -635,9 +546,7 @@ namespace server {
         }
 
         // Called when the timer expires.
-        void
-        on_timer(boost::system::error_code ec)
-        {
+        void on_timer(boost::system::error_code ec) {
             if(ec && ec != boost::asio::error::operation_aborted)
                 return fail(ec, "timer");
 
@@ -655,9 +564,7 @@ namespace server {
                         std::placeholders::_1)));
         }
 
-        void
-        on_read(boost::system::error_code ec)
-        {
+        void on_read(boost::system::error_code ec) {
             // Happens when the timer closes the socket
             if(ec == boost::asio::error::operation_aborted)
                 return;
@@ -686,9 +593,7 @@ namespace server {
                 do_read();
         }
 
-        void
-        on_write(boost::system::error_code ec, bool close)
-        {
+        void on_write(boost::system::error_code ec, bool close) {
             // Happens when the timer closes the socket
             if(ec == boost::asio::error::operation_aborted)
                 return;
@@ -710,6 +615,20 @@ namespace server {
                 do_read();
             }
         }
+
+    private:
+        std::string const& doc_root_;
+        http::request<http::string_body> req_;
+        queue queue_;
+
+        Derived&derived() {
+            return static_cast<Derived&>(*this);
+        }
+
+    protected:
+        boost::asio::steady_timer timer_;
+        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+        boost::beast::flat_buffer buffer_;
     };
 
 // Handles a plain HTTP connection
@@ -725,34 +644,23 @@ namespace server {
         plain_http_session(
             tcp::socket socket,
             boost::beast::flat_buffer buffer,
-            std::string const& doc_root)
-            : http_session<plain_http_session>(
-            socket.get_executor().context(),
-            std::move(buffer),
-            doc_root)
-            , socket_(std::move(socket))
-            , strand_(socket_.get_executor())
-        {
-        }
+            std::string const& doc_root
+        ) : http_session<plain_http_session>(socket.get_executor().context(), std::move(buffer), doc_root),
+            socket_(std::move(socket)),
+            strand_(socket_.get_executor()) {}
 
         // Called by the base class
-        tcp::socket&
-        stream()
-        {
+        tcp::socket&stream() {
             return socket_;
         }
 
         // Called by the base class
-        tcp::socket
-        release_stream()
-        {
+        tcp::socket release_stream() {
             return std::move(socket_);
         }
 
         // Start the asynchronous operation
-        void
-        run()
-        {
+        void run() {
             // Run the timer. The timer is operated
             // continuously, this simplifies the code.
             on_timer({});
@@ -760,9 +668,7 @@ namespace server {
             do_read();
         }
 
-        void
-        do_eof()
-        {
+        void do_eof() {
             // Send a TCP shutdown
             boost::system::error_code ec;
             socket_.shutdown(tcp::socket::shutdown_send, ec);
@@ -770,9 +676,7 @@ namespace server {
             // At this point the connection is closed gracefully
         }
 
-        void
-        do_timeout()
-        {
+        void do_timeout() {
             // Closing the socket cancels all outstanding operations. They
             // will complete with boost::asio::error::operation_aborted
             boost::system::error_code ec;
@@ -784,12 +688,7 @@ namespace server {
 // Handles an SSL HTTP connection
     class ssl_http_session :
         public http_session<ssl_http_session>,
-        public std::enable_shared_from_this<ssl_http_session>
-    {
-        ssl_stream<tcp::socket> stream_;
-        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-        bool eof_ = false;
-
+        public std::enable_shared_from_this<ssl_http_session> {
     public:
         // Create the http_session
         ssl_http_session(
@@ -887,14 +786,19 @@ namespace server {
                 return;
 
             // Start the timer again
-            timer_.expires_at(
-                (std::chrono::steady_clock::time_point::max)());
+            timer_.expires_at(chrono::time_point<chrono::steady_clock>::max());
             on_timer({});
             do_eof();
         }
+
+    private:
+        ssl_stream<tcp::socket> stream_;
+        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+        bool eof_ = false;
     };
 
-//------------------------------------------------------------------------------
+// Detector
+// ########################################################################
 
     namespace asio = boost::asio;
     namespace beast = boost::beast;
@@ -919,6 +823,9 @@ namespace server {
         string & _root;
         beast::flat_buffer _buffer;
     };
+
+// Listener
+// ########################################################################
 
     using boost::system::error_code;
     using boost::asio::socket_base;

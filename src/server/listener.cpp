@@ -51,6 +51,47 @@ void server::fail(boost::system::error_code code, char const *what) {
     std::cerr << what << ": " << code.message() << std::endl;
 }
 
+// Detector
+// ########################################################################
+
+server::Detector::Detector(tcp::socket socket, context &ctx, string &root) :
+    _socket(move(socket)),
+    _ctx(ctx),
+    _strand(_socket.get_executor()),
+    _root(root) {}
+
+void server::Detector::run() {
+    async_detect_ssl(
+        _socket,
+        _buffer,
+        asio::bind_executor(
+            _strand,
+            bind(
+                &Detector::on_detect,
+                shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2
+            )
+        )
+    );
+}
+
+void server::Detector::on_detect(error_code code, tribool result) {
+    if(code) {
+        return fail(code, "detect");
+    }
+
+    if(result) {
+        make_shared<ssl_http_session>(move(_socket), _ctx, move(_buffer), _root)->run();
+        return;
+    }
+
+    make_shared<plain_http_session>(move(_socket), move(_buffer), _root)->run();
+}
+
+// Listener
+// ########################################################################
+
 server::Listener::Listener(
     io_context &ioc,
     context &ctx,
@@ -104,39 +145,4 @@ void server::Listener::on_accept(error_code code) {
         make_shared<Detector>(move(_socket), _ctx, _root)->run();
     }
     do_accept();
-}
-
-server::Detector::Detector(tcp::socket socket, context &ctx, string &root) :
-    _socket(move(socket)),
-    _ctx(ctx),
-    _strand(_socket.get_executor()),
-    _root(root) {}
-
-void server::Detector::run() {
-    async_detect_ssl(
-        _socket,
-        _buffer,
-        asio::bind_executor(
-            _strand,
-            bind(
-                &Detector::on_detect,
-                shared_from_this(),
-                std::placeholders::_1,
-                std::placeholders::_2
-            )
-        )
-    );
-}
-
-void server::Detector::on_detect(error_code code, tribool result) {
-    if(code) {
-        return fail(code, "detect");
-    }
-
-    if(result) {
-        make_shared<ssl_http_session>(move(_socket), _ctx, move(_buffer), _root)->run();
-        return;
-    }
-
-    make_shared<plain_http_session>(move(_socket), move(_buffer), _root)->run();
 }
