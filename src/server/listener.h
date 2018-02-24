@@ -31,32 +31,25 @@ namespace server {
     namespace http = boost::beast::http;
     namespace websocket = boost::beast::websocket;
 
-// Return a reasonable mime type based on the extension of a file.
-    boost::beast::string_view mime_type(boost::beast::string_view path);
+    using boost::beast::string_view;
 
-// Append an HTTP rel-path to a local filesystem path.
-// The returned path is normalized for the platform.
-    std::string path_cat(
-        boost::beast::string_view base,
-        boost::beast::string_view path
-    );
+    string_view mime_type(string_view path);
 
-// This function produces an HTTP response for the given
-// request. The type of the response object depends on the
-// contents of the request, so the interface requires the
-// caller to pass a generic lambda for receiving the response.
-    template<
-        class Body, class Allocator,
-        class Send>
-    void
-    handle_request(
-        boost::beast::string_view doc_root,
+    using boost::beast::string_view;
+
+    string path_cat(string_view base, string_view path);
+
+    using boost::beast::string_view;
+
+    template<class Body, class Allocator, class Send>
+    void handle_request(
+        string_view doc_root,
         http::request<Body, http::basic_fields<Allocator>>&& req,
-        Send&& send)
-    {
+        Send&& send
+    ) {
         // Returns a bad request response
         auto const bad_request =
-            [&req](boost::beast::string_view why)
+            [&req](string_view why)
             {
                 http::response<http::string_body> res{http::status::bad_request, req.version()};
                 res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
@@ -69,7 +62,7 @@ namespace server {
 
         // Returns a not found response
         auto const not_found =
-            [&req](boost::beast::string_view target)
+            [&req](string_view target)
             {
                 http::response<http::string_body> res{http::status::not_found, req.version()};
                 res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
@@ -82,7 +75,7 @@ namespace server {
 
         // Returns a server error response
         auto const server_error =
-            [&req](boost::beast::string_view what)
+            [&req](string_view what)
             {
                 http::response<http::string_body> res{http::status::internal_server_error, req.version()};
                 res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
@@ -101,7 +94,7 @@ namespace server {
         // Request path must be absolute and not contain "..".
         if( req.target().empty() ||
             req.target()[0] != '/' ||
-            req.target().find("..") != boost::beast::string_view::npos)
+            req.target().find("..") != string_view::npos)
             return send(bad_request("Illegal request-target"));
 
         // Build the path to the requested file
@@ -686,7 +679,7 @@ namespace server {
             }
 
             // Send the response
-            handle_request(doc_root_, std::move(req_), queue_);
+            handle_request(doc_root_, move(req_), queue_);
 
             // If we aren't at the queue limit, try to pipeline another request
             if(! queue_.is_full())
@@ -720,13 +713,12 @@ namespace server {
     };
 
 // Handles a plain HTTP connection
-    class plain_http_session
-        : public http_session<plain_http_session>
-            , public std::enable_shared_from_this<plain_http_session>
+    class plain_http_session :
+        public http_session<plain_http_session>,
+        public std::enable_shared_from_this<plain_http_session>
     {
         tcp::socket socket_;
-        boost::asio::strand<
-            boost::asio::io_context::executor_type> strand_;
+        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
 
     public:
         // Create the http_session
@@ -790,13 +782,12 @@ namespace server {
     };
 
 // Handles an SSL HTTP connection
-    class ssl_http_session
-        : public http_session<ssl_http_session>
-            , public std::enable_shared_from_this<ssl_http_session>
+    class ssl_http_session :
+        public http_session<ssl_http_session>,
+        public std::enable_shared_from_this<ssl_http_session>
     {
         ssl_stream<tcp::socket> stream_;
-        boost::asio::strand<
-            boost::asio::io_context::executor_type> strand_;
+        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
         bool eof_ = false;
 
     public:
@@ -805,34 +796,23 @@ namespace server {
             tcp::socket socket,
             ssl::context& ctx,
             boost::beast::flat_buffer buffer,
-            std::string const& doc_root)
-            : http_session<ssl_http_session>(
-            socket.get_executor().context(),
-            std::move(buffer),
-            doc_root)
-            , stream_(std::move(socket), ctx)
-            , strand_(stream_.get_executor())
-        {
-        }
+            std::string const& doc_root
+        ) : http_session<ssl_http_session>(socket.get_executor().context(), std::move(buffer), doc_root),
+            stream_(std::move(socket), ctx),
+            strand_(stream_.get_executor()) {}
 
         // Called by the base class
-        ssl_stream<tcp::socket>&
-        stream()
-        {
+        ssl_stream<tcp::socket>&stream() {
             return stream_;
         }
 
         // Called by the base class
-        ssl_stream<tcp::socket>
-        release_stream()
-        {
+        ssl_stream<tcp::socket> release_stream() {
             return std::move(stream_);
         }
 
         // Start the asynchronous operation
-        void
-        run()
-        {
+        void run() {
             // Run the timer. The timer is operated
             // continuously, this simplifies the code.
             on_timer({});
@@ -851,13 +831,13 @@ namespace server {
                         &ssl_http_session::on_handshake,
                         shared_from_this(),
                         std::placeholders::_1,
-                        std::placeholders::_2)));
+                        std::placeholders::_2
+                    )
+                )
+            );
         }
-        void
-        on_handshake(
-            boost::system::error_code ec,
-            std::size_t bytes_used)
-        {
+
+        void on_handshake(boost::system::error_code ec, std::size_t bytes_used) {
             // Happens when the handshake times out
             if(ec == boost::asio::error::operation_aborted)
                 return;
@@ -871,9 +851,7 @@ namespace server {
             do_read();
         }
 
-        void
-        do_eof()
-        {
+        void do_eof() {
             eof_ = true;
 
             // Set the timer
@@ -886,12 +864,13 @@ namespace server {
                     std::bind(
                         &ssl_http_session::on_shutdown,
                         shared_from_this(),
-                        std::placeholders::_1)));
+                        std::placeholders::_1
+                    )
+                )
+            );
         }
 
-        void
-        on_shutdown(boost::system::error_code ec)
-        {
+        void on_shutdown(boost::system::error_code ec) {
             // Happens when the shutdown times out
             if(ec == boost::asio::error::operation_aborted)
                 return;
@@ -902,9 +881,7 @@ namespace server {
             // At this point the connection is closed gracefully
         }
 
-        void
-        do_timeout()
-        {
+        void do_timeout() {
             // If this is true it means we timed out performing the shutdown
             if(eof_)
                 return;
@@ -919,125 +896,52 @@ namespace server {
 
 //------------------------------------------------------------------------------
 
-// Detects SSL handshakes
-    class detect_session : public std::enable_shared_from_this<detect_session>
-    {
-        tcp::socket socket_;
-        ssl::context& ctx_;
-        boost::asio::strand<
-            boost::asio::io_context::executor_type> strand_;
-        std::string const& doc_root_;
-        boost::beast::flat_buffer buffer_;
+    namespace asio = boost::asio;
+    namespace beast = boost::beast;
+    using boost::tribool;
+    using boost::system::error_code;
+    using boost::asio::ip::tcp;
+    using boost::asio::ssl::context;
+    using boost::asio::strand;
 
+    class Detector : public enable_shared_from_this<Detector> {
     public:
-        explicit detect_session(
-            tcp::socket socket,
-            ssl::context& ctx,
-            std::string const& doc_root)
-            : socket_(std::move(socket))
-            , ctx_(ctx)
-            , strand_(socket_.get_executor())
-            , doc_root_(doc_root) {}
+        explicit Detector(tcp::socket socket, context& ctx, string & root);
 
-        void run() {
-            async_detect_ssl(
-                socket_,
-                buffer_,
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &detect_session::on_detect,
-                        shared_from_this(),
-                        std::placeholders::_1,
-                        std::placeholders::_2)));
+        void run();
 
-        }
+        void on_detect(error_code code, tribool result);
 
-        void on_detect(boost::system::error_code ec, boost::tribool result) {
-            if(ec)
-                return fail(ec, "detect");
-
-            if(result)
-            {
-                // Launch SSL session
-                std::make_shared<ssl_http_session>(
-                    std::move(socket_),
-                    ctx_,
-                    std::move(buffer_),
-                    doc_root_)->run();
-                return;
-            }
-
-            // Launch plain session
-            std::make_shared<plain_http_session>(
-                std::move(socket_),
-                std::move(buffer_),
-                doc_root_)->run();
-        }
+    private:
+        tcp::socket _socket;
+        context& _ctx;
+        strand<asio::io_context::executor_type> _strand;
+        string & _root;
+        beast::flat_buffer _buffer;
     };
 
     using boost::system::error_code;
     using boost::asio::socket_base;
+    using boost::asio::io_context;
+    using boost::asio::ssl::context;
 
     class Listener : public std::enable_shared_from_this<Listener> {
     public:
         Listener(
-            boost::asio::io_context &ioc,
-            ssl::context &ctx,
-            tcp::endpoint endpoint,
+            io_context &ioc,
+            context &ctx,
+            tcp::endpoint endp,
             string &root
-        ) : _ctx(ctx), _acceptor(ioc), _socket(ioc), _root(root) {
-            error_code code;
+        );
 
-            _acceptor.open(endpoint.protocol(), code);
-            if(code) {
-                fail(code, "open");
-                return;
-            }
+        void run();
 
-            _acceptor.bind(endpoint, code);
-            if(code) {
-                fail(code, "bind");
-                return;
-            }
+        void do_accept();
 
-            // Start listening for connections
-            _acceptor.listen(socket_base::max_listen_connections, code);
-            if(code) {
-                fail(code, "listen");
-                return;
-            }
-        }
-
-        void run() {
-            if(!_acceptor.is_open()) {
-                return;
-            }
-            do_accept();
-        }
-
-        void do_accept() {
-            _acceptor.async_accept(
-                _socket,
-                bind(
-                    &Listener::on_accept,
-                    shared_from_this(),
-                    std::placeholders::_1
-                )
-            );
-        }
-
-        void on_accept(error_code code) {
-            if(code) {
-                fail(code, "accept");
-            } else {
-                make_shared<detect_session>(move(_socket), _ctx, _root)->run();
-            }
-            do_accept();
-        }
+        void on_accept(error_code code);
 
     private:
-        ssl::context &_ctx;
+        context &_ctx;
         tcp::acceptor _acceptor;
         tcp::socket _socket;
         string &_root;

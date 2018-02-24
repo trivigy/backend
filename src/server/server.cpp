@@ -40,7 +40,7 @@ void server::Server::http_thread() {
 
     load_http_certificate(_ctx);
 
-    auto const address = ip::make_address(_cfg->network.http.address);
+    auto address = ip::make_address(_cfg->network.http.address);
     tcp::endpoint endpoint(address, _cfg->network.http.port);
     make_shared<Listener>(_ioc, _ctx, endpoint, root)->run();
 
