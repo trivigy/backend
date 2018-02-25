@@ -1,8 +1,8 @@
 #ifndef SYNC_SERVER_LISTENER_H
 #define SYNC_SERVER_LISTENER_H
 
-#include "server/detect_ssl.h"
-#include "server/ssl_stream.h"
+#include "server/detector.h"
+#include "server/stream.h"
 #include "server/queue.h"
 
 #include <boost/beast/core.hpp>
@@ -326,12 +326,12 @@ namespace server {
         public websocket_session<ssl_websocket_session>,
         public std::enable_shared_from_this<ssl_websocket_session> {
     public:
-        explicit ssl_websocket_session(ssl_stream<tcp::socket> stream) :
+        explicit ssl_websocket_session(Stream<tcp::socket> stream) :
             websocket_session<ssl_websocket_session>(stream.get_executor().context()),
             ws_(std::move(stream)),
             strand_(ws_.get_executor()) {}
 
-        websocket::stream<ssl_stream<tcp::socket>> &ws() {
+        websocket::stream<Stream<tcp::socket>> &ws() {
             return ws_;
         }
 
@@ -377,7 +377,7 @@ namespace server {
         }
 
     private:
-        websocket::stream<ssl_stream<tcp::socket>> ws_;
+        websocket::stream<Stream<tcp::socket>> ws_;
         boost::asio::strand<boost::asio::io_context::executor_type> strand_;
         bool eof_ = false;
     };
@@ -393,7 +393,7 @@ namespace server {
 
     template<class Body, class Allocator>
     void make_websocket_session(
-        ssl_stream<tcp::socket> stream,
+        Stream<tcp::socket> stream,
         http::request<Body, http::basic_fields<Allocator>> req
     ) {
         std::make_shared<ssl_websocket_session>(std::move(stream))->run(std::move(req));
@@ -631,11 +631,11 @@ namespace server {
             stream_(std::move(socket), ctx),
             strand_(stream_.get_executor()) {}
 
-        ssl_stream<tcp::socket> &stream() {
+        Stream<tcp::socket> &stream() {
             return stream_;
         }
 
-        ssl_stream<tcp::socket> release_stream() {
+        Stream<tcp::socket> release_stream() {
             return std::move(stream_);
         }
 
@@ -708,7 +708,7 @@ namespace server {
         }
 
     private:
-        ssl_stream<tcp::socket> stream_;
+        Stream<tcp::socket> stream_;
         boost::asio::strand<boost::asio::io_context::executor_type> strand_;
         bool eof_ = false;
     };

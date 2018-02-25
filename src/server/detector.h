@@ -135,7 +135,7 @@ detect_ssl(
     for(;;)
     {
         // There could already be data in the buffer
-        // so we do this first, before reading from the stream.
+        // so we do this first, before reading from the Stream.
         auto const result = is_ssl_handshake(buffer.data());
 
         // If we got an answer, return it
@@ -153,7 +153,7 @@ detect_ssl(
         // Prepare the buffer's output area.
         auto const mutable_buffer = buffer.prepare(beast::read_size(buffer, 1536));
 
-        // Try to fill our buffer by reading from the stream
+        // Try to fill our buffer by reading from the Stream
         std::size_t const bytes_transferred = stream.read_some(mutable_buffer, ec);
 
         // Check for an error
@@ -293,7 +293,7 @@ async_detect_ssl(
 
 //[example_core_detect_ssl_6
 
-// Read from a stream to invoke is_tls_handshake asynchronously
+// Read from a Stream to invoke is_tls_handshake asynchronously
 //
 template<
     class AsyncReadStream,

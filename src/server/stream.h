@@ -22,7 +22,7 @@
     @li Constructible from a moved socket.
 */
 template<class NextLayer>
-class ssl_stream
+class Stream
     : public boost::asio::ssl::stream_base
 {
     // only works for boost::asio::ip::tcp::socket
@@ -51,7 +51,7 @@ public:
     /// The type of the executor associated with the object.
     using executor_type = typename stream_type::executor_type;
 
-    ssl_stream(
+    Stream(
         boost::asio::ip::tcp::socket socket,
         boost::asio::ssl::context& ctx)
         : p_(new stream_type{
@@ -61,7 +61,7 @@ public:
         p_->next_layer() = std::move(socket);
     }
 
-    ssl_stream(ssl_stream&& other)
+    Stream(Stream&& other)
         : p_(new stream_type(
         other.get_executor().context(), *other.ctx_))
         , ctx_(other.ctx_)
@@ -70,7 +70,7 @@ public:
         swap(p_, other.p_);
     }
 
-    ssl_stream& operator=(ssl_stream&& other)
+    Stream& operator=(Stream&& other)
     {
         std::unique_ptr<stream_type> p(new stream_type{
             other.get_executor().context(), other.ctx_});
@@ -283,17 +283,17 @@ public:
     friend
     void
     teardown(boost::beast::websocket::role_type,
-        ssl_stream<SyncStream>& stream,
+        Stream<SyncStream>& stream,
         boost::system::error_code& ec);
 
     template<class AsyncStream, class TeardownHandler>
     friend
     void
     async_teardown(boost::beast::websocket::role_type,
-        ssl_stream<AsyncStream>& stream, TeardownHandler&& handler);
+        Stream<AsyncStream>& stream, TeardownHandler&& handler);
 };
 
-// These hooks are used to inform boost::beast::websocket::stream on
+// These hooks are used to inform boost::beast::websocket::Stream on
 // how to tear down the connection as part of the WebSocket
 // protocol specifications
 
@@ -302,10 +302,10 @@ inline
 void
 teardown(
     boost::beast::websocket::role_type role,
-    ssl_stream<SyncStream>& stream,
+    Stream<SyncStream>& stream,
     boost::system::error_code& ec)
 {
-    // Just forward it to the wrapped ssl::stream
+    // Just forward it to the wrapped ssl::Stream
     using boost::beast::websocket::teardown;
     teardown(role, *stream.p_, ec);
 }
@@ -315,10 +315,10 @@ inline
 void
 async_teardown(
     boost::beast::websocket::role_type role,
-    ssl_stream<AsyncStream>& stream,
+    Stream<AsyncStream>& stream,
     TeardownHandler&& handler)
 {
-    // Just forward it to the wrapped ssl::stream
+    // Just forward it to the wrapped ssl::Stream
     using boost::beast::websocket::async_teardown;
     async_teardown(role,
         *stream.p_, std::forward<TeardownHandler>(handler));
