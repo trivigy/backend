@@ -131,11 +131,13 @@ namespace server {
 
     void fail(boost::system::error_code code, char const *what);
 
-//    template<class Derived>
-//    class websocket_session {
+// ########################################################################
+
+//    class websocket_session : public enable_shared_from_this<websocket_session> {
 //    public:
-//        explicit websocket_session(boost::asio::io_context &ioc) :
-//            strand_(ioc.get_executor()),
+//        explicit websocket_session(
+//            boost::asio::io_context &ioc
+//        ) : strand_(ioc.get_executor()),
 //            timer_(ioc, chrono::time_point<chrono::steady_clock>::max()) {}
 //
 //        template<class Body, class Allocator>
@@ -260,15 +262,11 @@ namespace server {
 //    private:
 //        boost::beast::multi_buffer buffer_;
 //
-//        Derived &derived() {
-//            return static_cast<Derived &>(*this);
-//        }
-//
 //    protected:
 //        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
 //        boost::asio::steady_timer timer_;
 //    };
-//
+
 //    class plain_websocket_session :
 //        public websocket_session<plain_websocket_session>,
 //        public std::enable_shared_from_this<plain_websocket_session> {
@@ -413,7 +411,7 @@ namespace server {
     using boost::asio::error::operation_aborted;
     using boost::tribool;
 
-    class http_session : public enable_shared_from_this<http_session> {
+    class Http : public enable_shared_from_this<Http> {
         class queue {
             enum {
                 limit = 8
@@ -426,7 +424,7 @@ namespace server {
                 virtual void operator()() = 0;
             };
 
-            explicit queue(http_session &self) : _self(self) {
+            explicit queue(Http &self) : _self(self) {
                 static_assert(limit > 0, "queue limit must be positive");
                 _items.reserve(limit);
             }
@@ -448,11 +446,11 @@ namespace server {
             template<bool isRequest, class Body, class Fields>
             void operator()(http::message<isRequest, Body, Fields> &&msg) {
                 struct work_impl : work {
-                    http_session &_self;
+                    Http &_self;
                     http::message<isRequest, Body, Fields> _msg;
 
                     work_impl(
-                        http_session &self,
+                        Http &self,
                         http::message<isRequest, Body, Fields> &&msg
                     ) : _self(self),
                         _msg(move(msg)) {}
@@ -465,7 +463,7 @@ namespace server {
                                 bind_executor(
                                     _self._strand,
                                     bind(
-                                        &http_session::on_write,
+                                        &Http::on_write,
                                         _self.shared_from_this(),
                                         placeholders::_1,
                                         (bool) _msg.need_eof()
@@ -479,7 +477,7 @@ namespace server {
                                 bind_executor(
                                     _self._strand,
                                     bind(
-                                        &http_session::on_write,
+                                        &Http::on_write,
                                         _self.shared_from_this(),
                                         placeholders::_1,
                                         (bool) _msg.need_eof()
@@ -497,12 +495,12 @@ namespace server {
             }
 
         private:
-            http_session &_self;
+            Http &_self;
             vector<unique_ptr<work>> _items;
         };
 
     public:
-        http_session(
+        Http(
             tcp::socket socket,
             flat_buffer buffer,
             tribool secured,
@@ -530,7 +528,7 @@ namespace server {
                     bind_executor(
                         _strand,
                         bind(
-                            &http_session::on_handshake,
+                            &Http::on_handshake,
                             shared_from_this(),
                             placeholders::_1,
                             placeholders::_2
@@ -565,7 +563,7 @@ namespace server {
                     bind_executor(
                         _strand,
                         bind(
-                            &http_session::on_read,
+                            &Http::on_read,
                             shared_from_this(),
                             placeholders::_1
                         )
@@ -579,7 +577,7 @@ namespace server {
                     bind_executor(
                         _strand,
                         bind(
-                            &http_session::on_read,
+                            &Http::on_read,
                             shared_from_this(),
                             placeholders::_1
                         )
@@ -601,7 +599,7 @@ namespace server {
                 bind_executor(
                     _strand,
                     bind(
-                        &http_session::on_timer,
+                        &Http::on_timer,
                         shared_from_this(),
                         placeholders::_1
                     )
@@ -660,7 +658,7 @@ namespace server {
                     bind_executor(
                         _strand,
                         bind(
-                            &http_session::on_shutdown,
+                            &Http::on_shutdown,
                             shared_from_this(),
                             placeholders::_1
                         )

@@ -81,7 +81,7 @@ void server::Detector::on_detect(error_code code, tribool secured) {
         return fail(code, "detect");
     }
 
-    make_shared<http_session>(
+    make_shared<Http>(
         move(_socket),
         move(_buffer),
         secured,
