@@ -131,306 +131,316 @@ namespace server {
 
     void fail(boost::system::error_code code, char const *what);
 
-    template<class Derived>
-    class websocket_session {
-    public:
-        explicit websocket_session(boost::asio::io_context &ioc) :
-            strand_(ioc.get_executor()),
-            timer_(ioc, chrono::time_point<chrono::steady_clock>::max()) {}
+//    template<class Derived>
+//    class websocket_session {
+//    public:
+//        explicit websocket_session(boost::asio::io_context &ioc) :
+//            strand_(ioc.get_executor()),
+//            timer_(ioc, chrono::time_point<chrono::steady_clock>::max()) {}
+//
+//        template<class Body, class Allocator>
+//        void do_accept(http::request<Body, http::basic_fields<Allocator>> req) {
+//            timer_.expires_after(std::chrono::seconds(15));
+//            derived().ws().async_accept(
+//                req,
+//                boost::asio::bind_executor(
+//                    strand_,
+//                    std::bind(
+//                        &websocket_session::on_accept,
+//                        derived().shared_from_this(),
+//                        std::placeholders::_1
+//                    )
+//                )
+//            );
+//        }
+//
+//        void on_timer(boost::system::error_code ec) {
+//            if (ec && ec != boost::asio::error::operation_aborted) {
+//                return fail(ec, "timer");
+//            }
+//
+//            if (timer_.expiry() <= std::chrono::steady_clock::now()) {
+//                derived().do_timeout();
+//            }
+//
+//            timer_.async_wait(
+//                boost::asio::bind_executor(
+//                    strand_,
+//                    std::bind(
+//                        &websocket_session::on_timer,
+//                        derived().shared_from_this(),
+//                        std::placeholders::_1
+//                    )
+//                )
+//            );
+//        }
+//
+//        void on_accept(boost::system::error_code ec) {
+//            if (ec == boost::asio::error::operation_aborted) {
+//                return;
+//            }
+//
+//            if (ec) {
+//                return fail(ec, "accept");
+//            }
+//
+//            do_read();
+//        }
+//
+//        void do_read() {
+//            timer_.expires_after(std::chrono::seconds(15));
+//            derived().ws().async_read(
+//                buffer_,
+//                boost::asio::bind_executor(
+//                    strand_,
+//                    std::bind(
+//                        &websocket_session::on_read,
+//                        derived().shared_from_this(),
+//                        std::placeholders::_1,
+//                        std::placeholders::_2
+//                    )
+//                )
+//            );
+//        }
+//
+//        void on_read(
+//            boost::system::error_code ec,
+//            std::size_t bytes_transferred
+//        ) {
+//            boost::ignore_unused(bytes_transferred);
+//
+//            if (ec == boost::asio::error::operation_aborted) {
+//                return;
+//            }
+//
+//
+//            if (ec == websocket::error::closed) {
+//                return;
+//            }
+//
+//
+//            if (ec) {
+//                fail(ec, "read");
+//            }
+//
+//
+//            // Echo the message
+//            derived().ws().text(derived().ws().got_text());
+//            derived().ws().async_write(
+//                buffer_.data(),
+//                boost::asio::bind_executor(
+//                    strand_,
+//                    std::bind(
+//                        &websocket_session::on_write,
+//                        derived().shared_from_this(),
+//                        std::placeholders::_1,
+//                        std::placeholders::_2
+//                    )
+//                )
+//            );
+//        }
+//
+//        void on_write(
+//            boost::system::error_code ec,
+//            std::size_t bytes_transferred
+//        ) {
+//            boost::ignore_unused(bytes_transferred);
+//            if (ec == boost::asio::error::operation_aborted) {
+//                return;
+//            }
+//
+//            if (ec) {
+//                return fail(ec, "write");
+//            }
+//
+//            buffer_.consume(buffer_.size());
+//            do_read();
+//        }
+//
+//    private:
+//        boost::beast::multi_buffer buffer_;
+//
+//        Derived &derived() {
+//            return static_cast<Derived &>(*this);
+//        }
+//
+//    protected:
+//        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+//        boost::asio::steady_timer timer_;
+//    };
+//
+//    class plain_websocket_session :
+//        public websocket_session<plain_websocket_session>,
+//        public std::enable_shared_from_this<plain_websocket_session> {
+//    public:
+//        explicit plain_websocket_session(tcp::socket socket) :
+//            websocket_session<plain_websocket_session>(socket.get_executor().context()),
+//            ws_(std::move(socket)) {}
+//
+//        websocket::stream<tcp::socket> &ws() {
+//            return ws_;
+//        }
+//
+//        template<class Body, class Allocator>
+//        void run(http::request<Body, http::basic_fields<Allocator>> req) {
+//            on_timer({});
+//            do_accept(std::move(req));
+//        }
+//
+//        void do_timeout() {
+//            if (close_) {
+//                return;
+//            }
+//
+//            close_ = true;
+//            timer_.expires_after(std::chrono::seconds(15));
+//            ws_.async_close(
+//                websocket::close_code::normal,
+//                boost::asio::bind_executor(
+//                    strand_,
+//                    std::bind(
+//                        &plain_websocket_session::on_close,
+//                        shared_from_this(),
+//                        std::placeholders::_1
+//                    )
+//                )
+//            );
+//        }
+//
+//        void on_close(boost::system::error_code ec) {
+//            if (ec == boost::asio::error::operation_aborted) {
+//                return;
+//            }
+//
+//            if (ec) {
+//                return fail(ec, "close");
+//            }
+//        }
+//
+//    private:
+//        websocket::stream<tcp::socket> ws_;
+//        bool close_ = false;
+//    };
+//
+//    class ssl_websocket_session :
+//        public websocket_session<ssl_websocket_session>,
+//        public std::enable_shared_from_this<ssl_websocket_session> {
+//    public:
+//        explicit ssl_websocket_session(Stream<tcp::socket> stream) :
+//            websocket_session<ssl_websocket_session>(stream.get_executor().context()),
+//            ws_(std::move(stream)),
+//            strand_(ws_.get_executor()) {}
+//
+//        websocket::stream<Stream<tcp::socket>> &ws() {
+//            return ws_;
+//        }
+//
+//        template<class Body, class Allocator>
+//        void run(http::request<Body, http::basic_fields<Allocator>> req) {
+//            on_timer({});
+//            do_accept(std::move(req));
+//        }
+//
+//        void do_eof() {
+//            eof_ = true;
+//            timer_.expires_after(std::chrono::seconds(15));
+//            ws_.next_layer().async_shutdown(
+//                boost::asio::bind_executor(
+//                    strand_,
+//                    std::bind(
+//                        &ssl_websocket_session::on_shutdown,
+//                        shared_from_this(),
+//                        std::placeholders::_1
+//                    )
+//                )
+//            );
+//        }
+//
+//        void on_shutdown(boost::system::error_code ec) {
+//            if (ec == boost::asio::error::operation_aborted) {
+//                return;
+//            }
+//
+//            if (ec) {
+//                return fail(ec, "shutdown");
+//            }
+//        }
+//
+//        void do_timeout() {
+//            if (eof_) {
+//                return;
+//            }
+//
+//            timer_.expires_at(chrono::time_point<chrono::steady_clock>::max());
+//            on_timer({});
+//            do_eof();
+//        }
+//
+//    private:
+//        websocket::stream<Stream<tcp::socket>> ws_;
+//        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
+//        bool eof_ = false;
+//    };
+//
+//    template<class Body, class Allocator>
+//    void make_websocket_session(
+//        tcp::socket socket,
+//        http::request<Body, http::basic_fields<Allocator>> req
+//    ) {
+//        std::make_shared<plain_websocket_session>(std::move(socket))->run(
+//            std::move(req));
+//    }
+//
+//    template<class Body, class Allocator>
+//    void make_websocket_session(
+//        Stream<tcp::socket> stream,
+//        http::request<Body, http::basic_fields<Allocator>> req
+//    ) {
+//        std::make_shared<ssl_websocket_session>(std::move(stream))->run(std::move(req));
+//    }
 
-        template<class Body, class Allocator>
-        void do_accept(http::request<Body, http::basic_fields<Allocator>> req) {
-            timer_.expires_after(std::chrono::seconds(15));
-            derived().ws().async_accept(
-                req,
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &websocket_session::on_accept,
-                        derived().shared_from_this(),
-                        std::placeholders::_1
-                    )
-                )
-            );
-        }
+// ########################################################################
 
-        void on_timer(boost::system::error_code ec) {
-            if (ec && ec != boost::asio::error::operation_aborted) {
-                return fail(ec, "timer");
-            }
+    namespace asio = boost::asio;
+    namespace http = boost::beast::http;
+    using boost::system::error_code;
+    using boost::beast::flat_buffer;
+    using boost::asio::bind_executor;
+    using boost::asio::steady_timer;
+    using boost::asio::ssl::context;
+    using boost::asio::io_context;
+    using boost::asio::strand;
+    using boost::asio::error::operation_aborted;
+    using boost::tribool;
 
-            if (timer_.expiry() <= std::chrono::steady_clock::now()) {
-                derived().do_timeout();
-            }
-
-            timer_.async_wait(
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &websocket_session::on_timer,
-                        derived().shared_from_this(),
-                        std::placeholders::_1
-                    )
-                )
-            );
-        }
-
-        void on_accept(boost::system::error_code ec) {
-            if (ec == boost::asio::error::operation_aborted) {
-                return;
-            }
-
-            if (ec) {
-                return fail(ec, "accept");
-            }
-
-            do_read();
-        }
-
-        void do_read() {
-            timer_.expires_after(std::chrono::seconds(15));
-            derived().ws().async_read(
-                buffer_,
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &websocket_session::on_read,
-                        derived().shared_from_this(),
-                        std::placeholders::_1,
-                        std::placeholders::_2
-                    )
-                )
-            );
-        }
-
-        void on_read(
-            boost::system::error_code ec,
-            std::size_t bytes_transferred
-        ) {
-            boost::ignore_unused(bytes_transferred);
-
-            if (ec == boost::asio::error::operation_aborted) {
-                return;
-            }
-
-
-            if (ec == websocket::error::closed) {
-                return;
-            }
-
-
-            if (ec) {
-                fail(ec, "read");
-            }
-
-
-            // Echo the message
-            derived().ws().text(derived().ws().got_text());
-            derived().ws().async_write(
-                buffer_.data(),
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &websocket_session::on_write,
-                        derived().shared_from_this(),
-                        std::placeholders::_1,
-                        std::placeholders::_2
-                    )
-                )
-            );
-        }
-
-        void on_write(
-            boost::system::error_code ec,
-            std::size_t bytes_transferred
-        ) {
-            boost::ignore_unused(bytes_transferred);
-            if (ec == boost::asio::error::operation_aborted) {
-                return;
-            }
-
-            if (ec) {
-                return fail(ec, "write");
-            }
-
-            buffer_.consume(buffer_.size());
-            do_read();
-        }
-
-    private:
-        boost::beast::multi_buffer buffer_;
-
-        Derived &derived() {
-            return static_cast<Derived &>(*this);
-        }
-
-    protected:
-        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-        boost::asio::steady_timer timer_;
-    };
-
-    class plain_websocket_session :
-        public websocket_session<plain_websocket_session>,
-        public std::enable_shared_from_this<plain_websocket_session> {
-    public:
-        explicit plain_websocket_session(tcp::socket socket) :
-            websocket_session<plain_websocket_session>(socket.get_executor().context()),
-            ws_(std::move(socket)) {}
-
-        websocket::stream<tcp::socket> &ws() {
-            return ws_;
-        }
-
-        template<class Body, class Allocator>
-        void run(http::request<Body, http::basic_fields<Allocator>> req) {
-            on_timer({});
-            do_accept(std::move(req));
-        }
-
-        void do_timeout() {
-            if (close_) {
-                return;
-            }
-
-            close_ = true;
-            timer_.expires_after(std::chrono::seconds(15));
-            ws_.async_close(
-                websocket::close_code::normal,
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &plain_websocket_session::on_close,
-                        shared_from_this(),
-                        std::placeholders::_1
-                    )
-                )
-            );
-        }
-
-        void on_close(boost::system::error_code ec) {
-            if (ec == boost::asio::error::operation_aborted) {
-                return;
-            }
-
-            if (ec) {
-                return fail(ec, "close");
-            }
-        }
-
-    private:
-        websocket::stream<tcp::socket> ws_;
-        bool close_ = false;
-    };
-
-    class ssl_websocket_session :
-        public websocket_session<ssl_websocket_session>,
-        public std::enable_shared_from_this<ssl_websocket_session> {
-    public:
-        explicit ssl_websocket_session(Stream<tcp::socket> stream) :
-            websocket_session<ssl_websocket_session>(stream.get_executor().context()),
-            ws_(std::move(stream)),
-            strand_(ws_.get_executor()) {}
-
-        websocket::stream<Stream<tcp::socket>> &ws() {
-            return ws_;
-        }
-
-        template<class Body, class Allocator>
-        void run(http::request<Body, http::basic_fields<Allocator>> req) {
-            on_timer({});
-            do_accept(std::move(req));
-        }
-
-        void do_eof() {
-            eof_ = true;
-            timer_.expires_after(std::chrono::seconds(15));
-            ws_.next_layer().async_shutdown(
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &ssl_websocket_session::on_shutdown,
-                        shared_from_this(),
-                        std::placeholders::_1
-                    )
-                )
-            );
-        }
-
-        void on_shutdown(boost::system::error_code ec) {
-            if (ec == boost::asio::error::operation_aborted) {
-                return;
-            }
-
-            if (ec) {
-                return fail(ec, "shutdown");
-            }
-        }
-
-        void do_timeout() {
-            if (eof_) {
-                return;
-            }
-
-            timer_.expires_at(chrono::time_point<chrono::steady_clock>::max());
-            on_timer({});
-            do_eof();
-        }
-
-    private:
-        websocket::stream<Stream<tcp::socket>> ws_;
-        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-        bool eof_ = false;
-    };
-
-    template<class Body, class Allocator>
-    void make_websocket_session(
-        tcp::socket socket,
-        http::request<Body, http::basic_fields<Allocator>> req
-    ) {
-        std::make_shared<plain_websocket_session>(std::move(socket))->run(
-            std::move(req));
-    }
-
-    template<class Body, class Allocator>
-    void make_websocket_session(
-        Stream<tcp::socket> stream,
-        http::request<Body, http::basic_fields<Allocator>> req
-    ) {
-        std::make_shared<ssl_websocket_session>(std::move(stream))->run(std::move(req));
-    }
-
-    template<class Derived>
-    class http_session {
+    class http_session : public enable_shared_from_this<http_session> {
         class queue {
             enum {
                 limit = 8
             };
 
+        public:
             struct work {
                 virtual ~work() = default;
 
                 virtual void operator()() = 0;
             };
 
-            http_session &self_;
-            std::vector<std::unique_ptr<work>> items_;
-
-        public:
-            explicit queue(http_session &self) : self_(self) {
+            explicit queue(http_session &self) : _self(self) {
                 static_assert(limit > 0, "queue limit must be positive");
-                items_.reserve(limit);
+                _items.reserve(limit);
             }
 
             bool is_full() const {
-                return items_.size() >= limit;
+                return _items.size() >= limit;
             }
 
             bool on_write() {
-                BOOST_ASSERT(!items_.empty());
+                BOOST_ASSERT(!_items.empty());
                 auto const was_full = is_full();
-                items_.erase(items_.begin());
-                if (!items_.empty()) {
-                    (*items_.front())();
+                _items.erase(_items.begin());
+                if (!_items.empty()) {
+                    (*_items.front())();
                 }
                 return was_full;
             }
@@ -438,279 +448,271 @@ namespace server {
             template<bool isRequest, class Body, class Fields>
             void operator()(http::message<isRequest, Body, Fields> &&msg) {
                 struct work_impl : work {
-                    http_session &self_;
-                    http::message<isRequest, Body, Fields> msg_;
+                    http_session &_self;
+                    http::message<isRequest, Body, Fields> _msg;
 
                     work_impl(
                         http_session &self,
                         http::message<isRequest, Body, Fields> &&msg
-                    ) : self_(self),
-                        msg_(std::move(msg)) {}
+                    ) : _self(self),
+                        _msg(move(msg)) {}
 
-                    void operator()() {
-                        http::async_write(
-                            self_.derived().stream(),
-                            msg_,
-                            boost::asio::bind_executor(
-                                self_.strand_,
-                                std::bind(
-                                    &http_session::on_write,
-                                    self_.derived().shared_from_this(),
-                                    std::placeholders::_1,
-                                    msg_.need_eof()
+                    void operator()() override {
+                        if (_self._secured) {
+                            http::async_write(
+                                _self._stream,
+                                _msg,
+                                bind_executor(
+                                    _self._strand,
+                                    bind(
+                                        &http_session::on_write,
+                                        _self.shared_from_this(),
+                                        placeholders::_1,
+                                        (bool) _msg.need_eof()
+                                    )
                                 )
-                            )
-                        );
+                            );
+                        } else {
+                            http::async_write(
+                                _self._socket,
+                                _msg,
+                                bind_executor(
+                                    _self._strand,
+                                    bind(
+                                        &http_session::on_write,
+                                        _self.shared_from_this(),
+                                        placeholders::_1,
+                                        (bool) _msg.need_eof()
+                                    )
+                                )
+                            );
+                        }
                     }
                 };
 
-                items_.emplace_back(new work_impl(self_, std::move(msg)));
-                if (items_.size() == 1) {
-                    (*items_.front())();
+                _items.emplace_back(new work_impl(_self, move(msg)));
+                if (_items.size() == 1) {
+                    (*_items.front())();
                 }
             }
+
+        private:
+            http_session &_self;
+            vector<unique_ptr<work>> _items;
         };
 
     public:
         http_session(
-            boost::asio::io_context &ioc,
-            boost::beast::flat_buffer buffer,
-            std::string const &doc_root
-        ) : doc_root_(doc_root),
-            queue_(*this),
-            timer_(ioc, chrono::time_point<chrono::steady_clock>::max()),
-            strand_(ioc.get_executor()),
-            buffer_(std::move(buffer)) {}
+            tcp::socket socket,
+            flat_buffer buffer,
+            tribool secured,
+            context &ctx,
+            string &root
+        ) : _root(root),
+            _queue(*this),
+            _socket(move(socket)),
+            _stream(_socket, ctx),
+            _secured(secured),
+            _timer(
+                socket.get_executor().context(),
+                chrono::time_point<chrono::steady_clock>::max()
+            ),
+            _strand(socket.get_executor().context().get_executor()),
+            _buffer(move(buffer)) {}
 
-        void do_read() {
-            timer_.expires_after(std::chrono::seconds(15));
-            http::async_read(
-                derived().stream(),
-                buffer_,
-                req_,
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &http_session::on_read,
-                        derived().shared_from_this(),
-                        std::placeholders::_1
+        void run() {
+            on_timer({});
+            if (_secured) {
+                _timer.expires_after(chrono::seconds(15));
+                _stream.async_handshake(
+                    ssl::stream_base::server,
+                    _buffer.data(),
+                    bind_executor(
+                        _strand,
+                        bind(
+                            &http_session::on_handshake,
+                            shared_from_this(),
+                            placeholders::_1,
+                            placeholders::_2
+                        )
                     )
-                )
-            );
-        }
-
-        void on_timer(boost::system::error_code ec) {
-            if (ec && ec != boost::asio::error::operation_aborted) {
-                return fail(ec, "timer");
-            }
-
-            if (timer_.expiry() <= std::chrono::steady_clock::now()) {
-                return derived().do_timeout();
-            }
-
-            timer_.async_wait(
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &http_session::on_timer,
-                        derived().shared_from_this(),
-                        std::placeholders::_1
-                    )
-                )
-            );
-        }
-
-        void on_read(boost::system::error_code ec) {
-            if (ec == boost::asio::error::operation_aborted) {
-                return;
-            }
-
-            if (ec == http::error::end_of_stream) {
-                return derived().do_eof();
-            }
-
-            if (ec) {
-                return fail(ec, "read");
-            }
-
-            if (websocket::is_upgrade(req_)) {
-                return make_websocket_session(derived().release_stream(), std::move(req_));
-            }
-
-            handle_request(doc_root_, move(req_), queue_);
-
-            if (!queue_.is_full()) {
+                );
+            } else {
                 do_read();
             }
         }
 
-        void on_write(boost::system::error_code ec, bool close) {
-            if (ec == boost::asio::error::operation_aborted) {
+        void on_handshake(error_code code, size_t bytes_used) {
+            if (code == operation_aborted) {
                 return;
             }
 
-            if (ec) {
-                return fail(ec, "write");
+            if (code) {
+                return fail(code, "handshake");
+            }
+
+            _buffer.consume(bytes_used);
+            do_read();
+        }
+
+        void do_read() {
+            _timer.expires_after(chrono::seconds(15));
+            if (_secured) {
+                http::async_read(
+                    _stream,
+                    _buffer,
+                    _req,
+                    bind_executor(
+                        _strand,
+                        bind(
+                            &http_session::on_read,
+                            shared_from_this(),
+                            placeholders::_1
+                        )
+                    )
+                );
+            } else {
+                http::async_read(
+                    _socket,
+                    _buffer,
+                    _req,
+                    bind_executor(
+                        _strand,
+                        bind(
+                            &http_session::on_read,
+                            shared_from_this(),
+                            placeholders::_1
+                        )
+                    )
+                );
+            }
+        }
+
+        void on_timer(error_code code) {
+            if (code && code != operation_aborted) {
+                return fail(code, "timer");
+            }
+
+            if (_timer.expiry() <= chrono::steady_clock::now()) {
+                return do_timeout();
+            }
+
+            _timer.async_wait(
+                bind_executor(
+                    _strand,
+                    bind(
+                        &http_session::on_timer,
+                        shared_from_this(),
+                        placeholders::_1
+                    )
+                )
+            );
+        }
+
+        void on_read(error_code code) {
+            if (code == operation_aborted) {
+                return;
+            }
+
+            if (code == http::error::end_of_stream) {
+                return do_eof();
+            }
+
+            if (code) {
+                return fail(code, "read");
+            }
+
+            if (websocket::is_upgrade(_req)) {
+                return fail(code, "websocket::is_upgrade(_req)");
+//                return make_websocket_session(derived().release_stream(), move(_req));
+            }
+
+            handle_request(_root, move(_req), _queue);
+
+            if (!_queue.is_full()) {
+                do_read();
+            }
+        }
+
+        void on_write(error_code code, bool close) {
+            if (code == operation_aborted) {
+                return;
+            }
+
+            if (code) {
+                return fail(code, "write");
             }
 
             if (close) {
-                return derived().do_eof();
+                return do_eof();
             }
 
-            if (queue_.on_write()) {
+            if (_queue.on_write()) {
                 do_read();
             }
         }
 
-    private:
-        std::string const &doc_root_;
-        http::request<http::string_body> req_;
-        queue queue_;
-
-        Derived &derived() {
-            return static_cast<Derived &>(*this);
+        void do_eof() {
+            if (_secured) {
+                _eof = true;
+                _timer.expires_after(chrono::seconds(15));
+                _stream.async_shutdown(
+                    bind_executor(
+                        _strand,
+                        bind(
+                            &http_session::on_shutdown,
+                            shared_from_this(),
+                            placeholders::_1
+                        )
+                    )
+                );
+            } else {
+                error_code code;
+                _socket.shutdown(tcp::socket::shutdown_send, code);
+            }
         }
+
+        void on_shutdown(error_code code) {
+            if (code == operation_aborted) {
+                return;
+            }
+
+            if (code) {
+                return fail(code, "shutdown");
+            }
+        }
+
+        void do_timeout() {
+            if (_secured) {
+                if (_eof) {
+                    return;
+                }
+
+                _timer.expires_at(
+                    chrono::time_point<chrono::steady_clock>::max()
+                );
+                on_timer({});
+                do_eof();
+            } else {
+                error_code code;
+                _socket.shutdown(tcp::socket::shutdown_both, code);
+                _socket.close(code);
+            }
+        }
+
+    private:
+        http::request<http::string_body> _req;
+        flat_buffer _buffer;
+        steady_timer _timer;
+        bool _eof = false;
+        string &_root;
+        queue _queue;
 
     protected:
-        boost::asio::steady_timer timer_;
-        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-        boost::beast::flat_buffer buffer_;
-    };
-
-    class plain_http_session :
-        public http_session<plain_http_session>,
-        public std::enable_shared_from_this<plain_http_session> {
-    public:
-        plain_http_session(
-            tcp::socket socket,
-            boost::beast::flat_buffer buffer,
-            std::string const &doc_root
-        ) : http_session<plain_http_session>(socket.get_executor().context(), std::move(buffer), doc_root),
-            socket_(std::move(socket)),
-            strand_(socket_.get_executor()) {}
-
-        tcp::socket &stream() {
-            return socket_;
-        }
-
-        tcp::socket release_stream() {
-            return std::move(socket_);
-        }
-
-        void run() {
-            on_timer({});
-            do_read();
-        }
-
-        void do_eof() {
-            boost::system::error_code ec;
-            socket_.shutdown(tcp::socket::shutdown_send, ec);
-        }
-
-        void do_timeout() {
-            boost::system::error_code ec;
-            socket_.shutdown(tcp::socket::shutdown_both, ec);
-            socket_.close(ec);
-        }
-
-    private:
-        tcp::socket socket_;
-        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-    };
-
-    class ssl_http_session :
-        public http_session<ssl_http_session>,
-        public std::enable_shared_from_this<ssl_http_session> {
-    public:
-        ssl_http_session(
-            tcp::socket socket,
-            ssl::context &ctx,
-            boost::beast::flat_buffer buffer,
-            std::string const &doc_root
-        ) : http_session<ssl_http_session>(socket.get_executor().context(), std::move(buffer), doc_root),
-            stream_(std::move(socket), ctx),
-            strand_(stream_.get_executor()) {}
-
-        Stream<tcp::socket> &stream() {
-            return stream_;
-        }
-
-        Stream<tcp::socket> release_stream() {
-            return std::move(stream_);
-        }
-
-        // Start the asynchronous operation
-        void run() {
-            on_timer({});
-            timer_.expires_after(std::chrono::seconds(15));
-            stream_.async_handshake(
-                ssl::stream_base::server,
-                buffer_.data(),
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &ssl_http_session::on_handshake,
-                        shared_from_this(),
-                        std::placeholders::_1,
-                        std::placeholders::_2
-                    )
-                )
-            );
-        }
-
-        void on_handshake(boost::system::error_code ec, std::size_t bytes_used) {
-            // Happens when the handshake times out
-            if (ec == boost::asio::error::operation_aborted) {
-                return;
-            }
-
-            if (ec) {
-                return fail(ec, "handshake");
-            }
-
-            buffer_.consume(bytes_used);
-            do_read();
-        }
-
-        void do_eof() {
-            eof_ = true;
-            timer_.expires_after(std::chrono::seconds(15));
-            stream_.async_shutdown(
-                boost::asio::bind_executor(
-                    strand_,
-                    std::bind(
-                        &ssl_http_session::on_shutdown,
-                        shared_from_this(),
-                        std::placeholders::_1
-                    )
-                )
-            );
-        }
-
-        void on_shutdown(boost::system::error_code ec) {
-            if (ec == boost::asio::error::operation_aborted) {
-                return;
-            }
-
-            if (ec) {
-                return fail(ec, "shutdown");
-            }
-        }
-
-        void do_timeout() {
-            if (eof_) {
-                return;
-            }
-
-            timer_.expires_at(chrono::time_point<chrono::steady_clock>::max());
-            on_timer({});
-            do_eof();
-        }
-
-    private:
-        Stream<tcp::socket> stream_;
-        boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-        bool eof_ = false;
+        tcp::socket _socket;
+        ssl::stream<tcp::socket&> _stream;
+        strand<io_context::executor_type> _strand;
+        tribool _secured;
     };
 
 // Detector
@@ -730,7 +732,7 @@ namespace server {
 
         void run();
 
-        void on_detect(error_code code, tribool result);
+        void on_detect(error_code code, tribool secured);
 
     private:
         tcp::socket _socket;

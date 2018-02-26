@@ -76,17 +76,18 @@ void server::Detector::run() {
     );
 }
 
-void server::Detector::on_detect(error_code code, tribool result) {
+void server::Detector::on_detect(error_code code, tribool secured) {
     if(code) {
         return fail(code, "detect");
     }
 
-    if(result) {
-        make_shared<ssl_http_session>(move(_socket), _ctx, move(_buffer), _root)->run();
-        return;
-    }
-
-    make_shared<plain_http_session>(move(_socket), move(_buffer), _root)->run();
+    make_shared<http_session>(
+        move(_socket),
+        move(_buffer),
+        secured,
+        _ctx,
+        _root
+    )->run();
 }
 
 // Listener
