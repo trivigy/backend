@@ -97,9 +97,9 @@ bool server::Options::parse(int argc, const char **argv) {
         },
         {"members",
             {
-                {"c", to_string(this->members.c)},
-                {"H", to_string(this->members.H)},
-                {"S", to_string(this->members.S)}
+                {"c", this->members.c},
+                {"H", this->members.H},
+                {"S", this->members.S}
             }
         }
     };
