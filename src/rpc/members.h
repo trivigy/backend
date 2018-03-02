@@ -2,7 +2,7 @@
 #define SYNC_RPC_MEMBERS_H
 
 #include "peer.h"
-#include "rpc/rpc.h"
+#include "rpc/helper.h"
 #include "server/server.h"
 #include "protos/members.grpc.pb.h"
 

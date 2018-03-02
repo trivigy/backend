@@ -37,7 +37,7 @@ grpc::Status rpc::MembersService::gossip(
     const GossipRequest *request,
     GossipResponse *response
 ) {
-    rpc::log("/members/gossip", context->peer());
+    log("/members/gossip", context->peer());
 
     deque<Peer> buffer;
     auto cfg = server->cfg();
@@ -86,7 +86,7 @@ grpc::Status rpc::MembersService::list(
     const ListRequest *request,
     ListResponse *response
 ) {
-    rpc::log("/members/list", context->peer());
+    log("/members/list", context->peer());
 
     auto view = server->view();
     deque<Peer> snap = view->snapshot();
@@ -120,7 +120,7 @@ grpc::Status rpc::MembersService::status(
     const StatusRequest *request,
     StatusResponse *response
 ) {
-    rpc::log("/members/status", context->peer());
+    log("/members/status", context->peer());
 
     std::string prefix("Hello ");
     response->set_message(prefix + request->message());
