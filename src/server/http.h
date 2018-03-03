@@ -2,9 +2,11 @@
 #define SYNC_SERVER_HTTP_H
 
 #include "server/websocket.h"
+#include "server/response.h"
 #include "server/helper.h"
 
 #include <boost/beast/core.hpp>
+#include <boost/beast/core/file.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/version.hpp>
@@ -29,6 +31,7 @@ namespace server {
     using boost::system::error_code;
     using boost::beast::string_view;
     using boost::beast::flat_buffer;
+    using boost::beast::string_param;
     using boost::asio::bind_executor;
     using boost::asio::steady_timer;
     using boost::asio::ssl::context;
@@ -148,7 +151,7 @@ namespace server {
 
         string path_cat(string_view base, string_view path);
 
-        void handle_request(
+        void request_handler(
             string_view root,
             http::request<http::string_body> &&req,
             queue &send

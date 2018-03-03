@@ -158,66 +158,49 @@ string server::Http::path_cat(string_view base, string_view path) {
     return result;
 }
 
-void server::Http::handle_request(
+void server::Http::request_handler(
     string_view root,
     http::request<http::string_body> &&req,
     queue &send
 ) {
-    auto const bad_request =
-        [&req](string_view why) {
-            http::response<http::string_body> res(
-                http::status::bad_request,
-                req.version()
-            );
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(req.keep_alive());
-            res.body() = why.to_string();
-            res.prepare_payload();
-            return res;
-        };
+    auto fields = json::object();
+    for (auto &field : _req) {
+        fields.emplace(string(field.name_string()), string(field.value()));
+    }
 
-    // Returns a not found response
-    auto const not_found =
-        [&req](string_view target) {
-            http::response<http::string_body> res(
-                http::status::not_found,
-                req.version()
-            );
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(req.keep_alive());
-            res.body() =
-                "The resource '" + target.to_string() + "' was not found.";
-            res.prepare_payload();
-            return res;
-        };
-
-    // Returns a server error response
-    auto const server_error =
-        [&req](string_view what) {
-            http::response<http::string_body> res(
-                http::status::internal_server_error,
-                req.version()
-            );
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(req.keep_alive());
-            res.body() = "An error occurred: '" + what.to_string() + "'";
-            res.prepare_payload();
-            return res;
-        };
+    tcp::endpoint remote = _socket.remote_endpoint();
+    json extra = {
+        {"remote",
+            {
+                {"addr", remote.address().to_string()},
+                {"port", remote.port()},
+            }
+        },
+        {"method", string(
+            _req.method_string().data(),
+            _req.method_string().size()
+        )},
+        {"target", string(_req.target().data(), _req.target().size())},
+        {"version",
+            to_string(_req.version() / 10)
+            + "."
+            + to_string(_req.version() % 10)
+        },
+        {"fields", fields}
+    };
+    LOG(info) << logging::add_value("Extra", extra.dump());
 
     // Make sure we can handle the method
-    if (req.method() != http::verb::get &&
-        req.method() != http::verb::head)
-        return send(bad_request("Unknown HTTP-method"));
+    if (req.method() != http::verb::get && req.method() != http::verb::head) {
+        return send(Response::bad_request(req));
+    }
 
     // Request path must be absolute and not contain "..".
     if (req.target().empty() ||
         req.target()[0] != '/' ||
-        req.target().find("..") != string_view::npos)
-        return send(bad_request("Illegal request-target"));
+        req.target().find("..") != string_view::npos) {
+        return send(Response::bad_request(req));
+    }
 
     std::string path = path_cat(root, req.target());
     if (req.target().back() == '/') {
@@ -229,25 +212,25 @@ void server::Http::handle_request(
     body.open(path.c_str(), boost::beast::file_mode::scan, code);
 
     if (code == boost::system::errc::no_such_file_or_directory) {
-        return send(not_found(req.target()));
+        return send(Response::not_found(req));
     }
 
     if (code) {
-        return send(server_error(code.message()));
+        return send(Response::internal_server_error(req));
     }
 
     if (req.method() == http::verb::head) {
         http::response<http::empty_body> res{http::status::ok, req.version()};
-        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-        res.set(http::field::content_type, mime_type(path));
+        res.set(http::field::server, string_param(BOOST_BEAST_VERSION_STRING));
+        res.set(http::field::content_type, string_param(mime_type(path)));
         res.content_length(body.size());
         res.keep_alive(req.keep_alive());
         return send(std::move(res));
     }
 
     http::response<http::file_body> res{std::piecewise_construct, std::make_tuple(std::move(body)), std::make_tuple(http::status::ok, req.version())};
-    res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-    res.set(http::field::content_type, mime_type(path));
+    res.set(http::field::server, string_param(BOOST_BEAST_VERSION_STRING));
+    res.set(http::field::content_type, string_param(mime_type(path)));
     res.content_length(body.size());
     res.keep_alive(req.keep_alive());
     return send(std::move(res));
@@ -288,27 +271,6 @@ void server::Http::on_timer(error_code code) {
 }
 
 void server::Http::on_read(error_code code) {
-    tcp::endpoint remote = _socket.remote_endpoint();
-    json extra = {
-        {"remote",
-            {
-                {"addr", remote.address().to_string()},
-                {"port", remote.port()},
-            }
-        },
-        {"method", string(
-            _req.method_string().data(),
-            _req.method_string().size()
-        )},
-        {"target", string(_req.target().data(), _req.target().size())},
-        {"version",
-            to_string(_req.version() / 10)
-            + "."
-            + to_string(_req.version() % 10)
-        }
-    };
-    LOG(info) << logging::add_value("Extra", extra.dump());
-
     if (code == operation_aborted) {
         return;
     }
@@ -331,7 +293,7 @@ void server::Http::on_read(error_code code) {
         return;
     }
 
-    handle_request(_root, move(_req), _queue);
+    request_handler(_root, move(_req), _queue);
 
     if (!_queue.is_full()) {
         read();
