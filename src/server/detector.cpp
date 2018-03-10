@@ -1,9 +1,15 @@
 #include "server/detector.h"
 
-server::Detector::Detector(tcp::socket socket, context &ctx, string &root) :
+server::Detector::Detector(
+    tcp::socket socket,
+    context &ctx,
+    Router &router,
+    string &root
+) :
     _socket(move(socket)),
     _ctx(ctx),
     _strand(_socket.get_executor()),
+    _router(router),
     _root(root) {}
 
 void server::Detector::run() {
@@ -32,6 +38,7 @@ void server::Detector::on_detect(error_code code, tribool secured) {
         move(_buffer),
         secured,
         _ctx,
+        _router,
         _root
     )->run();
 }

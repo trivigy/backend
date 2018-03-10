@@ -3,6 +3,7 @@
 
 #include "server/http.h"
 #include "server/helper.h"
+#include "server/router.h"
 
 #include <boost/assert.hpp>
 #include <boost/config.hpp>
@@ -242,7 +243,12 @@ namespace server {
 
     class Detector : public enable_shared_from_this<Detector> {
     public:
-        explicit Detector(tcp::socket socket, context &ctx, string &root);
+        explicit Detector(
+            tcp::socket socket,
+            context &ctx,
+            Router &router,
+            string &root
+        );
 
         void run();
 
@@ -252,6 +258,7 @@ namespace server {
         tcp::socket _socket;
         context &_ctx;
         strand<io_context::executor_type> _strand;
+        Router &_router;
         string &_root;
         flat_buffer _buffer;
     };

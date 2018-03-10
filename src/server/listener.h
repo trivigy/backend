@@ -3,6 +3,7 @@
 
 #include "server/helper.h"
 #include "server/detector.h"
+#include "server/router.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/context.hpp>
@@ -23,6 +24,7 @@ namespace server {
             io_context &ioc,
             context &ctx,
             tcp::endpoint endp,
+            Router &router,
             string &root
         );
 
@@ -36,6 +38,7 @@ namespace server {
         context &_ctx;
         tcp::acceptor _acceptor;
         tcp::socket _socket;
+        Router &_router;
         string &_root;
     };
 }

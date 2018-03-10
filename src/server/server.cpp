@@ -36,13 +36,23 @@ int server::Server::start() {
 }
 
 void server::Server::http_thread() {
+    Router router;
+
+    router.add([] {
+        cerr << "/user" << endl;
+    }, "/user");
+
+    router.add([](const int id) {
+        cerr << "/user/" << to_string(id) << endl;
+    }, "/user/{}", params::integer());
+
     string root = ".";
 
     load_http_certificate(_ctx);
 
     auto address = ip::make_address(_cfg->network.http.address);
     tcp::endpoint endpoint(address, _cfg->network.http.port);
-    make_shared<Listener>(_ioc, _ctx, endpoint, root)->run();
+    make_shared<Listener>(_ioc, _ctx, endpoint, router, root)->run();
 
     vector<thread> v;
     v.reserve(_cfg->network.threads);

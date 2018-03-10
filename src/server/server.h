@@ -3,6 +3,7 @@
 
 #include "server/options.h"
 #include "server/listener.h"
+#include "server/router.h"
 #include "rpc/members.h"
 #include "view.h"
 

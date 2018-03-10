@@ -4,6 +4,7 @@
 #include "server/websocket.h"
 #include "server/response.h"
 #include "server/helper.h"
+#include "server/router.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/file.hpp>
@@ -136,6 +137,7 @@ namespace server {
             flat_buffer buffer,
             tribool secured,
             context &ctx,
+            Router &router,
             string &root
         );
 
@@ -173,6 +175,7 @@ namespace server {
         steady_timer _timer;
         bool _eof = false;
         context &_ctx;
+        Router &_router;
         string &_root;
         queue _queue;
 

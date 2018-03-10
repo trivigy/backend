@@ -6,6 +6,7 @@ server::Http::Http(
     flat_buffer buffer,
     tribool secured,
     context &ctx,
+    Router &router,
     string &root
 ) : _strand(socket.get_executor().context().get_executor()),
     _timer(
@@ -18,6 +19,7 @@ server::Http::Http(
     _secured(secured),
     _queue(*this),
     _ctx(ctx),
+    _router(router),
     _root(root) {}
 
 void server::Http::run() {
@@ -189,6 +191,8 @@ void server::Http::request_handler(
         {"fields", fields}
     };
     LOG(info) << logging::add_value("Extra", extra.dump());
+
+//    _router.dispatch(req.target().to_string());
 
     // Make sure we can handle the method
     if (req.method() != http::verb::get && req.method() != http::verb::head) {
