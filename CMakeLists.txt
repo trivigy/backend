@@ -93,7 +93,8 @@ set(IMPORT_LIBS
     crypto
     dl
     z
-    gcov)
+    gcov
+    fmt)
 
 target_link_libraries(sync PUBLIC ${IMPORT_LIBS})
 target_link_libraries(syncd PUBLIC ${IMPORT_LIBS})
