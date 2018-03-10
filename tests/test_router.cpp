@@ -1,39 +1,23 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "OCUnusedMacroInspection"
-#define BOOST_TEST_MODULE test_dispatcher
+#define BOOST_TEST_MODULE test_router
 
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 
 #include "server/router.h"
 
-class F : public server::Router {
-};
+BOOST_AUTO_TEST_CASE(multi_dispatch_test) { // NOLINT
+    server::Router router;
 
-BOOST_FIXTURE_TEST_CASE(remove_duplicates_test, F) { // NOLINT
-    using namespace std;
-    using server::matchers::word;
-    using server::matchers::integer;
+    router.add([] {
+    }, "/user");
 
-    add(server::matcher("/user/") + integer(),
-        [] (auto id) {
-            cerr << "/user/" << to_string(id) << endl;
-        });
+    router.add([](const int id) {
+    }, "/user/{}", server::params::integer());
 
-    add(server::matcher("/resource/") + word(),
-        [] (auto name) {
-            cerr << "/resource/" << name << endl;
-        });
-
-    add(server::matcher("/foo/") + integer() + "/bar/" + word(),
-        [] (auto id, auto name) {
-            cerr << "/foo/" << to_string(id) << "/bar/" << name << endl;
-        });
-
-    dispatch("/user/1234");
-    dispatch("/resource/john_doe");
-    dispatch("/foo/42/bar/jane_smith/");
-    dispatch("/user/admin");
+    BOOST_TEST(router.dispatch("/user"));
+    BOOST_TEST(router.dispatch("/user/12345"));
 }
 
 #pragma clang diagnostic pop
