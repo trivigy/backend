@@ -23,6 +23,7 @@ conan_cmake_run(
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+set(CMAKE_RESOURCE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/www)
 
 find_package(Threads REQUIRED)
 #find_package(JsonRpc REQUIRED)
@@ -98,6 +99,12 @@ set(IMPORT_LIBS
 
 target_link_libraries(sync PUBLIC ${IMPORT_LIBS})
 target_link_libraries(syncd PUBLIC ${IMPORT_LIBS})
+
+file(GLOB AIDE_RESOURCE_FILES
+    ${CONAN_BIN_DIRS_AIDE}/*.js
+    ${CONAN_BIN_DIRS_AIDE}/*.wasm)
+file(COPY ${AIDE_RESOURCE_FILES}
+    DESTINATION ${CMAKE_RESOURCE_OUTPUT_DIRECTORY})
 
 ##########################################################################
 enable_testing()

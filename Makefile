@@ -10,6 +10,7 @@ conan:
 	conan export conan/Protobuf syncaide/stable
 	conan export conan/gRPC syncaide/stable
 	conan export conan/fmt syncaide/stable
+	conan export conan/aide syncaide/stable
 .PHONY: conan
 
 TARGET=all
