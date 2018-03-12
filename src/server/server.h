@@ -54,6 +54,7 @@ namespace server {
         unique_ptr<grpc::Server> _server;
         vector<thread> _handlers;
         io_context _ioc;
+        Router _router;
         Options *_cfg;
         context _ctx;
         View _view;

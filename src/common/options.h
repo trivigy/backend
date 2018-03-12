@@ -29,8 +29,6 @@ namespace common {
         virtual bool parse(int argc, const char **argv) = 0;
 
     protected:
-        string basename(const string &path);
-
         string usage(
             const string &program_name,
             string description,

@@ -17,6 +17,7 @@
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/logic/tribool.hpp>
+#include <boost/filesystem.hpp>
 #include <nlohmann/json.hpp>
 #include <functional>
 #include <string>
@@ -28,6 +29,7 @@ namespace server {
     namespace ssl = boost::asio::ssl;
     namespace http = boost::beast::http;
     namespace websocket = boost::beast::websocket;
+    namespace fs = boost::filesystem;
     using nlohmann::json;
     using boost::system::error_code;
     using boost::beast::string_view;
@@ -149,16 +151,6 @@ namespace server {
 
         void timeout();
 
-        string_view mime_type(string_view path);
-
-        string path_cat(string_view base, string_view path);
-
-        void request_handler(
-            string_view root,
-            http::request<http::string_body> &&req,
-            queue &send
-        );
-
         void on_handshake(error_code code, size_t bytes_used);
 
         void on_timer(error_code code);
@@ -169,6 +161,16 @@ namespace server {
 
         void on_shutdown(error_code code);
 
+        string_view mime_type(string_view path);
+
+        string path_cat(string_view base, string_view path);
+
+        void request_handler(
+            string_view root,
+            http::request<http::string_body> &&req,
+            queue &send
+        );
+
     private:
         http::request<http::string_body> _req;
         flat_buffer _buffer;
@@ -176,7 +178,7 @@ namespace server {
         bool _eof = false;
         context &_ctx;
         Router &_router;
-        string &_root;
+        fs::path _root;
         queue _queue;
 
     protected:

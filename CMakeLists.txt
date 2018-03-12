@@ -14,7 +14,7 @@ if (NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
 endif ()
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-project(sync VERSION 0.0.3)
+project(sync VERSION 0.0.1)
 conan_cmake_run(
     CONANFILE conanfile.txt
     BASIC_SETUP CMAKE_TARGETS
@@ -49,14 +49,14 @@ include_directories(${CONAN_INCLUDE_DIRS})
 link_directories(${CONAN_LIB_DIRS})
 
 file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
-file(GLOB SYNC_SOURCE_FILES src/sync.cpp)
+file(GLOB SYNC_SOURCE_FILES src/sync-cli.cpp)
 file(GLOB SYNCD_SOURCE_FILES src/syncd.cpp)
 
 list(REMOVE_ITEM SOURCE_FILES
     ${SYNC_SOURCE_FILES}
     ${SYNCD_SOURCE_FILES})
 
-add_executable(sync
+add_executable(sync-cli
     ${SOURCE_FILES}
     ${SYNC_SOURCE_FILES}
 #    ${STUB_HDRS}
@@ -97,7 +97,7 @@ set(IMPORT_LIBS
     gcov
     fmt)
 
-target_link_libraries(sync PUBLIC ${IMPORT_LIBS})
+target_link_libraries(sync-cli PUBLIC ${IMPORT_LIBS})
 target_link_libraries(syncd PUBLIC ${IMPORT_LIBS})
 
 file(GLOB AIDE_RESOURCE_FILES
