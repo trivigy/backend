@@ -14,7 +14,7 @@ if (NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
 endif ()
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-project(sync VERSION 0.0.1)
+project(backend VERSION 0.0.1)
 conan_cmake_run(
     CONANFILE conanfile.txt
     BASIC_SETUP CMAKE_TARGETS
@@ -23,7 +23,7 @@ conan_cmake_run(
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
-set(CMAKE_RESOURCE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/share/sync)
+set(CMAKE_PUBLIC_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/public)
 
 find_package(Threads REQUIRED)
 #find_package(JsonRpc REQUIRED)
@@ -49,21 +49,21 @@ include_directories(${CONAN_INCLUDE_DIRS})
 link_directories(${CONAN_LIB_DIRS})
 
 file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
-file(GLOB SYNC_SOURCE_FILES src/sync-cli.cpp)
-file(GLOB SYNCD_SOURCE_FILES src/syncd.cpp)
+file(GLOB SYNC_SOURCE_FILES src/syncaide.cpp)
+file(GLOB SYNCD_SOURCE_FILES src/syncaided.cpp)
 
 list(REMOVE_ITEM SOURCE_FILES
     ${SYNC_SOURCE_FILES}
     ${SYNCD_SOURCE_FILES})
 
-add_executable(sync-cli
+add_executable(syncaide
     ${SOURCE_FILES}
     ${SYNC_SOURCE_FILES}
 #    ${STUB_HDRS}
     ${PROTO_SRCS}
     ${GRPC_SRCS})
 
-add_executable(syncd
+add_executable(syncaided
     ${SOURCE_FILES}
     ${SYNCD_SOURCE_FILES}
 #    ${STUB_HDRS}
@@ -97,14 +97,14 @@ set(IMPORT_LIBS
     gcov
     fmt)
 
-target_link_libraries(sync-cli PUBLIC ${IMPORT_LIBS})
-target_link_libraries(syncd PUBLIC ${IMPORT_LIBS})
+target_link_libraries(syncaide PUBLIC ${IMPORT_LIBS})
+target_link_libraries(syncaided PUBLIC ${IMPORT_LIBS})
 
-file(GLOB AIDE_RESOURCE_FILES
-    ${CONAN_BIN_DIRS_AIDE}/*.js
-    ${CONAN_BIN_DIRS_AIDE}/*.wasm)
-file(COPY ${AIDE_RESOURCE_FILES}
-    DESTINATION ${CMAKE_RESOURCE_OUTPUT_DIRECTORY})
+file(GLOB AGENT_PUBLIC_FILES
+    ${CONAN_BIN_DIRS_AGENT}/*.js
+    ${CONAN_BIN_DIRS_AGENT}/*.wasm)
+file(COPY ${AGENT_PUBLIC_FILES}
+    DESTINATION ${CMAKE_PUBLIC_OUTPUT_DIRECTORY})
 
 ##########################################################################
 enable_testing()
