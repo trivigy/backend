@@ -1,5 +1,5 @@
-#ifndef SYNC_RPC_MEMBERS_H
-#define SYNC_RPC_MEMBERS_H
+#ifndef SYNCAIDE_RPC_MEMBERS_H
+#define SYNCAIDE_RPC_MEMBERS_H
 
 #include "peer.h"
 #include "rpc/helper.h"
@@ -72,4 +72,4 @@ namespace rpc {
     };
 }
 
-#endif //SYNC_RPC_MEMBERS_H
+#endif //SYNCAIDE_RPC_MEMBERS_H

@@ -1,5 +1,5 @@
-#ifndef SYNC_VIEW_H
-#define SYNC_VIEW_H
+#ifndef SYNCAIDE_VIEW_H
+#define SYNCAIDE_VIEW_H
 
 #include "peer.h"
 
@@ -57,4 +57,4 @@ private:
     deque<Peer> _peers;
 };
 
-#endif //SYNC_VIEW_H
+#endif //SYNCAIDE_VIEW_H

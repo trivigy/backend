@@ -1,5 +1,5 @@
-#ifndef SYNC_CLIENT_H
-#define SYNC_CLIENT_H
+#ifndef SYNCAIDE_CLIENT_H
+#define SYNCAIDE_CLIENT_H
 
 #include "client/options.h"
 #include "rpc/members.h"
@@ -37,4 +37,4 @@ namespace client {
     };
 }
 
-#endif //SYNC_CLIENT_H
+#endif //SYNCAIDE_CLIENT_H

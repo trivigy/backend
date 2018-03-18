@@ -1,5 +1,5 @@
-#ifndef SYNC_CLIENT_OPTIONS_H
-#define SYNC_CLIENT_OPTIONS_H
+#ifndef SYNCAIDE_CLIENT_OPTIONS_H
+#define SYNCAIDE_CLIENT_OPTIONS_H
 
 #include "common/options.h"
 
@@ -36,4 +36,4 @@ namespace client {
     };
 }
 
-#endif //SYNC_CLIENT_OPTIONS_H
+#endif //SYNCAIDE_CLIENT_OPTIONS_H

@@ -1,5 +1,5 @@
-#ifndef SYNC_SERVER_RESPONSE_H
-#define SYNC_SERVER_RESPONSE_H
+#ifndef SYNCAIDE_SERVER_RESPONSE_H
+#define SYNCAIDE_SERVER_RESPONSE_H
 
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
@@ -325,4 +325,4 @@ namespace server {
     };
 }
 
-#endif //SYNC_SERVER_RESPONSE_H
+#endif //SYNCAIDE_SERVER_RESPONSE_H

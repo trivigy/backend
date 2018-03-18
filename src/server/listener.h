@@ -1,5 +1,5 @@
-#ifndef SYNC_SERVER_LISTENER_H
-#define SYNC_SERVER_LISTENER_H
+#ifndef SYNCAIDE_SERVER_LISTENER_H
+#define SYNCAIDE_SERVER_LISTENER_H
 
 #include "server/helper.h"
 #include "server/detector.h"
@@ -43,4 +43,4 @@ namespace server {
     };
 }
 
-#endif //SYNC_SERVER_LISTENER_H
+#endif //SYNCAIDE_SERVER_LISTENER_H

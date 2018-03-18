@@ -1,5 +1,5 @@
-#ifndef SYNC_OPTIONS_H
-#define SYNC_OPTIONS_H
+#ifndef SYNCAIDE_OPTIONS_H
+#define SYNCAIDE_OPTIONS_H
 
 #include <boost/program_options/options_description.hpp>
 #include <boost/algorithm/string.hpp>
@@ -40,4 +40,4 @@ namespace common {
     };
 }
 
-#endif //SYNC_OPTIONS_H
+#endif //SYNCAIDE_OPTIONS_H

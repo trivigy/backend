@@ -1,5 +1,5 @@
-#ifndef SYNC_SERVER_H
-#define SYNC_SERVER_H
+#ifndef SYNCAIDE_SERVER_H
+#define SYNCAIDE_SERVER_H
 
 #include "server/options.h"
 #include "server/listener.h"
@@ -70,4 +70,4 @@ namespace server {
 }
 
 
-#endif //SYNC_SERVER_H
+#endif //SYNCAIDE_SERVER_H

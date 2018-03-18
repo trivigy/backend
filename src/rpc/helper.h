@@ -1,5 +1,5 @@
-#ifndef SYNC_RPC_H
-#define SYNC_RPC_H
+#ifndef SYNCAIDE_RPC_H
+#define SYNCAIDE_RPC_H
 
 #include <nlohmann/json.hpp>
 #include <string>
@@ -13,4 +13,4 @@ namespace rpc {
     void log(const string &call, const string &peer);
 };
 
-#endif //SYNC_RPC_H
+#endif //SYNCAIDE_RPC_H

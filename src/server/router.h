@@ -1,5 +1,5 @@
-#ifndef SYNC_SERVER_DISPATCHER_H
-#define SYNC_SERVER_DISPATCHER_H
+#ifndef SYNCAIDE_SERVER_DISPATCHER_H
+#define SYNCAIDE_SERVER_DISPATCHER_H
 
 #include <fmt/format.h>
 #include <regex>
@@ -87,4 +87,4 @@ namespace server {
 
 }
 
-#endif //SYNC_SERVER_DISPATCHER_H
+#endif //SYNCAIDE_SERVER_DISPATCHER_H

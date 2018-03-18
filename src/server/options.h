@@ -1,5 +1,5 @@
-#ifndef SYNC_SERVER_OPTIONS_H
-#define SYNC_SERVER_OPTIONS_H
+#ifndef SYNCAIDE_SERVER_OPTIONS_H
+#define SYNCAIDE_SERVER_OPTIONS_H
 
 #include "common/options.h"
 
@@ -88,4 +88,4 @@ namespace server {
     };
 }
 
-#endif //SYNC_SERVER_OPTIONS_H
+#endif //SYNCAIDE_SERVER_OPTIONS_H

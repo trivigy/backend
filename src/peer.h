@@ -1,5 +1,5 @@
-#ifndef SYNC_PEER_H
-#define SYNC_PEER_H
+#ifndef SYNCAIDE_PEER_H
+#define SYNCAIDE_PEER_H
 
 #include <boost/format.hpp>
 #include <string>
@@ -35,4 +35,4 @@ private:
     int _age;
 };
 
-#endif //SYNC_PEER_H
+#endif //SYNCAIDE_PEER_H

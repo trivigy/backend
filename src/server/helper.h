@@ -1,5 +1,5 @@
-#ifndef SYNC_SERVER_HELPER_H
-#define SYNC_SERVER_HELPER_H
+#ifndef SYNCAIDE_SERVER_HELPER_H
+#define SYNCAIDE_SERVER_HELPER_H
 
 #include <boost/system/error_code.hpp>
 #include <nlohmann/json.hpp>
@@ -14,4 +14,4 @@ namespace server {
     void log(const string &call, error_code &code);
 }
 
-#endif //SYNC_SERVER_HELPER_H
+#endif //SYNCAIDE_SERVER_HELPER_H

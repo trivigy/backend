@@ -1,8 +1,8 @@
-#ifndef SYNC_SERVER_QUEUE_H
-#define SYNC_SERVER_QUEUE_H
+#ifndef SYNCAIDE_SERVER_QUEUE_H
+#define SYNCAIDE_SERVER_QUEUE_H
 
 namespace server {
 
 }
 
-#endif //SYNC_SERVER_QUEUE_H
+#endif //SYNCAIDE_SERVER_QUEUE_H

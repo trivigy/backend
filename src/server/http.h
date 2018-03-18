@@ -1,5 +1,5 @@
-#ifndef SYNC_SERVER_HTTP_H
-#define SYNC_SERVER_HTTP_H
+#ifndef SYNCAIDE_SERVER_HTTP_H
+#define SYNCAIDE_SERVER_HTTP_H
 
 #include "server/websocket.h"
 #include "server/response.h"
@@ -189,4 +189,4 @@ namespace server {
     };
 }
 
-#endif //SYNC_SERVER_HTTP_H
+#endif //SYNCAIDE_SERVER_HTTP_H

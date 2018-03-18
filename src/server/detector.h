@@ -1,5 +1,5 @@
-#ifndef SYNC_SERVER_DETECT_SSL_H
-#define SYNC_SERVER_DETECT_SSL_H
+#ifndef SYNCAIDE_SERVER_DETECT_SSL_H
+#define SYNCAIDE_SERVER_DETECT_SSL_H
 
 #include "server/http.h"
 #include "server/helper.h"
@@ -264,4 +264,4 @@ namespace server {
     };
 }
 
-#endif //SYNC_SERVER_DETECT_SSL_H
+#endif //SYNCAIDE_SERVER_DETECT_SSL_H

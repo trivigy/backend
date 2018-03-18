@@ -1,5 +1,5 @@
-#ifndef SYNC_SERVER_WEBSOCKET_H
-#define SYNC_SERVER_WEBSOCKET_H
+#ifndef SYNCAIDE_SERVER_WEBSOCKET_H
+#define SYNCAIDE_SERVER_WEBSOCKET_H
 
 #include "server/helper.h"
 
@@ -75,4 +75,4 @@ namespace server {
     };
 }
 
-#endif //SYNC_SERVER_WEBSOCKET_H
+#endif //SYNCAIDE_SERVER_WEBSOCKET_H
