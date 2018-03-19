@@ -246,8 +246,7 @@ namespace server {
         explicit Detector(
             tcp::socket socket,
             context &ctx,
-            Router &router,
-            string &root
+            Router &router
         );
 
         void run();
@@ -259,7 +258,6 @@ namespace server {
         context &_ctx;
         strand<io_context::executor_type> _strand;
         Router &_router;
-        string &_root;
         flat_buffer _buffer;
     };
 }

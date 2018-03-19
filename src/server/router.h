@@ -1,6 +1,9 @@
 #ifndef SYNCAIDE_SERVER_DISPATCHER_H
 #define SYNCAIDE_SERVER_DISPATCHER_H
 
+#include "server/response.h"
+
+#include <boost/beast/core.hpp>
 #include <fmt/format.h>
 #include <regex>
 #include <iostream>
@@ -8,6 +11,11 @@
 using namespace std;
 
 namespace server {
+    using boost::beast::http::status;
+    using boost::beast::http::request;
+    using boost::beast::http::response;
+    using boost::beast::http::string_body;
+
     namespace params {
         struct integer {
             const string pattern = "([[:digit:]]+)";
@@ -36,30 +44,34 @@ namespace server {
         template<typename Fn, typename Tuple>
         Rule(Fn &&fn, const string &pattern, Tuple) :
             _regex(pattern),
-            _pattern(pattern),
-            _fn([&fn](smatch &match) {
-                Tuple args;
+            _fn([&fn](smatch &match, request<string_body> &req) {
+                Tuple params;
                 auto it = ++match.begin();
-                tuple_for_each(args, [&it](auto &v) {
+                tuple_for_each(params, [&it](auto &v) {
                     istringstream iss(*it++);
                     iss >> v;
                 });
-                apply(fn, move(args));
+                return apply(fn, move(tuple_cat(tie(req), params)));
             }) {}
 
-        bool dispatch(const string &route) const {
+        response<string_body> dispatch(request<string_body> &req) const {
+            const string &route = req.target().to_string();
+
             smatch match;
             if (!regex_match(route.begin(), route.end(), match, _regex)) {
-                return false;
+                return response<string_body>(status::unknown, req.version());
             }
-            _fn(match);
-            return true;
+            return _fn(match, req);
         }
 
     private:
         regex _regex;
-        string _pattern;
-        function<void(std::smatch &match)> _fn;
+        function<
+            response<string_body>(
+                smatch &match,
+                request<string_body> &req
+            )
+        > _fn;
     };
 
     class Router {
@@ -73,12 +85,24 @@ namespace server {
             );
         }
 
-        bool dispatch(const string &route) const {
-            return any_of(begin(_rules), end(_rules),
-                [&route](const Rule &rule) {
-                    return rule.dispatch(route);
+        response<string_body> dispatch(request<string_body> &req) const {
+            vector<response<string_body>> resps;
+            for_each(_rules.begin(), _rules.end(),
+                [&resps, &req](const Rule &rule) {
+                    resps.emplace_back(rule.dispatch(req));
                 }
             );
+
+            auto const it = find_if(resps.begin(), resps.end(),
+                [](auto &resp) {
+                    return resp.result() != status::unknown;
+                }
+            );
+
+            if (it != resps.end()) {
+                return *it;
+            }
+            return Response::not_found(req);
         }
 
     private:

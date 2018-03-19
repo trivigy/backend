@@ -23,6 +23,7 @@
 #include <string>
 
 using namespace std;
+extern map<string, vector<unsigned char>> resources;
 
 namespace server {
     namespace asio = boost::asio;
@@ -32,6 +33,8 @@ namespace server {
     namespace fs = boost::filesystem;
     using nlohmann::json;
     using boost::system::error_code;
+    using boost::beast::http::request;
+    using boost::beast::http::response;
     using boost::beast::string_view;
     using boost::beast::flat_buffer;
     using boost::beast::string_param;
@@ -46,6 +49,9 @@ namespace server {
     using boost::tribool;
 
     class Http : public enable_shared_from_this<Http> {
+        using request_type = http::request<http::string_body>;
+        using response_type = http::response<http::string_body>;
+
         class queue {
             enum {
                 limit = 8
@@ -139,8 +145,7 @@ namespace server {
             flat_buffer buffer,
             tribool secured,
             context &ctx,
-            Router &router,
-            string &root
+            Router &router
         );
 
         void run();
@@ -161,15 +166,11 @@ namespace server {
 
         void on_shutdown(error_code code);
 
-        string_view mime_type(string_view path);
+        static response_type syncaide_js(request_type &req);
 
-        string path_cat(string_view base, string_view path);
+        static response_type syncaide_wasm(request_type &req);
 
-        void request_handler(
-            string_view root,
-            http::request<http::string_body> &&req,
-            queue &send
-        );
+        static response_type agent_id(request_type &req, const string &uid);
 
     private:
         http::request<http::string_body> _req;
@@ -178,7 +179,6 @@ namespace server {
         bool _eof = false;
         context &_ctx;
         Router &_router;
-        fs::path _root;
         queue _queue;
 
     protected:

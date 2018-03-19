@@ -1,9 +1,11 @@
 #ifndef SYNCAIDE_SERVER_H
 #define SYNCAIDE_SERVER_H
 
+#include "server/response.h"
 #include "server/options.h"
 #include "server/listener.h"
 #include "server/router.h"
+#include "server/http.h"
 #include "rpc/members.h"
 #include "view.h"
 

@@ -48,29 +48,44 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CONAN_INCLUDE_DIRS})
 link_directories(${CONAN_LIB_DIRS})
 
+file(GLOB AGENT_RESOURCE_FILES
+    ${CONAN_BIN_DIRS_AGENT}/*.js
+    ${CONAN_BIN_DIRS_AGENT}/*.wasm)
+
+file(GLOB EMBEDDER_SRCS src/embedder.cpp)
+add_executable(embedder ${EMBEDDER_SRCS})
+set(EMBEDDER_IMPORT_LIBS boost_filesystem boost_system fmt dl)
+target_link_libraries(embedder PUBLIC ${EMBEDDER_IMPORT_LIBS})
+add_custom_command(
+    OUTPUT resources.cpp
+    COMMAND embedder ${AGENT_RESOURCE_FILES}
+    DEPENDS ${AGENT_RESOURCE_FILES})
+
 file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
-file(GLOB SYNC_SOURCE_FILES src/syncaide.cpp)
-file(GLOB SYNCD_SOURCE_FILES src/syncaided.cpp)
+file(GLOB SYNCAIDE_SRCS src/syncaide.cpp)
+file(GLOB SYNCAIDED_SRCS src/syncaided.cpp)
 
 list(REMOVE_ITEM SOURCE_FILES
-    ${SYNC_SOURCE_FILES}
-    ${SYNCD_SOURCE_FILES})
+    ${EMBEDDER_SRCS}
+    ${SYNCAIDE_SRCS}
+    ${SYNCAIDED_SRCS})
 
 add_executable(syncaide
     ${SOURCE_FILES}
-    ${SYNC_SOURCE_FILES}
+    ${SYNCAIDE_SRCS}
 #    ${STUB_HDRS}
     ${PROTO_SRCS}
     ${GRPC_SRCS})
 
 add_executable(syncaided
+    resources.cpp
     ${SOURCE_FILES}
-    ${SYNCD_SOURCE_FILES}
+    ${SYNCAIDED_SRCS}
 #    ${STUB_HDRS}
     ${PROTO_SRCS}
     ${GRPC_SRCS})
 
-set(IMPORT_LIBS
+set(SYNCAIDE_IMPORT_LIBS
     boost_program_options
     boost_log
     boost_filesystem
@@ -97,14 +112,8 @@ set(IMPORT_LIBS
     gcov
     fmt)
 
-target_link_libraries(syncaide PUBLIC ${IMPORT_LIBS})
-target_link_libraries(syncaided PUBLIC ${IMPORT_LIBS})
-
-file(GLOB AGENT_PUBLIC_FILES
-    ${CONAN_BIN_DIRS_AGENT}/*.js
-    ${CONAN_BIN_DIRS_AGENT}/*.wasm)
-file(COPY ${AGENT_PUBLIC_FILES}
-    DESTINATION ${CMAKE_PUBLIC_OUTPUT_DIRECTORY})
+target_link_libraries(syncaide PUBLIC ${SYNCAIDE_IMPORT_LIBS})
+target_link_libraries(syncaided PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 
 ##########################################################################
 enable_testing()
@@ -117,7 +126,7 @@ foreach (TEST_SRC ${TEST_SRCS})
         ${PROTO_SRCS}
         ${GRPC_SRCS})
 
-    target_link_libraries(${TEST_NAME} ${IMPORT_LIBS})
+    target_link_libraries(${TEST_NAME} ${SYNCAIDE_IMPORT_LIBS})
 
     set_target_properties(${TEST_NAME} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)

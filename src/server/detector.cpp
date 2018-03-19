@@ -3,14 +3,12 @@
 server::Detector::Detector(
     tcp::socket socket,
     context &ctx,
-    Router &router,
-    string &root
+    Router &router
 ) :
     _socket(move(socket)),
     _ctx(ctx),
     _strand(_socket.get_executor()),
-    _router(router),
-    _root(root) {}
+    _router(router) {}
 
 void server::Detector::run() {
     async_detect_ssl(
@@ -38,7 +36,6 @@ void server::Detector::on_detect(error_code code, tribool secured) {
         move(_buffer),
         secured,
         _ctx,
-        _router,
-        _root
+        _router
     )->run();
 }

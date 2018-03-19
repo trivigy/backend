@@ -21,10 +21,6 @@ bool server::Options::parse(int argc, const char **argv) {
                 ->default_value(defaults.network.http.netloc())
                 ->notifier(bind(&server::Options::on_http, this, _1)),
             "address to which syncd listens for http connections (e.g. 172.20.0.2:8080, [::1]:8080, etc.)")
-        ("http-dir", po::value<string>()
-            ->default_value(fs::weakly_canonical(program_location().parent_path() / defaults.system.http_dir).string())
-            ->notifier(bind(&server::Options::on_http_dir, this, _1)),
-            "directory where static http resource files are found.")
         ("joins,j", po::value<vector<string>>()
                 ->multitoken()
                 ->default_value(vector<string>{}, string())
@@ -152,10 +148,6 @@ void server::Options::on_http(string netloc) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "http");
     }
-}
-
-void server::Options::on_http_dir(string dir) {
-    system.http_dir = fs::weakly_canonical(dir).string();
 }
 
 void server::Options::on_joins(vector<string> joins) {

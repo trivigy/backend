@@ -36,24 +36,18 @@ int server::Server::start() {
 }
 
 void server::Server::http_thread() {
-    _router.add([] {
-        cerr << "/user" << endl;
-    }, "/user");
-
-    _router.add([](const int id) {
-        cerr << "/user/" << to_string(id) << endl;
-    }, "/user/{}", params::integer());
+    _router.add(Http::syncaide_js, "/syncaide[.]js");
+    _router.add(Http::syncaide_wasm, "/syncaide[.]wasm");
+    _router.add(Http::agent_id, "/agent/{}", params::string());
 
     load_http_certificate(_ctx);
-
     auto address = ip::make_address(_cfg->network.http.address);
     tcp::endpoint endpoint(address, _cfg->network.http.port);
     make_shared<Listener>(
         _ioc,
         _ctx,
         endpoint,
-        _router,
-        _cfg->system.http_dir
+        _router
     )->run();
 
     vector<thread> v;

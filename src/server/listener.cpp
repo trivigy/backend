@@ -5,13 +5,11 @@ server::Listener::Listener(
     io_context &ioc,
     context &ctx,
     tcp::endpoint endp,
-    Router &router,
-    string &root
+    Router &router
 ) : _ctx(ctx),
     _acceptor(ioc),
     _socket(ioc),
-    _router(router),
-    _root(root) {
+    _router(router) {
     error_code code;
 
     _acceptor.open(endp.protocol(), code);
@@ -55,7 +53,7 @@ void server::Listener::on_accept(error_code code) {
     if (code) {
         log("accept", code);
     } else {
-        make_shared<Detector>(move(_socket), _ctx, _router, _root)->run();
+        make_shared<Detector>(move(_socket), _ctx, _router)->run();
     }
     accept();
 }

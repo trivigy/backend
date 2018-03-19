@@ -16,7 +16,7 @@ namespace server {
         using response_type = http::response<http::string_body>;
 
     private:
-        static response_type &&_base(
+        static response_type _base(
             http::request<http::string_body> &req,
             http::status status,
             const string &message = string()

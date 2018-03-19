@@ -40,10 +40,6 @@ namespace server {
                 } http;
                 const unsigned int threads = thread::hardware_concurrency();
             } network;
-
-            const struct {
-                const string http_dir = "../share/sync"; // NOLINT
-            } system;
         } defaults;
 
         struct {
@@ -64,10 +60,6 @@ namespace server {
         } network;
 
         struct {
-            string http_dir;
-        } system;
-
-        struct {
             int c = 30;
             int H = c / 2;
             int S = 0;
@@ -79,8 +71,6 @@ namespace server {
         void on_bind(string netloc);
 
         void on_http(string netloc);
-
-        void on_http_dir(string dir);
 
         void on_joins(vector<string> joins);
 
