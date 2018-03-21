@@ -13,6 +13,7 @@
 #include <boost/asio/strand.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/logic/tribool.hpp>
+#include <nlohmann/json.hpp>
 #include <functional>
 
 using namespace std;
@@ -22,7 +23,11 @@ namespace server {
     namespace ssl = boost::asio::ssl;
     namespace http = boost::beast::http;
     namespace websocket = boost::beast::websocket;
+    using nlohmann::json;
     using boost::system::error_code;
+    using boost::beast::http::request;
+    using boost::beast::http::response;
+    using boost::beast::http::string_body;
     using boost::beast::multi_buffer;
     using boost::asio::bind_executor;
     using boost::asio::steady_timer;
@@ -34,16 +39,20 @@ namespace server {
     using boost::tribool;
 
     class Websocket : public enable_shared_from_this<Websocket> {
+        using request_type = request<string_body>;
+        using response_type = response<string_body>;
+
     public:
         explicit Websocket(
             tcp::socket socket,
             tribool secured,
-            context &ctx
+            context &ctx,
+            json &&params
         );
 
-        void run(http::request<http::string_body> &&req);
+        void run(request<string_body> &&req);
 
-        void accept(http::request<http::string_body> &&req);
+        void accept(request<string_body> &&req);
 
         void read();
 
@@ -65,6 +74,7 @@ namespace server {
         bool _close = false;
         bool _eof = false;
         context &_ctx;
+        json _params;
 
     protected:
         tcp::socket _socket;

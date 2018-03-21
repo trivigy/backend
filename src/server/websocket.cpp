@@ -1,10 +1,13 @@
+#include <utility>
+
 #include "logging.h"
 #include "server/websocket.h"
 
 server::Websocket::Websocket(
     tcp::socket socket,
     tribool secured,
-    context &ctx
+    context &ctx,
+    json &&params
 ) : _strand(socket.get_executor().context().get_executor()),
     _timer(
         socket.get_executor().context(),
@@ -14,14 +17,15 @@ server::Websocket::Websocket(
     _plain(_socket),
     _secure(_socket, ctx),
     _secured(secured),
-    _ctx(ctx) {}
+    _ctx(ctx),
+    _params(move(params)) {}
 
-void server::Websocket::run(http::request<http::string_body> &&req) {
+void server::Websocket::run(request_type &&req) {
     on_timer({});
     accept(move(req));
 }
 
-void server::Websocket::accept(http::request<http::string_body> &&req) {
+void server::Websocket::accept(request_type &&req) {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
         _secure.async_accept(

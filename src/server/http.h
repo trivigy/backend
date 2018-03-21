@@ -20,6 +20,7 @@
 #include <boost/filesystem.hpp>
 #include <nlohmann/json.hpp>
 #include <functional>
+#include <variant>
 #include <string>
 
 using namespace std;
@@ -35,6 +36,10 @@ namespace server {
     using boost::system::error_code;
     using boost::beast::http::request;
     using boost::beast::http::response;
+    using boost::beast::http::string_body;
+    using boost::beast::http::field;
+    using boost::beast::http::status;
+    using boost::beast::http::verb;
     using boost::beast::string_view;
     using boost::beast::flat_buffer;
     using boost::beast::string_param;
@@ -49,8 +54,8 @@ namespace server {
     using boost::tribool;
 
     class Http : public enable_shared_from_this<Http> {
-        using request_type = http::request<http::string_body>;
-        using response_type = http::response<http::string_body>;
+        using request_type = request<string_body>;
+        using response_type = response<string_body>;
 
         class queue {
             enum {
@@ -170,10 +175,10 @@ namespace server {
 
         static response_type syncaide_wasm(request_type &req);
 
-        static response_type agent_id(request_type &req, const string &uid);
+        static response_type agent_uid(request_type &req, const string &uid);
 
     private:
-        http::request<http::string_body> _req;
+        request_type _req;
         flat_buffer _buffer;
         steady_timer _timer;
         bool _eof = false;
