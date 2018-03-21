@@ -23,7 +23,7 @@ namespace server {
         };
 
         struct string {
-            const std::string pattern = "([_[:alnum:]]+)";
+            const std::string pattern = "([_\\-[:alnum:]]+)";
             const tuple<std::string> type;
         };
     }
