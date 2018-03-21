@@ -18,6 +18,7 @@ server::Listener::Listener(
         return;
     }
 
+    _acceptor.set_option(socket_base::reuse_address(true));
     _acceptor.bind(endp, code);
     if (code) {
         log("bind", code);
