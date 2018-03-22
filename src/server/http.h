@@ -5,6 +5,7 @@
 #include "server/response.h"
 #include "server/helper.h"
 #include "server/router.h"
+#include "server/ssl_stream.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/file.hpp>
@@ -18,9 +19,9 @@
 #include <boost/asio/steady_timer.hpp>
 #include <boost/logic/tribool.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/variant.hpp>
 #include <nlohmann/json.hpp>
 #include <functional>
-#include <variant>
 #include <string>
 
 using namespace std;
@@ -51,9 +52,12 @@ namespace server {
     using boost::asio::ip::address;
     using boost::asio::strand;
     using boost::asio::error::operation_aborted;
+    using boost::variant;
+    using boost::get;
     using boost::tribool;
 
     class Http : public enable_shared_from_this<Http> {
+        using Socket = variant<tcp::socket, ssl_stream<tcp::socket>>;
         using request_type = request<string_body>;
         using response_type = response<string_body>;
 
@@ -103,7 +107,7 @@ namespace server {
                     void operator()() override {
                         if (_self._secured) {
                             http::async_write(
-                                _self._stream,
+                                get<ssl_stream<tcp::socket>>(_self._socket),
                                 _msg,
                                 bind_executor(
                                     _self._strand,
@@ -117,7 +121,7 @@ namespace server {
                             );
                         } else {
                             http::async_write(
-                                _self._socket,
+                                get<tcp::socket>(_self._socket),
                                 _msg,
                                 bind_executor(
                                     _self._strand,
@@ -186,9 +190,14 @@ namespace server {
         Router &_router;
         queue _queue;
 
+        static Socket deduce_socket(
+            tcp::socket socket,
+            context &ctx,
+            tribool secured
+        );
+
     protected:
-        tcp::socket _socket;
-        ssl::stream<tcp::socket &> _stream;
+        Socket _socket;
         strand<io_context::executor_type> _strand;
         tribool _secured;
     };

@@ -12,8 +12,7 @@ server::Http::Http(
         socket.get_executor().context(),
         chrono::time_point<chrono::steady_clock>::max()
     ),
-    _socket(move(socket)),
-    _stream(_socket, ctx),
+    _socket(deduce_socket(move(socket), ctx, secured)),
     _buffer(move(buffer)),
     _secured(secured),
     _queue(*this),
@@ -24,7 +23,7 @@ void server::Http::run() {
     on_timer({});
     if (_secured) {
         _timer.expires_after(chrono::seconds(15));
-        _stream.async_handshake(
+        get<ssl_stream<tcp::socket>>(_socket).async_handshake(
             ssl::stream_base::server,
             _buffer.data(),
             bind_executor(
@@ -46,7 +45,7 @@ void server::Http::read() {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
         http::async_read(
-            _stream,
+            get<ssl_stream<tcp::socket>>(_socket),
             _buffer,
             _req,
             bind_executor(
@@ -60,7 +59,7 @@ void server::Http::read() {
         );
     } else {
         http::async_read(
-            _socket,
+            get<tcp::socket>(_socket),
             _buffer,
             _req,
             bind_executor(
@@ -79,7 +78,7 @@ void server::Http::eof() {
     if (_secured) {
         _eof = true;
         _timer.expires_after(chrono::seconds(15));
-        _stream.async_shutdown(
+        get<ssl_stream<tcp::socket>>(_socket).async_shutdown(
             bind_executor(
                 _strand,
                 bind(
@@ -91,7 +90,7 @@ void server::Http::eof() {
         );
     } else {
         error_code code;
-        _socket.shutdown(tcp::socket::shutdown_send, code);
+        get<tcp::socket>(_socket).shutdown(tcp::socket::shutdown_send, code);
     }
 }
 
@@ -108,8 +107,8 @@ void server::Http::timeout() {
         eof();
     } else {
         error_code code;
-        _socket.shutdown(tcp::socket::shutdown_both, code);
-        _socket.close(code);
+        get<tcp::socket>(_socket).shutdown(tcp::socket::shutdown_both, code);
+        get<tcp::socket>(_socket).close(code);
     }
 }
 
@@ -165,7 +164,15 @@ void server::Http::on_read(error_code code) {
         fields.emplace(string(field.name_string()), string(field.value()));
     }
 
-    tcp::endpoint remote = _socket.remote_endpoint();
+    tcp::endpoint remote;
+    if (_secured) {
+        remote = get<ssl_stream<tcp::socket>>(_socket)
+            .next_layer()
+            .remote_endpoint();
+    } else {
+        remote = get<tcp::socket>(_socket).remote_endpoint();
+    }
+
     json extra = {
         {"remote",
             {
@@ -193,12 +200,12 @@ void server::Http::on_read(error_code code) {
     } else {
         auto params = json::parse(resp.body());
         if (websocket::is_upgrade(_req)) {
-            make_shared<Websocket>(
-                move(_socket),
-                _secured,
-                _ctx,
-                move(params)
-            )->run(move(_req));
+//            make_shared<Websocket>(
+//                move(_socket),
+//                _secured,
+//                _ctx,
+//                move(params)
+//            )->run(move(_req));
             _timer.expires_at(chrono::time_point<chrono::steady_clock>::max());
             return;
         } else {
@@ -299,4 +306,16 @@ server::Http::agent_uid(request_type &req, const string &uid) {
     response<string_body> resp(status::switching_protocols, req.version());
     resp.body() = params.dump();
     return resp;
+}
+
+server::Http::Socket server::Http::deduce_socket(
+    tcp::socket socket,
+    context &ctx,
+    tribool secured
+) {
+    if (secured) {
+        return ssl_stream<tcp::socket>(move(socket), ctx);
+    } else {
+        return tcp::socket(move(socket));
+    }
 }
