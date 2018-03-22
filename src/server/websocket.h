@@ -2,6 +2,7 @@
 #define SYNCAIDE_SERVER_WEBSOCKET_H
 
 #include "server/helper.h"
+#include "server/ssl_stream.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -13,6 +14,7 @@
 #include <boost/asio/strand.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/logic/tribool.hpp>
+#include <boost/variant.hpp>
 #include <nlohmann/json.hpp>
 #include <functional>
 
@@ -36,13 +38,26 @@ namespace server {
     using boost::asio::ip::tcp;
     using boost::asio::strand;
     using boost::asio::error::operation_aborted;
+    using boost::variant;
+    using boost::get;
     using boost::tribool;
 
     class Websocket : public enable_shared_from_this<Websocket> {
+        using Socket = variant<
+            websocket::stream<tcp::socket>,
+            websocket::stream<ssl_stream<tcp::socket>>
+        >;
         using request_type = request<string_body>;
         using response_type = response<string_body>;
 
     public:
+        explicit Websocket(
+            ssl_stream<tcp::socket> socket,
+            tribool secured,
+            context &ctx,
+            json &&params
+        );
+
         explicit Websocket(
             tcp::socket socket,
             tribool secured,
@@ -77,9 +92,10 @@ namespace server {
         json _params;
 
     protected:
-        tcp::socket _socket;
-        websocket::stream<tcp::socket &> _plain;
-        websocket::stream<ssl::stream<tcp::socket &>> _secure;
+        Socket _socket;
+//        tcp::socket _socket;
+//        websocket::stream<tcp::socket &> _plain;
+//        websocket::stream<ssl::stream<tcp::socket>> _secure;
         strand<io_context::executor_type> _strand;
         tribool _secured;
     };

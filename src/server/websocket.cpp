@@ -1,7 +1,20 @@
-#include <utility>
-
 #include "logging.h"
 #include "server/websocket.h"
+
+server::Websocket::Websocket(
+    ssl_stream<tcp::socket> socket,
+    boost::tribool secured,
+    context &ctx,
+    json &&params
+) : _strand(socket.next_layer().get_executor().context().get_executor()),
+    _timer(
+        socket.next_layer().get_executor().context(),
+        chrono::time_point<chrono::steady_clock>::max()
+    ),
+    _socket(websocket::stream<ssl_stream<tcp::socket>>(move(socket))),
+    _secured(secured),
+    _ctx(ctx),
+    _params(move(params)) {}
 
 server::Websocket::Websocket(
     tcp::socket socket,
@@ -13,9 +26,7 @@ server::Websocket::Websocket(
         socket.get_executor().context(),
         chrono::time_point<chrono::steady_clock>::max()
     ),
-    _socket(move(socket)),
-    _plain(_socket),
-    _secure(_socket, ctx),
+    _socket(websocket::stream<tcp::socket>(move(socket))),
     _secured(secured),
     _ctx(ctx),
     _params(move(params)) {}
@@ -28,7 +39,7 @@ void server::Websocket::run(request_type &&req) {
 void server::Websocket::accept(request_type &&req) {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
-        _secure.async_accept(
+        get<websocket::stream<ssl_stream<tcp::socket>>>(_socket).async_accept(
             req,
             bind_executor(
                 _strand,
@@ -40,7 +51,7 @@ void server::Websocket::accept(request_type &&req) {
             )
         );
     } else {
-        _plain.async_accept(
+        get<websocket::stream<tcp::socket>>(_socket).async_accept(
             req,
             bind_executor(
                 _strand,
@@ -57,7 +68,7 @@ void server::Websocket::accept(request_type &&req) {
 void server::Websocket::read() {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
-        _secure.async_read(
+        get<websocket::stream<ssl_stream<tcp::socket>>>(_socket).async_read(
             _buffer,
             bind_executor(
                 _strand,
@@ -70,7 +81,7 @@ void server::Websocket::read() {
             )
         );
     } else {
-        _plain.async_read(
+        get<websocket::stream<tcp::socket>>(_socket).async_read(
             _buffer,
             bind_executor(
                 _strand,
@@ -98,7 +109,8 @@ void server::Websocket::timeout() {
         on_timer({});
         _eof = true;
         _timer.expires_after(chrono::seconds(15));
-        _secure.next_layer().async_shutdown(
+        get<websocket::stream<ssl_stream<tcp::socket>>>(_socket)
+            .next_layer().async_shutdown(
             bind_executor(
                 _strand,
                 bind(
@@ -115,7 +127,7 @@ void server::Websocket::timeout() {
 
         _close = true;
         _timer.expires_after(chrono::seconds(15));
-        _plain.async_close(
+        get<websocket::stream<tcp::socket>>(_socket).async_close(
             (const uint16_t) websocket::close_code::normal,
             bind_executor(
                 _strand,
@@ -195,8 +207,9 @@ void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
     }
 
     if (_secured) {
-        _secure.text(_secure.got_text());
-        _secure.async_write(
+        auto &socket = get<websocket::stream<ssl_stream<tcp::socket>>>(_socket);
+        socket.text(socket.got_text());
+        socket.async_write(
             _buffer.data(),
             bind_executor(
                 _strand,
@@ -209,8 +222,9 @@ void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
             )
         );
     } else {
-        _plain.text(_plain.got_text());
-        _plain.async_write(
+        auto &socket = get<websocket::stream<tcp::socket>>(_socket);
+        socket.text(socket.got_text());
+        socket.async_write(
             _buffer.data(),
             bind_executor(
                 _strand,

@@ -200,12 +200,23 @@ void server::Http::on_read(error_code code) {
     } else {
         auto params = json::parse(resp.body());
         if (websocket::is_upgrade(_req)) {
-//            make_shared<Websocket>(
-//                move(_socket),
-//                _secured,
-//                _ctx,
-//                move(params)
-//            )->run(move(_req));
+            cerr << "--- handoff ---" << endl;
+
+            if (_secured) {
+                make_shared<Websocket>(
+                    move(get<ssl_stream<tcp::socket>>(_socket)),
+                    _secured,
+                    _ctx,
+                    move(params)
+                )->run(move(_req));
+            } else {
+                make_shared<Websocket>(
+                    move(get<tcp::socket>(_socket)),
+                    _secured,
+                    _ctx,
+                    move(params)
+                )->run(move(_req));
+            }
             _timer.expires_at(chrono::time_point<chrono::steady_clock>::max());
             return;
         } else {
@@ -253,7 +264,7 @@ server::Http::syncaide_js(request_type &req) {
     }
 
     auto search = resources.find("syncaide.js");
-    if(search != resources.end()) {
+    if (search != resources.end()) {
         response<string_body> resp(status::ok, req.version());
         resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
         resp.set(field::content_type, string_param("application/javascript"));
@@ -280,7 +291,7 @@ server::Http::syncaide_wasm(request_type &req) {
     }
 
     auto search = resources.find("syncaide.wasm");
-    if(search != resources.end()) {
+    if (search != resources.end()) {
         response<string_body> resp(status::ok, req.version());
         resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
         resp.set(field::content_type, string_param("application/octet-stream"));
