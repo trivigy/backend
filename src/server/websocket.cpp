@@ -37,10 +37,16 @@ void server::Websocket::run(request_type &&req) {
 }
 
 void server::Websocket::accept(request_type &&req) {
+    auto decorator = [&req](response_type &resp) {
+        resp.set(field::sec_websocket_protocol, string_param("binary"));
+    };
+
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
-        get<websocket::stream<ssl_stream<tcp::socket>>>(_socket).async_accept(
+        auto &socket = get<websocket::stream<ssl_stream<tcp::socket>>>(_socket);
+        socket.async_accept_ex(
             req,
+            decorator,
             bind_executor(
                 _strand,
                 bind(
@@ -51,8 +57,10 @@ void server::Websocket::accept(request_type &&req) {
             )
         );
     } else {
-        get<websocket::stream<tcp::socket>>(_socket).async_accept(
+        auto &socket = get<websocket::stream<tcp::socket>>(_socket);
+        socket.async_accept_ex(
             req,
+            decorator,
             bind_executor(
                 _strand,
                 bind(
@@ -68,7 +76,8 @@ void server::Websocket::accept(request_type &&req) {
 void server::Websocket::read() {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
-        get<websocket::stream<ssl_stream<tcp::socket>>>(_socket).async_read(
+        auto &socket = get<websocket::stream<ssl_stream<tcp::socket>>>(_socket);
+        socket.async_read(
             _buffer,
             bind_executor(
                 _strand,
@@ -81,7 +90,8 @@ void server::Websocket::read() {
             )
         );
     } else {
-        get<websocket::stream<tcp::socket>>(_socket).async_read(
+        auto &socket = get<websocket::stream<tcp::socket>>(_socket);
+        socket.async_read(
             _buffer,
             bind_executor(
                 _strand,
@@ -109,8 +119,8 @@ void server::Websocket::timeout() {
         on_timer({});
         _eof = true;
         _timer.expires_after(chrono::seconds(15));
-        get<websocket::stream<ssl_stream<tcp::socket>>>(_socket)
-            .next_layer().async_shutdown(
+        auto &socket = get<websocket::stream<ssl_stream<tcp::socket>>>(_socket);
+        socket.next_layer().async_shutdown(
             bind_executor(
                 _strand,
                 bind(
@@ -127,7 +137,8 @@ void server::Websocket::timeout() {
 
         _close = true;
         _timer.expires_after(chrono::seconds(15));
-        get<websocket::stream<tcp::socket>>(_socket).async_close(
+        auto &socket = get<websocket::stream<tcp::socket>>(_socket);
+        socket.async_close(
             (const uint16_t) websocket::close_code::normal,
             bind_executor(
                 _strand,

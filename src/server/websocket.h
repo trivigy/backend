@@ -30,7 +30,9 @@ namespace server {
     using boost::beast::http::request;
     using boost::beast::http::response;
     using boost::beast::http::string_body;
+    using boost::beast::http::field;
     using boost::beast::multi_buffer;
+    using boost::beast::string_param;
     using boost::asio::bind_executor;
     using boost::asio::steady_timer;
     using boost::asio::ssl::context;
@@ -93,9 +95,6 @@ namespace server {
 
     protected:
         Socket _socket;
-//        tcp::socket _socket;
-//        websocket::stream<tcp::socket &> _plain;
-//        websocket::stream<ssl::stream<tcp::socket>> _secure;
         strand<io_context::executor_type> _strand;
         tribool _secured;
     };
