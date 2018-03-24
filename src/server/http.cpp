@@ -200,8 +200,6 @@ void server::Http::on_read(error_code code) {
     } else {
         auto params = json::parse(resp.body());
         if (websocket::is_upgrade(_req)) {
-            cerr << "--- handoff ---" << endl;
-
             if (_secured) {
                 make_shared<Websocket>(
                     move(get<ssl_stream<tcp::socket>>(_socket)),
@@ -294,7 +292,7 @@ server::Http::syncaide_wasm(request_type &req) {
     if (search != resources.end()) {
         response<string_body> resp(status::ok, req.version());
         resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
-        resp.set(field::content_type, string_param("application/octet-stream"));
+        resp.set(field::content_type, string_param("application/wasm"));
         if (req.method() == verb::head) {
             resp.content_length(search->second.size());
             resp.keep_alive(req.keep_alive());
