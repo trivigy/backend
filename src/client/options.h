@@ -1,13 +1,15 @@
-#ifndef SYNC_CLIENT_OPTIONS_H
-#define SYNC_CLIENT_OPTIONS_H
+#ifndef SYNCAIDE_CLIENT_OPTIONS_H
+#define SYNCAIDE_CLIENT_OPTIONS_H
 
 #include "common/options.h"
 
 #include <boost/format.hpp>
+#include <boost/dll.hpp>
 
 namespace client {
     namespace po = boost::program_options;
     namespace cls = po::command_line_style;
+    using boost::dll::program_location;
 
     class Options final : common::Options {
     public:
@@ -34,4 +36,4 @@ namespace client {
     };
 }
 
-#endif //SYNC_CLIENT_OPTIONS_H
+#endif //SYNCAIDE_CLIENT_OPTIONS_H

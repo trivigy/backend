@@ -3,12 +3,14 @@ list:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs | tr -s ' '  '\n'
 
 conan:
-	conan export conan/libmicrohttpd syncaide/stable
+	conan export conan/agent syncaide/stable
 	conan export conan/fifo_map syncaide/stable
-	conan export conan/libjson-rpc-cpp syncaide/stable
-	conan export conan/json syncaide/stable
-	conan export conan/Protobuf syncaide/stable
+	conan export conan/fmt syncaide/stable
 	conan export conan/gRPC syncaide/stable
+	conan export conan/json syncaide/stable
+	conan export conan/libjson-rpc-cpp syncaide/stable
+	conan export conan/libmicrohttpd syncaide/stable
+	conan export conan/Protobuf syncaide/stable
 .PHONY: conan
 
 TARGET=all

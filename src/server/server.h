@@ -1,7 +1,11 @@
-#ifndef SYNC_SERVER_H
-#define SYNC_SERVER_H
+#ifndef SYNCAIDE_SERVER_H
+#define SYNCAIDE_SERVER_H
 
+#include "server/response.h"
 #include "server/options.h"
+#include "server/listener.h"
+#include "server/router.h"
+#include "server/http.h"
 #include "rpc/members.h"
 #include "view.h"
 
@@ -25,13 +29,15 @@
 using namespace std;
 
 namespace server {
-    using json = nlohmann::json;
-    using tcp = boost::asio::ip::tcp;
-    namespace ssl = boost::asio::ssl;
-    namespace http = boost::beast::http;
-    namespace websocket = boost::beast::websocket;
+    namespace asio = boost::asio;
+    namespace ip = boost::asio::ip;
+    using nlohmann::json;
+    using boost::asio::ip::tcp;
+    using boost::asio::io_context;
+    using boost::asio::ssl::context;
 
     extern struct exit_t {
+        promise<void> http;
         promise<void> passive;
         promise<void> active;
     } exit;
@@ -49,7 +55,10 @@ namespace server {
     private:
         unique_ptr<grpc::Server> _server;
         vector<thread> _handlers;
+        io_context _ioc;
+        Router _router;
         Options *_cfg;
+        context _ctx;
         View _view;
 
         void http_thread();
@@ -57,8 +66,10 @@ namespace server {
         void passive_thread();
 
         void active_thread();
+
+        void load_http_certificate(asio::ssl::context &ctx);
     };
 }
 
 
-#endif //SYNC_SERVER_H
+#endif //SYNCAIDE_SERVER_H

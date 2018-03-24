@@ -1,5 +1,5 @@
 #include "logging.h"
-#include "rpc/rpc.h"
+#include "rpc/helper.h"
 
 void rpc::log(const string &call, const string &peer) {
     json result = {{"call", call}};

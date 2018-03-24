@@ -4,7 +4,7 @@
 bool client::Options::parse(int argc, const char **argv) {
     using namespace std::placeholders;
 
-    string program_name = basename(argv[0]);
+    string program_name = program_location().stem().string();
     string description = "This works.";
     vector<po::options_description> descriptors;
     descriptors.emplace_back(po::options_description("Options"));

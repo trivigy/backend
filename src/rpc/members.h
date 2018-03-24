@@ -1,8 +1,8 @@
-#ifndef SYNC_RPC_MEMBERS_H
-#define SYNC_RPC_MEMBERS_H
+#ifndef SYNCAIDE_RPC_MEMBERS_H
+#define SYNCAIDE_RPC_MEMBERS_H
 
 #include "peer.h"
-#include "rpc/rpc.h"
+#include "rpc/helper.h"
 #include "server/server.h"
 #include "protos/members.grpc.pb.h"
 
@@ -14,7 +14,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <strings.h>
 #include <tuple>
 
 using namespace std;
@@ -73,4 +72,4 @@ namespace rpc {
     };
 }
 
-#endif //SYNC_RPC_MEMBERS_H
+#endif //SYNCAIDE_RPC_MEMBERS_H

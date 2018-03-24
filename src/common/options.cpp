@@ -1,9 +1,5 @@
 #include "options.h"
 
-string common::Options::basename(const string &path) {
-    return boost::filesystem::path(path).stem().string();
-}
-
 string common::Options::Options::usage(
     const string &program_name,
     string description,

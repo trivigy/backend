@@ -1,5 +1,5 @@
-#ifndef SYNC_LOGGING_H
-#define SYNC_LOGGING_H
+#ifndef SYNCAIDE_LOGGING_H
+#define SYNCAIDE_LOGGING_H
 
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
@@ -50,4 +50,4 @@ private:
 
 extern Logging logger;
 
-#endif //SYNC_LOGGING_H
+#endif //SYNCAIDE_LOGGING_H

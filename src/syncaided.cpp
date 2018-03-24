@@ -3,6 +3,7 @@
 
 void handler(int) {
     try {
+        server::exit.http.set_value();
         server::exit.passive.set_value();
         server::exit.active.set_value();
     } catch (const future_error &err) {
