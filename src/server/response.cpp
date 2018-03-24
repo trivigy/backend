@@ -2,16 +2,16 @@
 
 server::Response::response_type
 server::Response::_base(
-    http::request<http::string_body> &req,
+    request_type &req,
     http::status status,
     const string &message
 ) {
     http::response<http::string_body> resp(status, req.version());
-    resp.set(http::field::server, string_param(BOOST_BEAST_VERSION_STRING));
+    resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
     resp.keep_alive(req.keep_alive());
 
     if (!message.empty()) {
-        resp.set(http::field::content_type, string_param("text/html"));
+        resp.set(field::content_type, string_param("text/html"));
         resp.body() = message;
         resp.prepare_payload();
     }
@@ -21,7 +21,7 @@ server::Response::_base(
 
 server::Response::response_type
 server::Response::ok(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -33,7 +33,7 @@ server::Response::ok(
 
 server::Response::response_type
 server::Response::created(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -45,7 +45,7 @@ server::Response::created(
 
 server::Response::response_type
 server::Response::accepted(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -57,7 +57,7 @@ server::Response::accepted(
 
 server::Response::response_type
 server::Response::non_authoritative_information(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -69,7 +69,7 @@ server::Response::non_authoritative_information(
 
 server::Response::response_type
 server::Response::no_content(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -81,7 +81,7 @@ server::Response::no_content(
 
 server::Response::response_type
 server::Response::reset_content(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -93,7 +93,7 @@ server::Response::reset_content(
 
 server::Response::response_type
 server::Response::partial_content(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -105,7 +105,7 @@ server::Response::partial_content(
 
 server::Response::response_type
 server::Response::multi_status(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -117,7 +117,7 @@ server::Response::multi_status(
 
 server::Response::response_type
 server::Response::already_reported(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -129,7 +129,7 @@ server::Response::already_reported(
 
 server::Response::response_type
 server::Response::im_used(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -141,7 +141,7 @@ server::Response::im_used(
 
 server::Response::response_type
 server::Response::multiple_choices(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -153,7 +153,7 @@ server::Response::multiple_choices(
 
 server::Response::response_type
 server::Response::moved_permanently(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -165,7 +165,7 @@ server::Response::moved_permanently(
 
 server::Response::response_type
 server::Response::found(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -177,7 +177,7 @@ server::Response::found(
 
 server::Response::response_type
 server::Response::see_other(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -189,7 +189,7 @@ server::Response::see_other(
 
 server::Response::response_type
 server::Response::not_modified(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -201,7 +201,7 @@ server::Response::not_modified(
 
 server::Response::response_type
 server::Response::use_proxy(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -213,7 +213,7 @@ server::Response::use_proxy(
 
 server::Response::response_type
 server::Response::temporary_redirect(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -225,7 +225,7 @@ server::Response::temporary_redirect(
 
 server::Response::response_type
 server::Response::permanent_redirect(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -237,7 +237,7 @@ server::Response::permanent_redirect(
 
 server::Response::response_type
 server::Response::bad_request(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -249,7 +249,7 @@ server::Response::bad_request(
 
 server::Response::response_type
 server::Response::unauthorized(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -261,7 +261,7 @@ server::Response::unauthorized(
 
 server::Response::response_type
 server::Response::payment_required(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -273,7 +273,7 @@ server::Response::payment_required(
 
 server::Response::response_type
 server::Response::forbidden(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -285,7 +285,7 @@ server::Response::forbidden(
 
 server::Response::response_type
 server::Response::not_found(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -297,7 +297,7 @@ server::Response::not_found(
 
 server::Response::response_type
 server::Response::method_not_allowed(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -309,7 +309,7 @@ server::Response::method_not_allowed(
 
 server::Response::response_type
 server::Response::not_acceptable(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -321,7 +321,7 @@ server::Response::not_acceptable(
 
 server::Response::response_type
 server::Response::proxy_authentication_required(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -333,7 +333,7 @@ server::Response::proxy_authentication_required(
 
 server::Response::response_type
 server::Response::request_timeout(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -345,7 +345,7 @@ server::Response::request_timeout(
 
 server::Response::response_type
 server::Response::conflict(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -357,7 +357,7 @@ server::Response::conflict(
 
 server::Response::response_type
 server::Response::gone(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -369,7 +369,7 @@ server::Response::gone(
 
 server::Response::response_type
 server::Response::length_required(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -381,7 +381,7 @@ server::Response::length_required(
 
 server::Response::response_type
 server::Response::precondition_failed(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -393,7 +393,7 @@ server::Response::precondition_failed(
 
 server::Response::response_type
 server::Response::payload_too_large(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -405,7 +405,7 @@ server::Response::payload_too_large(
 
 server::Response::response_type
 server::Response::uri_too_long(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -417,7 +417,7 @@ server::Response::uri_too_long(
 
 server::Response::response_type
 server::Response::unsupported_media_type(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -429,7 +429,7 @@ server::Response::unsupported_media_type(
 
 server::Response::response_type
 server::Response::range_not_satisfiable(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -441,7 +441,7 @@ server::Response::range_not_satisfiable(
 
 server::Response::response_type
 server::Response::expectation_failed(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -453,7 +453,7 @@ server::Response::expectation_failed(
 
 server::Response::response_type
 server::Response::misdirected_request(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -465,7 +465,7 @@ server::Response::misdirected_request(
 
 server::Response::response_type
 server::Response::unprocessable_entity(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -477,7 +477,7 @@ server::Response::unprocessable_entity(
 
 server::Response::response_type
 server::Response::locked(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -489,7 +489,7 @@ server::Response::locked(
 
 server::Response::response_type
 server::Response::failed_dependency(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -501,7 +501,7 @@ server::Response::failed_dependency(
 
 server::Response::response_type
 server::Response::upgrade_required(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -513,7 +513,7 @@ server::Response::upgrade_required(
 
 server::Response::response_type
 server::Response::precondition_required(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -525,7 +525,7 @@ server::Response::precondition_required(
 
 server::Response::response_type
 server::Response::too_many_requests(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -537,7 +537,7 @@ server::Response::too_many_requests(
 
 server::Response::response_type
 server::Response::request_header_fields_too_large(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -549,7 +549,7 @@ server::Response::request_header_fields_too_large(
 
 server::Response::response_type
 server::Response::connection_closed_without_response(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -561,7 +561,7 @@ server::Response::connection_closed_without_response(
 
 server::Response::response_type
 server::Response::unavailable_for_legal_reasons(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -573,7 +573,7 @@ server::Response::unavailable_for_legal_reasons(
 
 server::Response::response_type
 server::Response::client_closed_request(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -585,7 +585,7 @@ server::Response::client_closed_request(
 
 server::Response::response_type
 server::Response::internal_server_error(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -597,7 +597,7 @@ server::Response::internal_server_error(
 
 server::Response::response_type
 server::Response::not_implemented(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -609,7 +609,7 @@ server::Response::not_implemented(
 
 server::Response::response_type
 server::Response::bad_gateway(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -621,7 +621,7 @@ server::Response::bad_gateway(
 
 server::Response::response_type
 server::Response::service_unavailable(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -633,7 +633,7 @@ server::Response::service_unavailable(
 
 server::Response::response_type
 server::Response::gateway_timeout(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -645,7 +645,7 @@ server::Response::gateway_timeout(
 
 server::Response::response_type
 server::Response::http_version_not_supported(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -657,7 +657,7 @@ server::Response::http_version_not_supported(
 
 server::Response::response_type
 server::Response::variant_also_negotiates(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -669,7 +669,7 @@ server::Response::variant_also_negotiates(
 
 server::Response::response_type
 server::Response::insufficient_storage(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -681,7 +681,7 @@ server::Response::insufficient_storage(
 
 server::Response::response_type
 server::Response::loop_detected(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -693,7 +693,7 @@ server::Response::loop_detected(
 
 server::Response::response_type
 server::Response::not_extended(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -705,7 +705,7 @@ server::Response::not_extended(
 
 server::Response::response_type
 server::Response::network_authentication_required(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
@@ -717,7 +717,7 @@ server::Response::network_authentication_required(
 
 server::Response::response_type
 server::Response::network_connect_timeout_error(
-    http::request<http::string_body> &req,
+    request_type &req,
     const string &message
 ) {
     return _base(
