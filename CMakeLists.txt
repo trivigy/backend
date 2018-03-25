@@ -141,11 +141,16 @@ add_test(NAME test_peer
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_peer)
 
+file(GLOB SYNCAIDED_WOMAIN
+    src/server/*.cpp
+    src/rpc/*.cpp
+    src/rpc/callers/*.cpp
+    src/rpc/services/*.cpp)
 add_executable(test_router
     tests/test_router.cpp
     resources.cpp
     ${SOURCE_FILES}
-    ${SYNCAIDED_SRCS}
+    ${SYNCAIDED_WOMAIN}
     ${PROTO_SRCS}
     ${GRPC_SRCS})
 target_link_libraries(test_router ${SYNCAIDE_IMPORT_LIBS})
