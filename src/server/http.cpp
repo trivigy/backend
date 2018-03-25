@@ -256,6 +256,13 @@ void server::Http::on_shutdown(error_code code) {
 }
 
 server::Http::response_type
+server::Http::health(request_type &req) {
+    response<string_body> resp(status::ok, req.version());
+    resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
+    return resp;
+}
+
+server::Http::response_type
 server::Http::syncaide_js(request_type &req) {
     if (req.method() != verb::head && req.method() != verb::get) {
         return Response::method_not_allowed(req);

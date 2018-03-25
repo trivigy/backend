@@ -175,6 +175,8 @@ namespace server {
 
         void on_shutdown(error_code code);
 
+        static response_type health(request_type &req);
+
         static response_type syncaide_js(request_type &req);
 
         static response_type syncaide_wasm(request_type &req);

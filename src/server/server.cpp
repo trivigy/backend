@@ -36,6 +36,7 @@ int server::Server::start() {
 }
 
 void server::Server::http_thread() {
+    _router.add(Http::health, "/health");
     _router.add(Http::syncaide_js, "/syncaide[.]js");
     _router.add(Http::syncaide_wasm, "/syncaide[.]wasm");
     _router.add(Http::agent_uid, "/agent/{}", params::string());
