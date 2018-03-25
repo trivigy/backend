@@ -324,6 +324,38 @@ server::Http::agent_uid(request_type &req, const string &uid) {
     return resp;
 }
 
+#ifndef NDEBUG
+
+server::Http::response_type
+server::Http::syncaide_html(request_type &req) {
+    if (req.method() != verb::head && req.method() != verb::get) {
+        return Response::method_not_allowed(req);
+    }
+
+    auto search = resources.find("syncaide.html");
+    if (search != resources.end()) {
+        response<string_body> resp(status::ok, req.version());
+        resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
+        resp.set(field::content_type, string_param("text/html"));
+        if (req.method() == verb::head) {
+            resp.content_length(search->second.size());
+            resp.keep_alive(req.keep_alive());
+            return resp;
+        }
+
+        resp.content_length(search->second.size());
+        resp.keep_alive(req.keep_alive());
+        resp.body() = string(search->second.begin(), search->second.end());
+        resp.prepare_payload();
+        return resp;
+    }
+
+    return Response::internal_server_error(req);
+}
+
+#endif //NDEBUG
+
+
 server::Http::Socket server::Http::deduce_socket(
     tcp::socket socket,
     context &ctx,

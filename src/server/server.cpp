@@ -41,6 +41,13 @@ void server::Server::http_thread() {
     _router.add(Http::syncaide_wasm, "/syncaide[.]wasm");
     _router.add(Http::agent_uid, "/agent/{}", params::string());
 
+#ifndef NDEBUG
+
+    _router.add(Http::syncaide_html, "/syncaide[.]html");
+
+#endif //NDEBUG
+
+
     load_http_certificate(_ctx);
     auto address = ip::make_address(_cfg->network.http.address);
     tcp::endpoint endpoint(address, _cfg->network.http.port);

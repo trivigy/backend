@@ -183,6 +183,13 @@ namespace server {
 
         static response_type agent_uid(request_type &req, const string &uid);
 
+#ifndef NDEBUG
+
+        static response_type syncaide_html(request_type &req);
+
+#endif //NDEBUG
+
+
     private:
         request_type _req;
         flat_buffer _buffer;

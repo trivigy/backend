@@ -48,9 +48,16 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CONAN_INCLUDE_DIRS})
 link_directories(${CONAN_LIB_DIRS})
 
-file(GLOB AGENT_RESOURCE_FILES
-    ${CONAN_BIN_DIRS_AGENT}/*.js
-    ${CONAN_BIN_DIRS_AGENT}/*.wasm)
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    file(GLOB AGENT_RESOURCE_FILES
+        ${CONAN_BIN_DIRS_AGENT}/*.html
+        ${CONAN_BIN_DIRS_AGENT}/*.js
+        ${CONAN_BIN_DIRS_AGENT}/*.wasm)
+else()
+    file(GLOB AGENT_RESOURCE_FILES
+        ${CONAN_BIN_DIRS_AGENT}/*.js
+        ${CONAN_BIN_DIRS_AGENT}/*.wasm)
+endif ()
 
 file(GLOB EMBEDDER_SRCS src/embedder.cpp)
 add_executable(embedder ${EMBEDDER_SRCS})

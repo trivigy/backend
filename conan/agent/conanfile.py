@@ -20,5 +20,6 @@ class AideConan(ConanFile):
         self.run("make build CMAKE_BUILD_TYPE={}".format(self.settings.build_type), cwd=self.folder)
 
     def package(self):
+        self.copy("*.html", "bin", "{}/build/{}/bin".format(self.folder, self.settings.build_type))
         self.copy("*.js", "bin", "{}/build/{}/bin".format(self.folder, self.settings.build_type))
         self.copy("*.wasm", "bin", "{}/build/{}/bin".format(self.folder, self.settings.build_type))
