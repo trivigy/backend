@@ -21,6 +21,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/variant.hpp>
 #include <nlohmann/json.hpp>
+#include <fmt/format.h>
 #include <functional>
 #include <string>
 

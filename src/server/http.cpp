@@ -279,9 +279,16 @@ server::Http::syncaide_js(request_type &req) {
             return resp;
         }
 
-        resp.content_length(search->second.size());
+        json settings = {
+            {"remote", "www.example.com:8080"}
+        };
+
+        string body(search->second.begin(), search->second.end());
+        body.insert(0, fmt::format("var syncaide = {};\n", settings.dump()));
+
+        resp.content_length(body.size());
         resp.keep_alive(req.keep_alive());
-        resp.body() = string(search->second.begin(), search->second.end());
+        resp.body() = body;
         resp.prepare_payload();
         return resp;
     }
