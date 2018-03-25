@@ -6,7 +6,8 @@
 #include "server/listener.h"
 #include "server/router.h"
 #include "server/http.h"
-#include "rpc/members.h"
+#include "rpc/callers/members.h"
+#include "rpc/services/members.h"
 #include "view.h"
 
 #include <boost/beast/core.hpp>

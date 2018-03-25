@@ -70,7 +70,7 @@ void server::Server::http_thread() {
 
 void server::Server::passive_thread() {
     grpc::ServerBuilder builder;
-    rpc::MembersService service(this);
+    rpc::services::MembersService service(this);
 
     builder.AddListeningPort(
         _cfg->network.bind,
@@ -101,7 +101,7 @@ void server::Server::active_thread() {
         buffer.emplace(buffer.begin(), Peer(_cfg->network.advertise, 0));
 
         auto peer = _view.random_peer();
-        rpc::MembersClient client(
+        rpc::callers::MembersCaller caller(
             grpc::CreateCustomChannel(
                 peer.addr(),
                 grpc::InsecureChannelCredentials(),
@@ -110,7 +110,7 @@ void server::Server::active_thread() {
         );
 
         grpc::Status status;
-        tie(status, buffer) = client.gossip(buffer, _cfg->network.advertise);
+        tie(status, buffer) = caller.gossip(buffer, _cfg->network.advertise);
         _view.update(_cfg->members.c, _cfg->members.H, _cfg->members.S, buffer);
 
         if (!status.ok()) {

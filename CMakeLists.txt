@@ -62,8 +62,19 @@ add_custom_command(
     DEPENDS ${AGENT_RESOURCE_FILES})
 
 file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
-file(GLOB SYNCAIDE_SRCS src/syncaide.cpp)
-file(GLOB SYNCAIDED_SRCS src/syncaided.cpp)
+
+file(GLOB SYNCAIDE_SRCS
+    src/syncaide.cpp
+    src/client/*.cpp
+    src/rpc/*.cpp
+    src/rpc/callers/*.cpp)
+
+file(GLOB SYNCAIDED_SRCS
+    src/syncaided.cpp
+    src/server/*.cpp
+    src/rpc/*.cpp
+    src/rpc/callers/*.cpp
+    src/rpc/services/*.cpp)
 
 list(REMOVE_ITEM SOURCE_FILES
     ${EMBEDDER_SRCS}

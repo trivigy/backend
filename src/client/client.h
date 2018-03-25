@@ -2,7 +2,7 @@
 #define SYNCAIDE_CLIENT_H
 
 #include "client/options.h"
-#include "rpc/members.h"
+#include "rpc/callers/members.h"
 
 #include <nlohmann/json.hpp>
 #include <boost/format.hpp>
