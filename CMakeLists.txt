@@ -115,23 +115,43 @@ set(SYNCAIDE_IMPORT_LIBS
 target_link_libraries(syncaide PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 target_link_libraries(syncaided PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 
-##########################################################################
+### Tests ################################################################
 enable_testing()
-file(GLOB TEST_SRCS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tests/*.cpp)
-foreach (TEST_SRC ${TEST_SRCS})
-    get_filename_component(TEST_NAME ${TEST_SRC} NAME_WE)
-    add_executable(${TEST_NAME}
-        ${SOURCE_FILES}
-        ${TEST_SRC}
-        ${PROTO_SRCS}
-        ${GRPC_SRCS})
 
-    target_link_libraries(${TEST_NAME} ${SYNCAIDE_IMPORT_LIBS})
+add_executable(test_peer
+    tests/test_peer.cpp
+    ${SOURCE_FILES}
+    ${PROTO_SRCS}
+    ${GRPC_SRCS})
+target_link_libraries(test_peer ${SYNCAIDE_IMPORT_LIBS})
+set_target_properties(test_peer PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
+add_test(NAME test_peer
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_peer)
 
-    set_target_properties(${TEST_NAME} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
+add_executable(test_router
+    tests/test_router.cpp
+    resources.cpp
+    ${SOURCE_FILES}
+    ${SYNCAIDED_SRCS}
+    ${PROTO_SRCS}
+    ${GRPC_SRCS})
+target_link_libraries(test_router ${SYNCAIDE_IMPORT_LIBS})
+set_target_properties(test_router PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
+add_test(NAME test_router
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_router)
 
-    add_test(NAME ${TEST_NAME}
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/${TEST_NAME})
-endforeach (TEST_SRC)
+add_executable(test_view
+    tests/test_view.cpp
+    ${SOURCE_FILES}
+    ${PROTO_SRCS}
+    ${GRPC_SRCS})
+target_link_libraries(test_view ${SYNCAIDE_IMPORT_LIBS})
+set_target_properties(test_view PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
+add_test(NAME test_view
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_view)
