@@ -279,12 +279,18 @@ server::Http::syncaide_js(request_type &req) {
             return resp;
         }
 
-        json settings = {
-            {"remote", "www.example.com:8080"}
+        json arguments = {
+            {"secure", true},
+            {"netloc", "localhost:8080"},
+            {"identity", "f64000f3-4dc9-4e22-b704-cdcf82c01038"}
+        };
+
+        json prepend = {
+            {"arguments", {arguments.dump()}}
         };
 
         string body(search->second.begin(), search->second.end());
-        body.insert(0, fmt::format("var syncaide = {};\n", settings.dump()));
+        body.insert(0, fmt::format("var Module = {0};\n", prepend.dump()));
 
         resp.content_length(body.size());
         resp.keep_alive(req.keep_alive());
