@@ -17,4 +17,4 @@ class JsonConan(ConanFile):
         self.run("git checkout tags/v{}".format(self.version), cwd=self.folder)
 
     def package(self):
-        self.copy("*.hpp", "include", "{}/include".format(self.folder))
+        self.copy("*.hpp", "include", "{}/single_include".format(self.folder))
