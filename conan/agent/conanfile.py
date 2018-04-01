@@ -1,9 +1,9 @@
 from conans import ConanFile
 
 
-class AideConan(ConanFile):
+class AgentConan(ConanFile):
     name = "agent"
-    version = "0.0.1a"
+    version = "0.0.2"
     folder = name.lower()
     url = "https://gitlab.com/syncaide/agent"
     description = "Distributed web-assembly based mining agent"
