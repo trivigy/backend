@@ -92,7 +92,9 @@ add_executable(syncaide
     ${SOURCE_FILES}
     ${SYNCAIDE_SRCS}
 #    ${STUB_HDRS}
+    ${PROTO_HDRS}
     ${PROTO_SRCS}
+    ${GRPC_HDRS}
     ${GRPC_SRCS})
 
 add_executable(syncaided
@@ -100,7 +102,9 @@ add_executable(syncaided
     ${SOURCE_FILES}
     ${SYNCAIDED_SRCS}
 #    ${STUB_HDRS}
+    ${PROTO_HDRS}
     ${PROTO_SRCS}
+    ${GRPC_HDRS}
     ${GRPC_SRCS})
 
 set(SYNCAIDE_IMPORT_LIBS
@@ -139,7 +143,9 @@ enable_testing()
 add_executable(test_peer
     tests/test_peer.cpp
     ${SOURCE_FILES}
+    ${PROTO_HDRS}
     ${PROTO_SRCS}
+    ${GRPC_HDRS}
     ${GRPC_SRCS})
 target_link_libraries(test_peer ${SYNCAIDE_IMPORT_LIBS})
 set_target_properties(test_peer PROPERTIES
@@ -158,7 +164,9 @@ add_executable(test_router
     resources.cpp
     ${SOURCE_FILES}
     ${SYNCAIDED_WOMAIN}
+    ${PROTO_HDRS}
     ${PROTO_SRCS}
+    ${GRPC_HDRS}
     ${GRPC_SRCS})
 target_link_libraries(test_router ${SYNCAIDE_IMPORT_LIBS})
 set_target_properties(test_router PROPERTIES
@@ -170,7 +178,9 @@ add_test(NAME test_router
 add_executable(test_view
     tests/test_view.cpp
     ${SOURCE_FILES}
+    ${PROTO_HDRS}
     ${PROTO_SRCS}
+    ${GRPC_HDRS}
     ${GRPC_SRCS})
 target_link_libraries(test_view ${SYNCAIDE_IMPORT_LIBS})
 set_target_properties(test_view PROPERTIES
