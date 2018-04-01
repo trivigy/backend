@@ -1,7 +1,7 @@
 [requires]
 boost/1.66.0@conan/stable
 gRPC/1.8.5@syncaide/stable
-json/3.1.0@syncaide/stable
+json/3.1.2@syncaide/stable
 fifo_map/1.0@syncaide/stable
 fmt/4.1.0@syncaide/stable
 agent/0.0.2@syncaide/stable

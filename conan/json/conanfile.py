@@ -3,7 +3,7 @@ from conans import ConanFile
 
 class JsonConan(ConanFile):
     name = "json"
-    version = "3.1.0"
+    version = "3.1.2"
     folder = name.lower()
     url = "https://github.com/nlohmann/json"
     description = "JSON for Modern C++"
