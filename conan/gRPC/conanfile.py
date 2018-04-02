@@ -10,7 +10,7 @@ class gRPCConan(ConanFile):
     url = "https://github.com/grpc/grpc.git"
     description = "The C based gRPC (C++, Python, Ruby, Objective-C, PHP, C#)"
     license = "https://github.com/grpc/grpc/blob/master/LICENSE"
-    requires = "zlib/1.2.11@conan/stable", "OpenSSL/1.0.2m@conan/stable", "Protobuf/3.5.1@syncaide/stable", "gflags/2.2.1@bincrafters/stable"
+    requires = "zlib/1.2.11@conan/stable", "OpenSSL/1.0.2m@conan/stable", "Protobuf/3.5.2@syncaide/stable", "gflags/2.2.1@bincrafters/stable"
     settings = "os", "compiler", "build_type", "arch"
     options = {
         "shared": [True, False],
