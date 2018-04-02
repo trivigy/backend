@@ -37,16 +37,11 @@ void server::Websocket::run(request_type &&req) {
 }
 
 void server::Websocket::accept(request_type &&req) {
-    auto decorator = [&req](response_type &resp) {
-        resp.set(field::sec_websocket_protocol, string_param("binary"));
-    };
-
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
         auto &socket = get<websocket::stream<ssl_stream<tcp::socket>>>(_socket);
-        socket.async_accept_ex(
+        socket.async_accept(
             req,
-            decorator,
             bind_executor(
                 _strand,
                 bind(
@@ -58,9 +53,8 @@ void server::Websocket::accept(request_type &&req) {
         );
     } else {
         auto &socket = get<websocket::stream<tcp::socket>>(_socket);
-        socket.async_accept_ex(
+        socket.async_accept(
             req,
-            decorator,
             bind_executor(
                 _strand,
                 bind(
