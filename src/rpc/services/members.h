@@ -22,7 +22,7 @@ namespace rpc {
 
         class MembersService final : public Members::Service {
         public:
-            explicit MembersService(server::Server *server);
+            explicit MembersService(shared_ptr<server::Server> server);
 
             grpc::Status gossip(
                 grpc::ServerContext *context,
@@ -43,7 +43,7 @@ namespace rpc {
             ) override;
 
         private:
-            server::Server *server;
+            shared_ptr<server::Server> server;
         };
     }
 }

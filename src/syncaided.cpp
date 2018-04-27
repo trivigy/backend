@@ -21,6 +21,6 @@ int main(int argc, const char **argv) {
     signal(SIGTERM, handler);
     signal(SIGQUIT, handler);
 
-    server::Server server(options);
-    return server.start();
+    shared_ptr<server::Server> server = make_shared<server::Server>(options);
+    return server->start();
 }

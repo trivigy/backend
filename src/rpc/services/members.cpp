@@ -1,8 +1,10 @@
 #include "logging.h"
 #include "rpc/services/members.h"
 
-rpc::services::MembersService::MembersService(server::Server *server) {
-    this->server = server;
+rpc::services::MembersService::MembersService(
+    shared_ptr<server::Server> server
+) {
+    this->server = move(server);
 }
 
 grpc::Status rpc::services::MembersService::gossip(

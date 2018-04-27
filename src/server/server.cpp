@@ -24,6 +24,7 @@ View *server::Server::view() {
 }
 
 int server::Server::start() {
+    _handlers.emplace_back(thread([=] { upstream_thread(); }));
     _handlers.emplace_back(thread([=] { http_thread(); }));
     _handlers.emplace_back(thread([=] { passive_thread(); }));
     _handlers.emplace_back(thread([=] { active_thread(); }));
@@ -33,6 +34,10 @@ int server::Server::start() {
     }
 
     return EXIT_FAILURE;
+}
+
+void server::Server::upstream_thread() {
+
 }
 
 void server::Server::http_thread() {
@@ -78,7 +83,7 @@ void server::Server::http_thread() {
 
 void server::Server::passive_thread() {
     grpc::ServerBuilder builder;
-    rpc::services::MembersService service(this);
+    rpc::services::MembersService service(shared_from_this());
 
     builder.AddListeningPort(
         _cfg->network.bind,

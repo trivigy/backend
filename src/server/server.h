@@ -38,12 +38,13 @@ namespace server {
     using boost::asio::ssl::context;
 
     extern struct exit_t {
+        promise<void> upstream;
         promise<void> http;
         promise<void> passive;
         promise<void> active;
     } exit;
 
-    class Server {
+    class Server : public enable_shared_from_this<Server>  {
     public:
         explicit Server(Options &options);
 
@@ -61,6 +62,8 @@ namespace server {
         Options *_cfg;
         context _ctx;
         View _view;
+
+        void upstream_thread();
 
         void http_thread();
 
