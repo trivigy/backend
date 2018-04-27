@@ -52,25 +52,15 @@ void server::Server::http_thread() {
 
 #endif //NDEBUG
 
-
     load_http_certificate(_ctx);
     auto address = ip::make_address(_cfg->network.http.address);
     tcp::endpoint endpoint(address, _cfg->network.http.port);
-    make_shared<Listener>(
-        _ioc,
-        _ctx,
-        endpoint,
-        _router
-    )->run();
+    make_shared<Listener>(_ioc, _ctx, endpoint, _router)->run();
 
     vector<thread> v;
     v.reserve(_cfg->network.threads);
     for (auto i = _cfg->network.threads; i > 0; --i) {
-        v.emplace_back(
-            [&] {
-                _ioc.run();
-            }
-        );
+        v.emplace_back([&] { _ioc.run(); });
     }
 
     auto future = server::exit.http.get_future();
