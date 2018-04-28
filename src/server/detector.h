@@ -246,7 +246,7 @@ namespace server {
         explicit Detector(
             tcp::socket socket,
             context &ctx,
-            Router &router
+            shared_ptr<Router> router
         );
 
         void run();
@@ -257,7 +257,7 @@ namespace server {
         tcp::socket _socket;
         context &_ctx;
         strand<io_context::executor_type> _strand;
-        Router &_router;
+        shared_ptr<Router> _router;
         flat_buffer _buffer;
     };
 }

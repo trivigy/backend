@@ -28,6 +28,7 @@
 #include <future>
 
 using namespace std;
+using namespace placeholders;
 
 namespace server {
     namespace asio = boost::asio;
@@ -38,40 +39,80 @@ namespace server {
     using boost::asio::ssl::context;
 
     extern struct exit_t {
+        promise<void> peering;
         promise<void> upstream;
-        promise<void> http;
-        promise<void> passive;
-        promise<void> active;
+        promise<void> frontend;
     } exit;
 
-    class Server : public enable_shared_from_this<Server>  {
+    class Server;
+
+    class Peering : public enable_shared_from_this<Peering> {
     public:
-        explicit Server(Options &options);
+        explicit Peering(shared_ptr<Server> server);
 
-        Options *cfg();
+        void start();
 
-        View *view();
+        shared_ptr<View> view();
+
+    private:
+        io_context _ioc;
+        steady_timer _timer;
+        shared_ptr<View> _view;
+        vector<thread> _handlers;
+        shared_ptr<Server> _server;
+        unique_ptr<grpc::Server> _rpc;
+
+        void on_pulse(error_code code);
+    };
+
+    class Upstream : public enable_shared_from_this<Upstream> {
+    public:
+        explicit Upstream(shared_ptr<Server> server);
+
+        void start();
+
+    private:
+        shared_ptr<Server> _server;
+    };
+
+    class Frontend : public enable_shared_from_this<Frontend> {
+    public:
+        explicit Frontend(shared_ptr<Server> server);
+
+        void start();
+
+    private:
+        shared_ptr<Server> _server;
+        shared_ptr<Router> _router;
+        vector<thread> _handlers;
+        io_context _ioc;
+        context _ctx;
+
+        void load_http_certificate(asio::ssl::context &ctx);
+    };
+
+    class Server : public enable_shared_from_this<Server> {
+    public:
+        static shared_ptr<Server> create(shared_ptr<Options> options);
+
+        shared_ptr<Options> cfg();
+
+        shared_ptr<Peering> peering();
+
+        shared_ptr<Upstream> upstream();
+
+        shared_ptr<Frontend> frontend();
 
         int start();
 
     private:
-        unique_ptr<grpc::Server> _server;
+        explicit Server(shared_ptr<Options> options);
+
         vector<thread> _handlers;
-        io_context _ioc;
-        Router _router;
-        Options *_cfg;
-        context _ctx;
-        View _view;
-
-        void upstream_thread();
-
-        void http_thread();
-
-        void passive_thread();
-
-        void active_thread();
-
-        void load_http_certificate(asio::ssl::context &ctx);
+        shared_ptr<Options> _cfg;
+        shared_ptr<Peering> _peering;
+        shared_ptr<Upstream> _upstream;
+        shared_ptr<Frontend> _frontend;
     };
 }
 

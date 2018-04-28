@@ -3,9 +3,7 @@
 
 rpc::services::MembersService::MembersService(
     shared_ptr<server::Server> server
-) {
-    this->server = move(server);
-}
+) : _server(move(server)) {}
 
 grpc::Status rpc::services::MembersService::gossip(
     grpc::ServerContext *context,
@@ -15,7 +13,7 @@ grpc::Status rpc::services::MembersService::gossip(
     log("/members/gossip", context->peer());
 
     deque<Peer> buffer;
-    auto cfg = server->cfg();
+    auto cfg = _server->cfg();
     auto peers = request->peers();
     auto it = peers.begin();
     while (it != peers.end()) {
@@ -26,7 +24,7 @@ grpc::Status rpc::services::MembersService::gossip(
         it++;
     }
 
-    auto view = server->view();
+    auto view = _server->peering()->view();
     deque<Peer> result = view->select(cfg->members.c / 2 - 1, cfg->members.H);
     result.emplace(result.begin(), Peer(cfg->network.advertise, 0));
     for (const auto &each : result) {
@@ -44,7 +42,7 @@ grpc::Status rpc::services::MembersService::list(
 ) {
     log("/members/list", context->peer());
 
-    auto view = server->view();
+    auto view = _server->peering()->view();
     deque<Peer> snap = view->snapshot();
     for (const auto &each : snap) {
         protos::Peer *peer = response->add_peers();

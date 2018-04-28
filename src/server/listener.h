@@ -24,7 +24,7 @@ namespace server {
             io_context &ioc,
             context &ctx,
             tcp::endpoint endp,
-            Router &router
+            shared_ptr<Router> router
         );
 
         void run();
@@ -37,7 +37,7 @@ namespace server {
         context &_ctx;
         tcp::acceptor _acceptor;
         tcp::socket _socket;
-        Router &_router;
+        shared_ptr<Router> _router;
     };
 }
 

@@ -3,17 +3,17 @@
 
 void handler(int) {
     try {
-        server::exit.http.set_value();
-        server::exit.passive.set_value();
-        server::exit.active.set_value();
+        server::exit.peering.set_value();
+        server::exit.upstream.set_value();
+        server::exit.frontend.set_value();
     } catch (const future_error &err) {
         LOG(warning) << "something is going on.";
     }
 }
 
 int main(int argc, const char **argv) {
-    server::Options options;
-    if (!options.parse(argc, argv)) {
+    auto options = make_shared<server::Options>();
+    if (!options->parse(argc, argv)) {
         return EXIT_FAILURE;
     }
 
@@ -21,6 +21,6 @@ int main(int argc, const char **argv) {
     signal(SIGTERM, handler);
     signal(SIGQUIT, handler);
 
-    shared_ptr<server::Server> server = make_shared<server::Server>(options);
+    auto server = server::Server::create(options);
     return server->start();
 }

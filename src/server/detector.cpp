@@ -3,12 +3,11 @@
 server::Detector::Detector(
     tcp::socket socket,
     context &ctx,
-    Router &router
-) :
-    _socket(move(socket)),
+    shared_ptr<Router> router
+) : _socket(move(socket)),
     _ctx(ctx),
     _strand(_socket.get_executor()),
-    _router(router) {}
+    _router(move(router)) {}
 
 void server::Detector::run() {
     async_detect_ssl(

@@ -155,7 +155,7 @@ namespace server {
             flat_buffer buffer,
             tribool secured,
             context &ctx,
-            Router &router
+            shared_ptr<Router> router
         );
 
         void run();
@@ -197,7 +197,7 @@ namespace server {
         steady_timer _timer;
         bool _eof = false;
         context &_ctx;
-        Router &_router;
+        shared_ptr<Router> _router;
         queue _queue;
 
         static Socket deduce_socket(

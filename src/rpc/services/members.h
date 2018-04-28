@@ -43,7 +43,7 @@ namespace rpc {
             ) override;
 
         private:
-            shared_ptr<server::Server> server;
+            shared_ptr<server::Server> _server;
         };
     }
 }
