@@ -1,9 +1,0 @@
-[
-    {
-        "name": "submit",
-        "params": {
-            "name": "Peter"
-        },
-        "returns": "Hello Peter"
-    }
-]

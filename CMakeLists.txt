@@ -26,18 +26,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set(CMAKE_PUBLIC_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/public)
 
 find_package(Threads REQUIRED)
-#find_package(JsonRpc REQUIRED)
 find_package(Protobuf REQUIRED)
 find_package(GRPC REQUIRED)
 
-#set(STUB_DEST ${CMAKE_CURRENT_BINARY_DIR}/stubs)
-#file(MAKE_DIRECTORY ${STUB_DEST})
-
 set(PROTO_DEST ${CMAKE_CURRENT_BINARY_DIR}/protos)
 file(MAKE_DIRECTORY ${PROTO_DEST})
-
-#file(GLOB STUB_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/stubs/*.json)
-#jsonrpc_generate_cpp(STUB_HDRS ${STUB_DEST} ${STUB_FILES})
 
 file(GLOB PROTO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/protos/*.proto)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_DEST} ${PROTO_FILES})
@@ -91,7 +84,6 @@ list(REMOVE_ITEM SOURCE_FILES
 add_executable(syncaide
     ${SOURCE_FILES}
     ${SYNCAIDE_SRCS}
-#    ${STUB_HDRS}
     ${PROTO_HDRS}
     ${PROTO_SRCS}
     ${GRPC_HDRS}
@@ -101,7 +93,6 @@ add_executable(syncaided
     resources.cpp
     ${SOURCE_FILES}
     ${SYNCAIDED_SRCS}
-#    ${STUB_HDRS}
     ${PROTO_HDRS}
     ${PROTO_SRCS}
     ${GRPC_HDRS}
