@@ -5,6 +5,7 @@ json/3.1.2@syncaide/stable
 fifo_map/1.0@syncaide/stable
 fmt/4.1.0@syncaide/stable
 agent/0.0.2@syncaide/stable
+Poco/1.9.0@pocoproject/stable
 
 [options]
 

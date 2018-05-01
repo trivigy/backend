@@ -125,6 +125,18 @@ set(SYNCAIDE_IMPORT_LIBS
     gcov
     fmt)
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    set(SYNCAIDE_IMPORT_LIBS
+        ${SYNCAIDE_IMPORT_LIBS}
+        PocoFoundationd
+        PocoNetd)
+else()
+    set(SYNCAIDE_IMPORT_LIBS
+        ${SYNCAIDE_IMPORT_LIBS}
+        PocoFoundation
+        PocoNet)
+endif ()
+
 target_link_libraries(syncaide PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 target_link_libraries(syncaided PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 
