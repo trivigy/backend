@@ -5,8 +5,8 @@
 
 #include <boost/beast/core.hpp>
 #include <fmt/format.h>
-#include <regex>
 #include <iostream>
+#include <regex>
 
 using namespace std;
 

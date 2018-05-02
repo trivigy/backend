@@ -23,7 +23,9 @@ conan_cmake_run(
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
-set(CMAKE_PUBLIC_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/public)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+set(CMAKE_TESTS_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
+set(CMAKE_UTILS_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/utils)
 
 find_package(Threads REQUIRED)
 find_package(Protobuf REQUIRED)
@@ -41,6 +43,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CONAN_INCLUDE_DIRS})
 link_directories(${CONAN_LIB_DIRS})
 
+### Embedder ##############################################################
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     file(GLOB AGENT_RESOURCE_FILES
         ${CONAN_BIN_DIRS_AGENT}/*.html
@@ -54,13 +57,20 @@ endif ()
 
 file(GLOB EMBEDDER_SRCS src/embedder.cpp)
 add_executable(embedder ${EMBEDDER_SRCS})
-set(EMBEDDER_IMPORT_LIBS boost_filesystem boost_system fmt dl)
-target_link_libraries(embedder PUBLIC ${EMBEDDER_IMPORT_LIBS})
+target_link_libraries(embedder PUBLIC
+    boost_filesystem
+    boost_system
+    fmt
+    dl)
+set_target_properties(embedder PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_UTILS_OUTPUT_DIRECTORY}
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_UTILS_OUTPUT_DIRECTORY})
 add_custom_command(
     OUTPUT resources.cpp
     COMMAND embedder ${AGENT_RESOURCE_FILES}
     DEPENDS ${AGENT_RESOURCE_FILES})
 
+### Syncaide ##############################################################
 file(GLOB_RECURSE SOURCE_FILES src/*.cpp)
 
 file(GLOB SYNCAIDE_SRCS
@@ -105,7 +115,6 @@ set(SYNCAIDE_IMPORT_LIBS
     boost_system
     boost_thread
     boost_date_time
-    boost_unit_test_framework
     boost_regex
     grpc
     grpc++
@@ -128,23 +137,23 @@ set(SYNCAIDE_IMPORT_LIBS
 target_link_libraries(syncaide PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 target_link_libraries(syncaided PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 
-### Tests ################################################################
+### Tests #################################################################
 enable_testing()
 
+#-- test_peer -------------------------------------------------------------
 add_executable(test_peer
     tests/test_peer.cpp
-    ${SOURCE_FILES}
-    ${PROTO_HDRS}
-    ${PROTO_SRCS}
-    ${GRPC_HDRS}
-    ${GRPC_SRCS})
-target_link_libraries(test_peer ${SYNCAIDE_IMPORT_LIBS})
+    src/peer.cpp)
+target_link_libraries(test_peer PUBLIC
+    boost_unit_test_framework)
 set_target_properties(test_peer PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_TESTS_OUTPUT_DIRECTORY})
 add_test(NAME test_peer
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_peer)
+    WORKING_DIRECTORY ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    COMMAND ${CMAKE_TESTS_OUTPUT_DIRECTORY}/test_peer)
 
+#-- test_router -----------------------------------------------------------
 file(GLOB SYNCAIDED_WOMAIN
     src/server/*.cpp
     src/rpc/*.cpp
@@ -152,30 +161,45 @@ file(GLOB SYNCAIDED_WOMAIN
     src/rpc/services/*.cpp)
 add_executable(test_router
     tests/test_router.cpp
-    resources.cpp
-    ${SOURCE_FILES}
-    ${SYNCAIDED_WOMAIN}
-    ${PROTO_HDRS}
-    ${PROTO_SRCS}
-    ${GRPC_HDRS}
-    ${GRPC_SRCS})
-target_link_libraries(test_router ${SYNCAIDE_IMPORT_LIBS})
+    src/server/response.cpp
+    src/server/router.h)
+target_link_libraries(test_router PUBLIC
+    boost_unit_test_framework
+    boost_system
+    pthread
+    fmt)
 set_target_properties(test_router PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_TESTS_OUTPUT_DIRECTORY})
 add_test(NAME test_router
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_router)
+    WORKING_DIRECTORY ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    COMMAND ${CMAKE_TESTS_OUTPUT_DIRECTORY}/test_router)
 
+#-- test_uri --------------------------------------------------------------
+add_executable(test_uri
+    tests/test_uri.cpp
+    src/common/uri.cpp)
+target_link_libraries(test_uri PUBLIC
+    boost_unit_test_framework)
+set_target_properties(test_uri PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_TESTS_OUTPUT_DIRECTORY})
+add_test(NAME test_uri
+    WORKING_DIRECTORY ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    COMMAND ${CMAKE_TESTS_OUTPUT_DIRECTORY}/test_uri)
+
+#-- test_view -------------------------------------------------------------
 add_executable(test_view
     tests/test_view.cpp
-    ${SOURCE_FILES}
-    ${PROTO_HDRS}
-    ${PROTO_SRCS}
-    ${GRPC_HDRS}
-    ${GRPC_SRCS})
-target_link_libraries(test_view ${SYNCAIDE_IMPORT_LIBS})
+    src/peer.cpp
+    src/view.cpp)
+target_link_libraries(test_view PUBLIC
+    boost_unit_test_framework
+    boost_system
+    pthread)
 set_target_properties(test_view PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests)
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_TESTS_OUTPUT_DIRECTORY})
 add_test(NAME test_view
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/test_view)
+    WORKING_DIRECTORY ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    COMMAND ${CMAKE_TESTS_OUTPUT_DIRECTORY}/test_view)
