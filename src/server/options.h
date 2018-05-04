@@ -31,7 +31,6 @@ namespace server {
             } network;
         } defaults;
 
-        string config;
 
         struct {
             Endpoint advertise;
@@ -53,8 +52,6 @@ namespace server {
         bool parse(int argc, const char **argv) override;
 
     private:
-        void on_config(string path);
-
         void on_advertise(string endpoint);
 
         void on_bind(string endpoint);

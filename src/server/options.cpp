@@ -15,11 +15,11 @@ bool server::Options::parse(int argc, const char **argv) {
     descriptors.emplace_back(po::options_description("Options"));
     descriptors.back().add_options()
         ("help", "show this help message and exit.")
-        ("config,c", po::value<string>(&config)
-                ->notifier(bind(&server::Options::on_config, this, _1)),
+        ("config,c", po::value<string>()
+                ->default_value(string()),
             "specify configurations file to load arguments from instread of commandline.")
         ("advertise,a", po::value<string>()
-                ->default_value(defaults.network.bind.netloc(), "bind")
+                ->default_value(string(), "bind")
                 ->notifier(bind(&server::Options::on_advertise, this, _1)),
             "used as the address that is advertised to other nodes in the cluster.")
         ("bind,b", po::value<string>()
@@ -60,6 +60,28 @@ bool server::Options::parse(int argc, const char **argv) {
                 .run(),
             maps.back()
         );
+
+        auto config = maps.back()["config"].as<string>();
+        if (!config.empty()) {
+            auto canonical = fs::canonical(config);
+            if (fs::exists(canonical)) {
+                ifstream config_file(canonical.string());
+                po::store(
+                    po::parse_config_file(config_file, descriptors.back()),
+                    maps.back()
+                );
+                config_file.close();
+
+                po::store(
+                    po::command_line_parser(argc, argv)
+                        .options(descriptors.back())
+                        .positional(positions.back())
+                        .run(),
+                    maps.back()
+                );
+            }
+        }
+
     } catch (exception &e) {
         cerr << "\033[1;91m" << "error: " << e.what() << "\033[0m" << endl;
         cout << usage(
@@ -129,14 +151,10 @@ bool server::Options::parse(int argc, const char **argv) {
     return true;
 }
 
-void server::Options::on_config(string path) {
-    // TODO validate file exists
-}
-
 void server::Options::on_advertise(string endpoint) {
     try {
-        network.advertise = Endpoint(endpoint);
-    } catch (const exception& e) {
+        if (!endpoint.empty()) network.advertise = Endpoint(endpoint);
+    } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "advertise");
     }
@@ -145,7 +163,7 @@ void server::Options::on_advertise(string endpoint) {
 void server::Options::on_bind(string endpoint) {
     try {
         network.bind = Endpoint(endpoint);
-    } catch (const exception& e) {
+    } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "bind");
     }
@@ -156,7 +174,7 @@ void server::Options::on_joins(vector<string> endpoints) {
         for (auto &endpoint : endpoints) {
             network.joins.emplace_back(Endpoint(endpoint));
         }
-    } catch (const exception& e) {
+    } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "joins");
     }
@@ -167,7 +185,7 @@ void server::Options::on_upstreams(vector<string> endpoints) {
         for (auto &endpoint : endpoints) {
             network.upstreams.emplace_back(Endpoint(endpoint));
         }
-    } catch (const exception& e) {
+    } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "upstreams");
     }
@@ -176,7 +194,7 @@ void server::Options::on_upstreams(vector<string> endpoints) {
 void server::Options::on_http(string endpoint) {
     try {
         network.http = Endpoint(endpoint);
-    } catch (const exception& e) {
+    } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "http");
     }
