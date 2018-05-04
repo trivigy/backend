@@ -140,6 +140,20 @@ target_link_libraries(syncaided PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 ### Tests #################################################################
 enable_testing()
 
+#-- test_endpoint ---------------------------------------------------------
+add_executable(test_endpoint
+    tests/test_endpoint.cpp
+    src/common/endpoint.cpp)
+target_link_libraries(test_endpoint PUBLIC
+    boost_unit_test_framework
+    boost_regex)
+set_target_properties(test_endpoint PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_TESTS_OUTPUT_DIRECTORY})
+add_test(NAME test_endpoint
+    WORKING_DIRECTORY ${CMAKE_TESTS_OUTPUT_DIRECTORY}
+    COMMAND ${CMAKE_TESTS_OUTPUT_DIRECTORY}/test_endpoint)
+
 #-- test_peer -------------------------------------------------------------
 add_executable(test_peer
     tests/test_peer.cpp
@@ -174,19 +188,6 @@ set_target_properties(test_router PROPERTIES
 add_test(NAME test_router
     WORKING_DIRECTORY ${CMAKE_TESTS_OUTPUT_DIRECTORY}
     COMMAND ${CMAKE_TESTS_OUTPUT_DIRECTORY}/test_router)
-
-#-- test_uri --------------------------------------------------------------
-add_executable(test_uri
-    tests/test_uri.cpp
-    src/common/uri.cpp)
-target_link_libraries(test_uri PUBLIC
-    boost_unit_test_framework)
-set_target_properties(test_uri PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_TESTS_OUTPUT_DIRECTORY}
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_TESTS_OUTPUT_DIRECTORY})
-add_test(NAME test_uri
-    WORKING_DIRECTORY ${CMAKE_TESTS_OUTPUT_DIRECTORY}
-    COMMAND ${CMAKE_TESTS_OUTPUT_DIRECTORY}/test_uri)
 
 #-- test_view -------------------------------------------------------------
 add_executable(test_view
