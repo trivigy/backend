@@ -98,6 +98,11 @@ BOOST_AUTO_TEST_CASE(print_compose_special_scheme_override) { // NOLINT
     BOOST_TEST(u.compose() == "https://www.example.com:8443");
 }
 
+BOOST_AUTO_TEST_CASE(print_compose_ipv6) { // NOLINT
+    Endpoint u("scheme://[2001:DB8::1]:8443");
+    BOOST_TEST(u.compose() == "scheme://[2001:DB8::1]:8443");
+}
+
 BOOST_AUTO_TEST_CASE(print_netloc_with_port) { // NOLINT
     Endpoint u("scheme://www.example.com:8080");
     BOOST_TEST(u.netloc() == "www.example.com:8080");

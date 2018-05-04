@@ -95,7 +95,9 @@ string common::Endpoint::compose() {
 
     string output;
     if (!_scheme.empty()) output += _scheme + "://";
-    output += _host;
+
+    if (is_ipv6()) output += "[" + _host + "]";
+    else output += _host;
 
     auto it = special_scheme.find(_scheme);
     if (it != special_scheme.end()) {
