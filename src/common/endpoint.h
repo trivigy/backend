@@ -49,17 +49,17 @@ namespace common {
 
         const uint16_t port() const;
 
-        string compose();
+        const string compose() const;
 
-        string netloc();
+        const string netloc() const;
 
-        bool empty();
+        bool empty() const;
 
-        bool is_ipv4();
+        bool is_ipv4() const;
 
-        bool is_ipv6();
+        bool is_ipv6() const;
 
-        bool is_fqdn();
+        bool is_fqdn() const;
 
     private:
         void _authority(const string &source);

@@ -18,7 +18,7 @@ grpc::Status rpc::services::MembersService::gossip(
     auto it = peers.begin();
     while (it != peers.end()) {
         auto peer = *it;
-        if (cfg->network.advertise.compare(0, peer.size(), peer)) {
+        if (cfg->network.advertise.netloc().compare(0, peer.size(), peer)) {
             buffer.emplace_back(Peer(peer, 0));
         }
         it++;
@@ -26,7 +26,7 @@ grpc::Status rpc::services::MembersService::gossip(
 
     auto view = _server->peering()->view();
     deque<Peer> result = view->select(cfg->members.c / 2 - 1, cfg->members.H);
-    result.emplace(result.begin(), Peer(cfg->network.advertise, 0));
+    result.emplace(result.begin(), Peer(cfg->network.advertise.netloc(), 0));
     for (const auto &each : result) {
         response->add_peers(each.addr());
     }

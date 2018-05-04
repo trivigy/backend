@@ -11,7 +11,7 @@ server::Peering::Peering(shared_ptr<Server> server) :
 
     deque<Peer> buffer;
     for (auto &join : cfg->network.joins) {
-        buffer.emplace_back(Peer(join, 0));
+        buffer.emplace_back(Peer(join.netloc(), 0));
     }
     _view->update(cfg->members.c, cfg->members.H, cfg->members.S, buffer);
 }
@@ -21,7 +21,7 @@ void server::Peering::start() {
     rpc::services::MembersService service(_server);
 
     builder.AddListeningPort(
-        _server->cfg()->network.bind,
+        _server->cfg()->network.bind.netloc(),
         grpc::InsecureServerCredentials()
     );
 
@@ -54,7 +54,7 @@ void server::Peering::on_pulse(error_code code) {
 
     deque<Peer> buffer;
     buffer = _view->select(cfg->members.c / 2 - 1, cfg->members.H);
-    buffer.emplace(buffer.begin(), Peer(cfg->network.advertise, 0));
+    buffer.emplace(buffer.begin(), Peer(cfg->network.advertise.netloc(), 0));
 
     auto peer = _view->random_peer();
     rpc::callers::MembersCaller caller(
@@ -66,7 +66,7 @@ void server::Peering::on_pulse(error_code code) {
     );
 
     grpc::Status status;
-    tie(status, buffer) = caller.gossip(buffer, cfg->network.advertise);
+    tie(status, buffer) = caller.gossip(buffer, cfg->network.advertise.netloc());
     _view->update(cfg->members.c, cfg->members.H, cfg->members.S, buffer);
 
     if (!status.ok()) {
@@ -105,8 +105,8 @@ void server::Frontend::start() {
 #endif //NDEBUG
 
     load_http_certificate(_ctx);
-    auto address = ip::make_address(_server->cfg()->network.http.address);
-    tcp::endpoint endpoint(address, _server->cfg()->network.http.port);
+    auto address = ip::make_address(_server->cfg()->network.http.host());
+    tcp::endpoint endpoint(address, _server->cfg()->network.http.port());
     make_shared<Listener>(_ioc, _ctx, endpoint, _router)->run();
 
     _handlers.reserve(_server->cfg()->network.threads);

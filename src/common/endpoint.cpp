@@ -90,7 +90,7 @@ void common::Endpoint::_authority(const string &source) {
     throw invalid_argument("Failure parsing host and port.");
 }
 
-string common::Endpoint::compose() {
+const string common::Endpoint::compose() const {
     if (empty()) return string();
 
     string output;
@@ -108,25 +108,25 @@ string common::Endpoint::compose() {
     return output;
 }
 
-string common::Endpoint::netloc() {
+const string common::Endpoint::netloc() const {
     if (empty()) return string();
 
     if (_port > 0) return _host + ":" + to_string(_port);
     return _host;
 }
 
-bool common::Endpoint::empty() {
+bool common::Endpoint::empty() const {
     return _type == host_t::NONE;
 }
 
-bool common::Endpoint::is_ipv4() {
+bool common::Endpoint::is_ipv4() const {
     return _type == host_t::IPV4;
 }
 
-bool common::Endpoint::is_ipv6() {
+bool common::Endpoint::is_ipv6() const {
     return _type == host_t::IPV6;
 }
 
-bool common::Endpoint::is_fqdn() {
+bool common::Endpoint::is_fqdn() const {
     return _type == host_t::FQDN;
 }
