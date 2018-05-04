@@ -47,13 +47,6 @@ namespace server {
     class Server;
 
     class Peering : public enable_shared_from_this<Peering> {
-    public:
-        explicit Peering(shared_ptr<Server> server);
-
-        void start();
-
-        shared_ptr<View> view();
-
     private:
         io_context _ioc;
         steady_timer _timer;
@@ -62,25 +55,28 @@ namespace server {
         shared_ptr<Server> _server;
         unique_ptr<grpc::Server> _rpc;
 
+    public:
+        explicit Peering(shared_ptr<Server> server);
+
+        void start();
+
+        shared_ptr<View> view();
+
+    private:
         void on_pulse(error_code code);
     };
 
     class Upstream : public enable_shared_from_this<Upstream> {
+    private:
+        shared_ptr<Server> _server;
+
     public:
         explicit Upstream(shared_ptr<Server> server);
 
         void start();
-
-    private:
-        shared_ptr<Server> _server;
     };
 
     class Frontend : public enable_shared_from_this<Frontend> {
-    public:
-        explicit Frontend(shared_ptr<Server> server);
-
-        void start();
-
     private:
         shared_ptr<Server> _server;
         shared_ptr<Router> _router;
@@ -88,10 +84,23 @@ namespace server {
         io_context _ioc;
         context _ctx;
 
+    public:
+        explicit Frontend(shared_ptr<Server> server);
+
+        void start();
+
+    private:
         void load_http_certificate(asio::ssl::context &ctx);
     };
 
     class Server : public enable_shared_from_this<Server> {
+    private:
+        vector<thread> _handlers;
+        shared_ptr<Options> _cfg;
+        shared_ptr<Peering> _peering;
+        shared_ptr<Upstream> _upstream;
+        shared_ptr<Frontend> _frontend;
+
     public:
         static shared_ptr<Server> create(shared_ptr<Options> options);
 
@@ -107,12 +116,6 @@ namespace server {
 
     private:
         explicit Server(shared_ptr<Options> options);
-
-        vector<thread> _handlers;
-        shared_ptr<Options> _cfg;
-        shared_ptr<Peering> _peering;
-        shared_ptr<Upstream> _upstream;
-        shared_ptr<Frontend> _frontend;
     };
 }
 

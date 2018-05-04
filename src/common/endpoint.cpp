@@ -17,7 +17,7 @@ common::Endpoint::Endpoint(const string &source) : Endpoint() {
         _authority(match["authority"]);
         return;
     }
-    throw std::invalid_argument("Failure parsing scheme and authority");
+    throw invalid_argument("Failure parsing scheme and authority.");
 }
 
 common::Endpoint::Endpoint(const string &host, uint16_t port) :
@@ -87,7 +87,7 @@ void common::Endpoint::_authority(const string &source) {
         }
         return;
     }
-    throw std::invalid_argument("Failure parsing host and port");
+    throw invalid_argument("Failure parsing host and port.");
 }
 
 string common::Endpoint::compose() {
