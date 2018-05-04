@@ -21,6 +21,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/variant.hpp>
 #include <nlohmann/json.hpp>
+#include <fmt/format.h>
 #include <functional>
 #include <string>
 
@@ -148,13 +149,27 @@ namespace server {
             vector<unique_ptr<work>> _items;
         };
 
+    private:
+        request_type _req;
+        flat_buffer _buffer;
+        steady_timer _timer;
+        bool _eof = false;
+        context &_ctx;
+        shared_ptr<Router> _router;
+        queue _queue;
+
+    protected:
+        Socket _socket;
+        strand<io_context::executor_type> _strand;
+        tribool _secured;
+
     public:
         Http(
             tcp::socket socket,
             flat_buffer buffer,
             tribool secured,
             context &ctx,
-            Router &router
+            shared_ptr<Router> router
         );
 
         void run();
@@ -175,31 +190,26 @@ namespace server {
 
         void on_shutdown(error_code code);
 
+        static response_type health(request_type &req);
+
         static response_type syncaide_js(request_type &req);
 
         static response_type syncaide_wasm(request_type &req);
 
         static response_type agent_uid(request_type &req, const string &uid);
 
-    private:
-        request_type _req;
-        flat_buffer _buffer;
-        steady_timer _timer;
-        bool _eof = false;
-        context &_ctx;
-        Router &_router;
-        queue _queue;
+#ifndef NDEBUG
 
+        static response_type syncaide_html(request_type &req);
+
+#endif //NDEBUG
+
+    private:
         static Socket deduce_socket(
             tcp::socket socket,
             context &ctx,
             tribool secured
         );
-
-    protected:
-        Socket _socket;
-        strand<io_context::executor_type> _strand;
-        tribool _secured;
     };
 }
 

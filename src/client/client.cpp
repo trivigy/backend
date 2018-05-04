@@ -1,9 +1,7 @@
 #include "logging.h"
 #include "client/client.h"
 
-client::Client::Client(client::Options &options) {
-    _cfg = &options;
-}
+client::Client::Client(client::Options &options) : _cfg(&options) {}
 
 client::Options *client::Client::cfg() {
     return _cfg;
@@ -22,9 +20,8 @@ int client::Client::start() {
     return EXIT_FAILURE;
 }
 
-
 int client::Client::members_gossip() {
-    rpc::MembersClient client(
+    rpc::callers::MembersCaller caller(
         grpc::CreateCustomChannel(
             _cfg->network.host,
             grpc::InsecureChannelCredentials(),
@@ -34,7 +31,7 @@ int client::Client::members_gossip() {
 
     grpc::Status status;
     deque<Peer> buffer;
-    tie(status, buffer) = client.gossip();
+    tie(status, buffer) = caller.gossip();
 
     if (status.ok()) {
         auto results = json::array();
@@ -50,7 +47,7 @@ int client::Client::members_gossip() {
 }
 
 int client::Client::members_list() {
-    rpc::MembersClient client(
+    rpc::callers::MembersCaller caller(
         grpc::CreateCustomChannel(
             _cfg->network.host,
             grpc::InsecureChannelCredentials(),
@@ -60,7 +57,7 @@ int client::Client::members_list() {
 
     grpc::Status status;
     deque<Peer> buffer;
-    tie(status, buffer) = client.list();
+    tie(status, buffer) = caller.list();
 
     if (status.ok()) {
         auto view = json::array();
@@ -81,7 +78,7 @@ int client::Client::members_list() {
 }
 
 int client::Client::members_status() {
-    rpc::MembersClient client(
+    rpc::callers::MembersCaller caller(
         grpc::CreateCustomChannel(
             _cfg->network.host,
             grpc::InsecureChannelCredentials(),
@@ -92,7 +89,7 @@ int client::Client::members_status() {
     string message("world");
     grpc::Status status;
     string reply;
-    tie(status, reply) = client.status(message);
+    tie(status, reply) = caller.status(message);
 
     if (status.ok()) {
         json result = {{"message", reply}};

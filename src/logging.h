@@ -34,14 +34,15 @@ using fifo_map = nlohmann::fifo_map<K, V, nlohmann::fifo_map_compare<K>, A>;
 #define LOG(lvl) BOOST_LOG_SEV(logger::get(), trivial::lvl)
 
 class Logging {
+private:
+    srcs::severity_logger_mt<trivial::severity_level> _slg;
+
 public:
     Logging();
 
     auto &get();
 
 private:
-    srcs::severity_logger_mt<trivial::severity_level> _slg;
-
     static void formatter(
         logging::record_view const &rec,
         logging::formatting_ostream &strm

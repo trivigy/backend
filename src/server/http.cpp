@@ -6,7 +6,7 @@ server::Http::Http(
     flat_buffer buffer,
     tribool secured,
     context &ctx,
-    Router &router
+    shared_ptr<Router> router
 ) : _strand(socket.get_executor().context().get_executor()),
     _timer(
         socket.get_executor().context(),
@@ -17,7 +17,7 @@ server::Http::Http(
     _secured(secured),
     _queue(*this),
     _ctx(ctx),
-    _router(router) {}
+    _router(move(router)) {}
 
 void server::Http::run() {
     on_timer({});
@@ -194,7 +194,7 @@ void server::Http::on_read(error_code code) {
     };
     LOG(info) << logging::add_value("Extra", extra.dump());
 
-    response_type resp = _router.dispatch(_req);
+    response_type resp = _router->dispatch(_req);
     if (resp.result() != status::switching_protocols) {
         _queue(move(resp));
     } else {
@@ -256,6 +256,13 @@ void server::Http::on_shutdown(error_code code) {
 }
 
 server::Http::response_type
+server::Http::health(request_type &req) {
+    response<string_body> resp(status::ok, req.version());
+    resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
+    return resp;
+}
+
+server::Http::response_type
 server::Http::syncaide_js(request_type &req) {
     if (req.method() != verb::head && req.method() != verb::get) {
         return Response::method_not_allowed(req);
@@ -272,9 +279,22 @@ server::Http::syncaide_js(request_type &req) {
             return resp;
         }
 
-        resp.content_length(search->second.size());
+        json arguments = {
+            {"secure", true},
+            {"netloc", "localhost:8080"},
+            {"identity", "f64000f3-4dc9-4e22-b704-cdcf82c01038"}
+        };
+
+        json prepend = {
+            {"arguments", {arguments.dump()}}
+        };
+
+        string body(search->second.begin(), search->second.end());
+        body.insert(0, fmt::format("var Module = {0};\n", prepend.dump()));
+
+        resp.content_length(body.size());
         resp.keep_alive(req.keep_alive());
-        resp.body() = string(search->second.begin(), search->second.end());
+        resp.body() = body;
         resp.prepare_payload();
         return resp;
     }
@@ -316,6 +336,38 @@ server::Http::agent_uid(request_type &req, const string &uid) {
     resp.body() = params.dump();
     return resp;
 }
+
+#ifndef NDEBUG
+
+server::Http::response_type
+server::Http::syncaide_html(request_type &req) {
+    if (req.method() != verb::head && req.method() != verb::get) {
+        return Response::method_not_allowed(req);
+    }
+
+    auto search = resources.find("syncaide.html");
+    if (search != resources.end()) {
+        response<string_body> resp(status::ok, req.version());
+        resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
+        resp.set(field::content_type, string_param("text/html"));
+        if (req.method() == verb::head) {
+            resp.content_length(search->second.size());
+            resp.keep_alive(req.keep_alive());
+            return resp;
+        }
+
+        resp.content_length(search->second.size());
+        resp.keep_alive(req.keep_alive());
+        resp.body() = string(search->second.begin(), search->second.end());
+        resp.prepare_payload();
+        return resp;
+    }
+
+    return Response::internal_server_error(req);
+}
+
+#endif //NDEBUG
+
 
 server::Http::Socket server::Http::deduce_socket(
     tcp::socket socket,

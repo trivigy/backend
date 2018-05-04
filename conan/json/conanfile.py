@@ -3,7 +3,7 @@ from conans import ConanFile
 
 class JsonConan(ConanFile):
     name = "json"
-    version = "3.1.0"
+    version = "3.1.2"
     folder = name.lower()
     url = "https://github.com/nlohmann/json"
     description = "JSON for Modern C++"
@@ -17,4 +17,4 @@ class JsonConan(ConanFile):
         self.run("git checkout tags/v{}".format(self.version), cwd=self.folder)
 
     def package(self):
-        self.copy("*.hpp", "include/nlohmann", "{}/src".format(self.folder))
+        self.copy("*.hpp", "include", "{}/single_include".format(self.folder))

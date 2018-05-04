@@ -8,8 +8,6 @@ conan:
 	conan export conan/fmt syncaide/stable
 	conan export conan/gRPC syncaide/stable
 	conan export conan/json syncaide/stable
-	conan export conan/libjson-rpc-cpp syncaide/stable
-	conan export conan/libmicrohttpd syncaide/stable
 	conan export conan/Protobuf syncaide/stable
 .PHONY: conan
 

@@ -242,23 +242,23 @@ namespace server {
     using boost::tribool;
 
     class Detector : public enable_shared_from_this<Detector> {
+    private:
+        tcp::socket _socket;
+        context &_ctx;
+        strand<io_context::executor_type> _strand;
+        shared_ptr<Router> _router;
+        flat_buffer _buffer;
+
     public:
         explicit Detector(
             tcp::socket socket,
             context &ctx,
-            Router &router
+            shared_ptr<Router> router
         );
 
         void run();
 
         void on_detect(error_code code, tribool secured);
-
-    private:
-        tcp::socket _socket;
-        context &_ctx;
-        strand<io_context::executor_type> _strand;
-        Router &_router;
-        flat_buffer _buffer;
     };
 }
 

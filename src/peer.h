@@ -9,6 +9,10 @@
 using namespace std;
 
 class Peer {
+private:
+    string _addr;
+    int _age;
+
 public:
     Peer(const string &addr, int age);
 
@@ -29,10 +33,6 @@ public:
     friend bool operator<(const Peer &lhs, Peer &rhs);
 
     friend ostream &operator<<(ostream &stream, const Peer &rhs);
-
-private:
-    string _addr;
-    int _age;
 };
 
 #endif //SYNCAIDE_PEER_H
