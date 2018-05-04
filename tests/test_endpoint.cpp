@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_CASE(construct_invalid_endpoint) { // NOLINT
     BOOST_CHECK_THROW(Endpoint("I am not a valid URI."), invalid_argument);
 }
 
-BOOST_AUTO_TEST_CASE(construct_uri_from_char_array) { // NOLINT
+BOOST_AUTO_TEST_CASE(construct_endpoint_from_char_array) { // NOLINT
     BOOST_CHECK_NO_THROW(Endpoint("http://www.example.com"));
 }
 
@@ -56,6 +56,10 @@ BOOST_AUTO_TEST_CASE(construct_special_scheme_override) { // NOLINT
     BOOST_TEST(u.scheme() == "https");
     BOOST_TEST(u.host() == "www.example.com");
     BOOST_TEST(u.port() == 8443);
+}
+
+BOOST_AUTO_TEST_CASE(construct_localhost) { // NOLINT
+    BOOST_CHECK_NO_THROW(Endpoint("scheme://localhost"));
 }
 
 BOOST_AUTO_TEST_CASE(verify_type_ipv4) { // NOLINT
