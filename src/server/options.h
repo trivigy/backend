@@ -31,6 +31,8 @@ namespace server {
             } network;
         } defaults;
 
+        string config;
+
         struct {
             Endpoint advertise;
             Endpoint bind;
@@ -51,15 +53,17 @@ namespace server {
         bool parse(int argc, const char **argv) override;
 
     private:
-        void on_advertise(string source);
+        void on_config(string path);
 
-        void on_bind(string source);
+        void on_advertise(string endpoint);
 
-        void on_joins(vector<string> sources);
+        void on_bind(string endpoint);
 
-        void on_upstreams(vector<string> sources);
+        void on_joins(vector<string> endpoints);
 
-        void on_http(string source);
+        void on_upstreams(vector<string> endpoints);
+
+        void on_http(string endpoint);
 
         void on_threads(int threads);
     };

@@ -6,11 +6,18 @@ bool server::Options::parse(int argc, const char **argv) {
     using namespace std::placeholders;
 
     string program_name = program_location().stem().string();
-    string description = "Description of this application.";
+    string description =
+        "Mining pool backend responsible for distributed miner orchestration.\n\n"
+        "Configurations for endpoints (such as bind, joins, upstreams, and http) "
+        "can be provided using {host}:{port} notation. (e.g. 172.20.0.2:8080, "
+        "[::1]:8080, www.example.com:8888, etc.)";
     vector<po::options_description> descriptors;
     descriptors.emplace_back(po::options_description("Options"));
     descriptors.back().add_options()
         ("help", "show this help message and exit.")
+        ("config,c", po::value<string>(&config)
+                ->notifier(bind(&server::Options::on_config, this, _1)),
+            "specify configurations file to load arguments from instread of commandline.")
         ("advertise,a", po::value<string>()
                 ->default_value(defaults.network.bind.netloc(), "bind")
                 ->notifier(bind(&server::Options::on_advertise, this, _1)),
@@ -18,21 +25,21 @@ bool server::Options::parse(int argc, const char **argv) {
         ("bind,b", po::value<string>()
                 ->default_value(defaults.network.bind.netloc())
                 ->notifier(bind(&server::Options::on_bind, this, _1)),
-            "listen for connections on specified address for internal cluster communications (e.g. 172.20.0.2:8847, [::1]:8847, etc.)")
+            "listen for connections on specified address for internal cluster communications.")
         ("joins,j", po::value<vector<string>>()
                 ->multitoken()
                 ->default_value(vector<string>{}, string())
                 ->notifier(bind(&server::Options::on_joins, this, _1)),
-            "connect to cluster through the listed addresses (e.g. 172.20.0.2:8847, [::1]:8847, etc.)")
+            "connect to cluster through the listed addresses.")
         ("upstreams,u", po::value<vector<string>>()
                 ->multitoken()
                 ->default_value(vector<string>{}, string())
                 ->notifier(bind(&server::Options::on_upstreams, this, _1)),
-            "designated cryptocurrency clients for connection through the listed addresses (e.g. 172.20.0.2:8847, [::1]:8847, etc.)")
+            "designated cryptocurrency clients for connection through the listed addresses.")
         ("http,h", po::value<string>()
                 ->default_value(defaults.network.http.netloc())
                 ->notifier(bind(&server::Options::on_http, this, _1)),
-            "address to which syncd listens for http connections (e.g. 172.20.0.2:8080, [::1]:8080, etc.)")
+            "address to which syncd listens for http connections.")
         ("threads", po::value<unsigned int>(&network.threads)
                 ->multitoken()
                 ->default_value(defaults.network.threads)
@@ -122,28 +129,32 @@ bool server::Options::parse(int argc, const char **argv) {
     return true;
 }
 
-void server::Options::on_advertise(string source) {
+void server::Options::on_config(string path) {
+    // TODO validate file exists
+}
+
+void server::Options::on_advertise(string endpoint) {
     try {
-        network.advertise = Endpoint(source);
+        network.advertise = Endpoint(endpoint);
     } catch (const exception& e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "advertise");
     }
 }
 
-void server::Options::on_bind(string source) {
+void server::Options::on_bind(string endpoint) {
     try {
-        network.bind = Endpoint(source);
+        network.bind = Endpoint(endpoint);
     } catch (const exception& e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "bind");
     }
 }
 
-void server::Options::on_joins(vector<string> sources) {
+void server::Options::on_joins(vector<string> endpoints) {
     try {
-        for (auto &source : sources) {
-            network.joins.emplace_back(Endpoint(source));
+        for (auto &endpoint : endpoints) {
+            network.joins.emplace_back(Endpoint(endpoint));
         }
     } catch (const exception& e) {
         auto kind = po::validation_error::invalid_option_value;
@@ -151,10 +162,10 @@ void server::Options::on_joins(vector<string> sources) {
     }
 }
 
-void server::Options::on_upstreams(vector<string> sources) {
+void server::Options::on_upstreams(vector<string> endpoints) {
     try {
-        for (auto &source : sources) {
-            network.upstreams.emplace_back(Endpoint(source));
+        for (auto &endpoint : endpoints) {
+            network.upstreams.emplace_back(Endpoint(endpoint));
         }
     } catch (const exception& e) {
         auto kind = po::validation_error::invalid_option_value;
@@ -162,9 +173,9 @@ void server::Options::on_upstreams(vector<string> sources) {
     }
 }
 
-void server::Options::on_http(string source) {
+void server::Options::on_http(string endpoint) {
     try {
-        network.http = Endpoint(source);
+        network.http = Endpoint(endpoint);
     } catch (const exception& e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "http");
