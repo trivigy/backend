@@ -61,7 +61,7 @@ bool server::Options::parse(int argc, const char **argv) {
             maps.back()
         );
     } catch (exception &e) {
-        cerr << "error: " << e.what() << endl;
+        cerr << "\033[1;91m" << "error: " << e.what() << "\033[0m" << endl;
         cout << usage(
             program_name,
             description,
