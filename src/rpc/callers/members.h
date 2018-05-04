@@ -16,6 +16,9 @@ using namespace protos::members;
 namespace rpc {
     namespace callers {
         class MembersCaller {
+        private:
+            unique_ptr<Members::Stub> stub;
+
         public:
             explicit MembersCaller(
                 const shared_ptr<grpc::ChannelInterface> &channel
@@ -29,9 +32,6 @@ namespace rpc {
             tuple<grpc::Status, deque<Peer>> list();
 
             tuple<grpc::Status, string> status(const string &message);
-
-        private:
-            unique_ptr<Members::Stub> stub;
         };
     }
 }

@@ -20,6 +20,10 @@
 using namespace std;
 
 class View {
+private:
+    mutable shared_mutex _mutex;
+    deque<Peer> _peers;
+
 public:
     Peer random_peer();
 
@@ -51,10 +55,6 @@ protected:
     void remove_random(int qty);
 
     void maturate();
-
-private:
-    mutable shared_mutex _mutex;
-    deque<Peer> _peers;
 };
 
 #endif //SYNCAIDE_VIEW_H

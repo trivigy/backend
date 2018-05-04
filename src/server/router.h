@@ -40,6 +40,15 @@ namespace server {
     }
 
     class Rule {
+    private:
+        regex _regex;
+        function<
+            response<string_body>(
+                std::smatch &match,
+                boost::beast::http::request<string_body> &req
+            )
+        > _fn;
+
     public:
         template<typename Fn, typename Tuple>
         Rule(Fn &&fn, const string &pattern, Tuple) :
@@ -63,18 +72,12 @@ namespace server {
             }
             return _fn(match, req);
         }
-
-    private:
-        regex _regex;
-        function<
-            response<string_body>(
-                smatch &match,
-                request<string_body> &req
-            )
-        > _fn;
     };
 
     class Router {
+    private:
+        vector<Rule> _rules;
+
     public:
         template<typename Fn, typename... Args>
         void add(Fn &&fn, const string &pattern, Args ... args) {
@@ -104,9 +107,6 @@ namespace server {
             }
             return Response::not_found(req);
         }
-
-    private:
-        vector<Rule> _rules;
     };
 
 }

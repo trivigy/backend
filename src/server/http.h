@@ -149,6 +149,20 @@ namespace server {
             vector<unique_ptr<work>> _items;
         };
 
+    private:
+        request_type _req;
+        flat_buffer _buffer;
+        steady_timer _timer;
+        bool _eof = false;
+        context &_ctx;
+        shared_ptr<Router> _router;
+        queue _queue;
+
+    protected:
+        Socket _socket;
+        strand<io_context::executor_type> _strand;
+        tribool _secured;
+
     public:
         Http(
             tcp::socket socket,
@@ -190,26 +204,12 @@ namespace server {
 
 #endif //NDEBUG
 
-
     private:
-        request_type _req;
-        flat_buffer _buffer;
-        steady_timer _timer;
-        bool _eof = false;
-        context &_ctx;
-        shared_ptr<Router> _router;
-        queue _queue;
-
         static Socket deduce_socket(
             tcp::socket socket,
             context &ctx,
             tribool secured
         );
-
-    protected:
-        Socket _socket;
-        strand<io_context::executor_type> _strand;
-        tribool _secured;
     };
 }
 

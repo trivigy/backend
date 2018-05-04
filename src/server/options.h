@@ -47,6 +47,7 @@ namespace server {
             int S = 0;
         } members;
 
+    public:
         bool parse(int argc, const char **argv) override;
 
     private:

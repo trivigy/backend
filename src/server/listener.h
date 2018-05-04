@@ -19,6 +19,12 @@ namespace server {
     using boost::asio::ssl::context;
 
     class Listener : public enable_shared_from_this<Listener> {
+    private:
+        context &_ctx;
+        tcp::acceptor _acceptor;
+        tcp::socket _socket;
+        shared_ptr<Router> _router;
+
     public:
         Listener(
             io_context &ioc,
@@ -32,12 +38,6 @@ namespace server {
         void accept();
 
         void on_accept(error_code code);
-
-    private:
-        context &_ctx;
-        tcp::acceptor _acceptor;
-        tcp::socket _socket;
-        shared_ptr<Router> _router;
     };
 }
 

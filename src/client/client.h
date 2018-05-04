@@ -19,6 +19,9 @@ namespace client {
     using json = nlohmann::json;
 
     class Client {
+    private:
+        Options *_cfg;
+
     public:
         explicit Client(Options &options);
 
@@ -27,8 +30,6 @@ namespace client {
         int start();
 
     private:
-        Options *_cfg;
-
         int members_gossip();
 
         int members_list();

@@ -52,6 +52,19 @@ namespace server {
         using request_type = request<string_body>;
         using response_type = response<string_body>;
 
+    private:
+        multi_buffer _buffer;
+        steady_timer _timer;
+        bool _close = false;
+        bool _eof = false;
+        context &_ctx;
+        json _params;
+
+    protected:
+        Socket _socket;
+        strand<io_context::executor_type> _strand;
+        tribool _secured;
+
     public:
         explicit Websocket(
             ssl_stream<tcp::socket> socket,
@@ -84,19 +97,6 @@ namespace server {
         void on_read(error_code code, size_t bytes_transferred);
 
         void on_write(error_code code, size_t bytes_transferred);
-
-    private:
-        multi_buffer _buffer;
-        steady_timer _timer;
-        bool _close = false;
-        bool _eof = false;
-        context &_ctx;
-        json _params;
-
-    protected:
-        Socket _socket;
-        strand<io_context::executor_type> _strand;
-        tribool _secured;
     };
 }
 

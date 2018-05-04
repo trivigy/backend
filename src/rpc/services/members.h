@@ -21,6 +21,9 @@ namespace rpc {
         using namespace boost::algorithm;
 
         class MembersService final : public Members::Service {
+        private:
+            shared_ptr<server::Server> _server;
+
         public:
             explicit MembersService(shared_ptr<server::Server> server);
 
@@ -41,9 +44,6 @@ namespace rpc {
                 const StatusRequest *request,
                 StatusResponse *response
             ) override;
-
-        private:
-            shared_ptr<server::Server> _server;
         };
     }
 }
