@@ -96,9 +96,7 @@ void server::Http::eof() {
 
 void server::Http::timeout() {
     if (_secured) {
-        if (_eof) {
-            return;
-        }
+        if (_eof) return;
 
         _timer.expires_at(
             chrono::time_point<chrono::steady_clock>::max()
@@ -113,26 +111,16 @@ void server::Http::timeout() {
 }
 
 void server::Http::on_handshake(error_code code, size_t bytes_used) {
-    if (code == operation_aborted) {
-        return;
-    }
-
-    if (code) {
-        return log("handshake", code);
-    }
+    if (code == operation_aborted) return;
+    if (code) return log("handshake", code);
 
     _buffer.consume(bytes_used);
     read();
 }
 
 void server::Http::on_timer(error_code code) {
-    if (code && code != operation_aborted) {
-        return log("timer", code);
-    }
-
-    if (_timer.expiry() <= chrono::steady_clock::now()) {
-        return timeout();
-    }
+    if (code && code != operation_aborted) return log("timer", code);
+    if (_timer.expiry() <= chrono::steady_clock::now()) return timeout();
 
     _timer.async_wait(
         bind_executor(
@@ -147,17 +135,9 @@ void server::Http::on_timer(error_code code) {
 }
 
 void server::Http::on_read(error_code code) {
-    if (code == operation_aborted) {
-        return;
-    }
-
-    if (code == http::error::end_of_stream) {
-        return eof();
-    }
-
-    if (code) {
-        return log("read", code);
-    }
+    if (code == operation_aborted) return;
+    if (code == end_of_stream) return eof();
+    if (code) return log("read", code);
 
     auto fields = json::object();
     for (auto &field : _req) {
@@ -222,37 +202,19 @@ void server::Http::on_read(error_code code) {
         }
     }
 
-    if (!_queue.is_full()) {
-        read();
-    }
+    if (!_queue.is_full()) read();
 }
 
 void server::Http::on_write(error_code code, bool close) {
-    if (code == operation_aborted) {
-        return;
-    }
-
-    if (code) {
-        return log("write", code);
-    }
-
-    if (close) {
-        return eof();
-    }
-
-    if (_queue.on_write()) {
-        read();
-    }
+    if (code == operation_aborted) return;
+    if (code) return log("write", code);
+    if (close) return eof();
+    if (_queue.on_write()) read();
 }
 
 void server::Http::on_shutdown(error_code code) {
-    if (code == operation_aborted) {
-        return;
-    }
-
-    if (code) {
-        return log("shutdown", code);
-    }
+    if (code == operation_aborted) return;
+    if (code) return log("shutdown", code);
 }
 
 server::Http::response_type
@@ -374,9 +336,6 @@ server::Http::Socket server::Http::deduce_socket(
     context &ctx,
     tribool secured
 ) {
-    if (secured) {
-        return ssl_stream<tcp::socket>(move(socket), ctx);
-    } else {
-        return tcp::socket(move(socket));
-    }
+    if (secured) return ssl_stream<tcp::socket>(move(socket), ctx);
+    else return tcp::socket(move(socket));
 }

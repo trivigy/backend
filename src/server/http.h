@@ -45,6 +45,7 @@ namespace server {
     using boost::beast::string_view;
     using boost::beast::flat_buffer;
     using boost::beast::string_param;
+    using boost::beast::http::error::end_of_stream;
     using boost::asio::bind_executor;
     using boost::asio::steady_timer;
     using boost::asio::ssl::context;
@@ -139,9 +140,7 @@ namespace server {
                 };
 
                 _items.emplace_back(new work_impl(_self, move(msg)));
-                if (_items.size() == 1) {
-                    (*_items.front())();
-                }
+                if (_items.size() == 1) (*_items.front())();
             }
 
         private:
