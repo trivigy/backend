@@ -165,7 +165,6 @@ namespace server {
 
         void run();
 
-    private:
         void on_detect(error_code code, tribool secured);
 
         template<class Stream, class Buffer, class Token>
