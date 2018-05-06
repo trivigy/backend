@@ -148,37 +148,16 @@ namespace server {
         }
     };
 
-    class Detector : public enable_shared_from_this<Detector> {
-    private:
-        tcp::socket _socket;
-        context &_ctx;
-        strand<io_context::executor_type> _strand;
-        shared_ptr<Router> _router;
-        flat_buffer _buffer;
+    template<class Stream, class Buffer, class Token>
+    RESULT_TYPE(Token, HANDLER_SIG)
+    async_detect_ssl(Stream &stream, Buffer &buffer, Token &&token) {
+        async_completion<Token, HANDLER_SIG> init{token};
+        DetectSslOp<Stream, Buffer, HANDLER_TYPE(Token, HANDLER_SIG)>{
+            stream, buffer, init.completion_handler
+        }(error_code{}, 0);
 
-    public:
-        explicit Detector(
-            tcp::socket socket,
-            context &ctx,
-            shared_ptr<Router> router
-        );
-
-        void run();
-
-        void on_detect(error_code code, tribool secured);
-
-        template<class Stream, class Buffer, class Token>
-        RESULT_TYPE(Token, HANDLER_SIG)
-        async_detect_ssl(Stream &stream, Buffer &buffer, Token &&token) {
-            async_completion<Token, void(error_code, tribool)> init{token};
-
-            DetectSslOp<Stream, Buffer, HANDLER_TYPE(Token, HANDLER_SIG)>{
-                stream, buffer, init.completion_handler
-            }(error_code{}, 0);
-
-            return init.result.get();
-        }
-    };
+        return init.result.get();
+    }
 }
 
 #endif //SYNCAIDE_SERVER_DETECT_SSL_H

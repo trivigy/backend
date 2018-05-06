@@ -33,13 +33,7 @@ server::Listener::Listener(
 }
 
 void server::Listener::run() {
-    if (!_acceptor.is_open()) {
-        return;
-    }
-    accept();
-}
-
-void server::Listener::accept() {
+    if (!_acceptor.is_open()) return;
     _acceptor.async_accept(
         _socket,
         bind(
@@ -51,10 +45,14 @@ void server::Listener::accept() {
 }
 
 void server::Listener::on_accept(error_code code) {
-    if (code) {
-        log("accept", code);
-    } else {
-        make_shared<Detector>(move(_socket), _ctx, _router)->run();
-    }
-    accept();
+    if (code) log("accept", code);
+    make_shared<Handoff>(move(_socket), _ctx, _router)->run();
+    _acceptor.async_accept(
+        _socket,
+        bind(
+            &Listener::on_accept,
+            shared_from_this(),
+            std::placeholders::_1
+        )
+    );
 }

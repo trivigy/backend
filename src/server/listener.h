@@ -2,7 +2,7 @@
 #define SYNCAIDE_SERVER_LISTENER_H
 
 #include "server/helper.h"
-#include "server/detector.h"
+#include "server/handoff.h"
 #include "server/router.h"
 
 #include <boost/asio/ip/tcp.hpp>
@@ -34,8 +34,6 @@ namespace server {
         );
 
         void run();
-
-        void accept();
 
         void on_accept(error_code code);
     };
