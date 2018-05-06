@@ -58,7 +58,7 @@ namespace server {
 
     class Http : public enable_shared_from_this<Http> {
         using plain_socket = tcp::socket;
-        using ssl_socket = SslStream<tcp::socket>;
+        using ssl_socket = ssl_stream<tcp::socket>;
         using request_type = request<string_body>;
         using response_type = response<string_body>;
         using Socket = variant<plain_socket, ssl_socket>;
@@ -108,10 +108,9 @@ namespace server {
 
                     void operator()() override {
                         if (_self._secured) {
-                            auto &sock = boost::get<ssl_socket>(_self._socket);
+                            auto &s = boost::get<ssl_socket>(_self._socket);
                             http::async_write(
-                                sock,
-                                _msg,
+                                s, _msg,
                                 bind_executor(
                                     _self._strand,
                                     bind(
@@ -123,10 +122,9 @@ namespace server {
                                 )
                             );
                         } else {
-                            auto &sock = boost::get<plain_socket>(_self._socket);
+                            auto &s = boost::get<plain_socket>(_self._socket);
                             http::async_write(
-                                sock,
-                                _msg,
+                                s, _msg,
                                 bind_executor(
                                     _self._strand,
                                     bind(

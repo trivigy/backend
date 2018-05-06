@@ -18,7 +18,7 @@ namespace server {
     using boost::asio::ssl::verify_mode;
 
     template<class NextLayer>
-    class SslStream : public ssl::stream_base {
+    class ssl_stream : public boost::asio::ssl::stream_base {
         using stream_type = ssl::stream<NextLayer>;
 
     private:
@@ -32,20 +32,20 @@ namespace server {
         using lowest_layer_type = typename stream_type::lowest_layer_type;
         using executor_type = typename stream_type::executor_type;
 
-        SslStream(tcp::socket socket, ssl::context& ctx) :
+        ssl_stream(tcp::socket socket, ssl::context& ctx) :
             _p(new stream_type{socket.get_executor().context(), ctx}),
             _ctx(&ctx) {
             _p->next_layer() = move(socket);
         }
 
-        SslStream(SslStream&& other) noexcept :
+        ssl_stream(ssl_stream&& other) noexcept :
             _p(new stream_type(other.get_executor().context(), *other._ctx)),
             _ctx(other._ctx) {
             using std::swap;
             swap(_p, other._p);
         }
 
-        SslStream& operator=(SslStream&& other) noexcept {
+        ssl_stream& operator=(ssl_stream&& other) noexcept {
             std::unique_ptr<stream_type> p(new stream_type(
                 other.get_executor().context(), 
                 *other._ctx
@@ -137,10 +137,13 @@ namespace server {
             HandshakeHandler,
             void(boost::system::error_code)
         )
-        async_handshake(handshake_type type,
+        async_handshake(
+            handshake_type type,
             BOOST_ASIO_MOVE_ARG(HandshakeHandler) handler
         ) {
-            return _p->async_handshake(type, handler);
+            return _p->async_handshake(type,
+                BOOST_ASIO_MOVE_CAST(HandshakeHandler)(handler)
+            );
         }
 
         template<class ConstBufferSeq, class BufferedHandshakeHandler>
@@ -153,7 +156,9 @@ namespace server {
             ConstBufferSeq const& buffers,
             BOOST_ASIO_MOVE_ARG(BufferedHandshakeHandler) handler
         ) {
-            return _p->async_handshake(type, buffers, handler);
+            return _p->async_handshake(type, buffers,
+                BOOST_ASIO_MOVE_CAST(BufferedHandshakeHandler)(handler)
+            );
         }
 
         void shutdown() {
@@ -170,7 +175,9 @@ namespace server {
             void (boost::system::error_code)
         )
         async_shutdown(BOOST_ASIO_MOVE_ARG(ShutdownHandler) handler) {
-            return _p->async_shutdown(handler);
+            return _p->async_shutdown(
+                BOOST_ASIO_MOVE_CAST(ShutdownHandler)(handler)
+            );
         }
 
         template<class ConstBufferSeq>
@@ -192,7 +199,9 @@ namespace server {
             ConstBufferSeq const& buffers,
             BOOST_ASIO_MOVE_ARG(WriteHandler) handler
         ) {
-            return _p->async_write_some(buffers, handler);
+            return _p->async_write_some(buffers,
+                BOOST_ASIO_MOVE_CAST(WriteHandler)(handler)
+            );
         }
 
         template<class MutableBufferSequence>
@@ -217,20 +226,22 @@ namespace server {
             MutableBufferSequence const& buffers,
             BOOST_ASIO_MOVE_ARG(ReadHandler) handler
         ) {
-            return _p->async_read_some(buffers, handler);
+            return _p->async_read_some(buffers,
+                BOOST_ASIO_MOVE_CAST(ReadHandler)(handler)
+            );
         }
 
         template<class SyncStream>
         friend void teardown(
             boost::beast::websocket::role_type,
-            SslStream<SyncStream>& stream,
+            ssl_stream<SyncStream>& stream,
             error_code& code
         );
 
         template<class AsyncStream, class TeardownHandler>
         friend void async_teardown(
             boost::beast::websocket::role_type,
-            SslStream<AsyncStream>& stream,
+            ssl_stream<AsyncStream>& stream,
             TeardownHandler&& handler
         );
     };
@@ -238,7 +249,7 @@ namespace server {
     template<class SyncStream>
     inline void teardown(
         boost::beast::websocket::role_type role,
-        SslStream<SyncStream>& stream,
+        ssl_stream<SyncStream>& stream,
         boost::system::error_code& code
     ) {
         using boost::beast::websocket::teardown;
@@ -248,7 +259,7 @@ namespace server {
     template<class AsyncStream, class TeardownHandler>
     inline void async_teardown(
         boost::beast::websocket::role_type role,
-        SslStream<AsyncStream>& stream,
+        ssl_stream<AsyncStream>& stream,
         TeardownHandler&& handler
     ) {
         using boost::beast::websocket::async_teardown;

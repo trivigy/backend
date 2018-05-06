@@ -2,7 +2,7 @@
 #include "server/websocket.h"
 
 server::Websocket::Websocket(
-    SslStream<tcp::socket> socket,
+    ssl_stream<tcp::socket> socket,
     boost::tribool secured,
     context &ctx,
     json &&params
@@ -26,7 +26,7 @@ server::Websocket::Websocket(
         socket.get_executor().context(),
         chrono::time_point<chrono::steady_clock>::max()
     ),
-    _socket(ssl_socket(move(socket))),
+    _socket(plain_socket(move(socket))),
     _secured(secured),
     _ctx(ctx),
     _params(move(params)) {}

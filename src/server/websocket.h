@@ -46,7 +46,7 @@ namespace server {
 
     class Websocket : public enable_shared_from_this<Websocket> {
         using plain_socket = websocket::stream<tcp::socket>;
-        using ssl_socket = websocket::stream<SslStream<tcp::socket>>;
+        using ssl_socket = websocket::stream<ssl_stream<tcp::socket>>;
         using Socket = variant<plain_socket, ssl_socket>;
         using request_type = request<string_body>;
         using response_type = response<string_body>;
@@ -66,7 +66,7 @@ namespace server {
 
     public:
         explicit Websocket(
-            SslStream<tcp::socket> socket,
+            ssl_stream<tcp::socket> socket,
             tribool secured,
             context &ctx,
             json &&params
