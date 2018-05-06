@@ -23,7 +23,7 @@ void server::Http::run() {
     on_timer({});
     if (_secured) {
         _timer.expires_after(chrono::seconds(15));
-        get<ssl_stream<tcp::socket>>(_socket).async_handshake(
+        boost::get<ssl_socket>(_socket).async_handshake(
             ssl::stream_base::server,
             _buffer.data(),
             bind_executor(
@@ -45,7 +45,7 @@ void server::Http::read() {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
         http::async_read(
-            get<ssl_stream<tcp::socket>>(_socket),
+            boost::get<ssl_socket>(_socket),
             _buffer,
             _req,
             bind_executor(
@@ -59,7 +59,7 @@ void server::Http::read() {
         );
     } else {
         http::async_read(
-            get<tcp::socket>(_socket),
+            boost::get<plain_socket>(_socket),
             _buffer,
             _req,
             bind_executor(
@@ -78,7 +78,7 @@ void server::Http::eof() {
     if (_secured) {
         _eof = true;
         _timer.expires_after(chrono::seconds(15));
-        get<ssl_stream<tcp::socket>>(_socket).async_shutdown(
+        boost::get<ssl_socket>(_socket).async_shutdown(
             bind_executor(
                 _strand,
                 bind(
@@ -90,30 +90,28 @@ void server::Http::eof() {
         );
     } else {
         error_code code;
-        get<tcp::socket>(_socket).shutdown(tcp::socket::shutdown_send, code);
+        auto &socket = boost::get<plain_socket>(_socket);
+        socket.shutdown(tcp::socket::shutdown_send, code);
     }
 }
 
 void server::Http::timeout() {
     if (_secured) {
         if (_eof) return;
-
-        _timer.expires_at(
-            chrono::time_point<chrono::steady_clock>::max()
-        );
+        _timer.expires_at(chrono::time_point<chrono::steady_clock>::max());
         on_timer({});
         eof();
     } else {
         error_code code;
-        get<tcp::socket>(_socket).shutdown(tcp::socket::shutdown_both, code);
-        get<tcp::socket>(_socket).close(code);
+        auto &socket = boost::get<plain_socket>(_socket);
+        socket.shutdown(tcp::socket::shutdown_both, code);
+        socket.close(code);
     }
 }
 
 void server::Http::on_handshake(error_code code, size_t bytes_used) {
     if (code == operation_aborted) return;
     if (code) return log("handshake", code);
-
     _buffer.consume(bytes_used);
     read();
 }
@@ -121,7 +119,6 @@ void server::Http::on_handshake(error_code code, size_t bytes_used) {
 void server::Http::on_timer(error_code code) {
     if (code && code != operation_aborted) return log("timer", code);
     if (_timer.expiry() <= chrono::steady_clock::now()) return timeout();
-
     _timer.async_wait(
         bind_executor(
             _strand,
@@ -136,7 +133,7 @@ void server::Http::on_timer(error_code code) {
 
 void server::Http::on_read(error_code code) {
     if (code == operation_aborted) return;
-    if (code == end_of_stream) return eof();
+    if (code == http::error::end_of_stream) return eof();
     if (code) return log("read", code);
 
     auto fields = json::object();
@@ -146,11 +143,9 @@ void server::Http::on_read(error_code code) {
 
     tcp::endpoint remote;
     if (_secured) {
-        remote = get<ssl_stream<tcp::socket>>(_socket)
-            .next_layer()
-            .remote_endpoint();
+        remote = boost::get<ssl_socket>(_socket).next_layer().remote_endpoint();
     } else {
-        remote = get<tcp::socket>(_socket).remote_endpoint();
+        remote = boost::get<plain_socket>(_socket).remote_endpoint();
     }
 
     json extra = {
@@ -182,14 +177,14 @@ void server::Http::on_read(error_code code) {
         if (websocket::is_upgrade(_req)) {
             if (_secured) {
                 make_shared<Websocket>(
-                    move(get<ssl_stream<tcp::socket>>(_socket)),
+                    move(boost::get<ssl_socket>(_socket)),
                     _secured,
                     _ctx,
                     move(params)
                 )->run(move(_req));
             } else {
                 make_shared<Websocket>(
-                    move(get<tcp::socket>(_socket)),
+                    move(boost::get<plain_socket>(_socket)),
                     _secured,
                     _ctx,
                     move(params)
@@ -336,6 +331,9 @@ server::Http::Socket server::Http::deduce_socket(
     context &ctx,
     tribool secured
 ) {
-    if (secured) return ssl_stream<tcp::socket>(move(socket), ctx);
-    else return tcp::socket(move(socket));
+    if (secured) {
+        return ssl_socket(move(socket), ctx);
+    } else {
+        return plain_socket(move(socket));
+    }
 }

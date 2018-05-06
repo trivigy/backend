@@ -40,15 +40,14 @@ namespace server {
     using boost::asio::ip::tcp;
     using boost::asio::strand;
     using boost::asio::error::operation_aborted;
+    using boost::ignore_unused;
     using boost::variant;
-    using boost::get;
     using boost::tribool;
 
     class Websocket : public enable_shared_from_this<Websocket> {
-        using Socket = variant<
-            websocket::stream<tcp::socket>,
-            websocket::stream<ssl_stream<tcp::socket>>
-        >;
+        using plain_socket = websocket::stream<tcp::socket>;
+        using ssl_socket = websocket::stream<SslStream<tcp::socket>>;
+        using Socket = variant<plain_socket, ssl_socket>;
         using request_type = request<string_body>;
         using response_type = response<string_body>;
 
@@ -67,7 +66,7 @@ namespace server {
 
     public:
         explicit Websocket(
-            ssl_stream<tcp::socket> socket,
+            SslStream<tcp::socket> socket,
             tribool secured,
             context &ctx,
             json &&params

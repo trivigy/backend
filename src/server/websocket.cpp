@@ -2,7 +2,7 @@
 #include "server/websocket.h"
 
 server::Websocket::Websocket(
-    ssl_stream<tcp::socket> socket,
+    SslStream<tcp::socket> socket,
     boost::tribool secured,
     context &ctx,
     json &&params
@@ -11,7 +11,7 @@ server::Websocket::Websocket(
         socket.next_layer().get_executor().context(),
         chrono::time_point<chrono::steady_clock>::max()
     ),
-    _socket(websocket::stream<ssl_stream<tcp::socket>>(move(socket))),
+    _socket(ssl_socket(move(socket))),
     _secured(secured),
     _ctx(ctx),
     _params(move(params)) {}
@@ -26,7 +26,7 @@ server::Websocket::Websocket(
         socket.get_executor().context(),
         chrono::time_point<chrono::steady_clock>::max()
     ),
-    _socket(websocket::stream<tcp::socket>(move(socket))),
+    _socket(ssl_socket(move(socket))),
     _secured(secured),
     _ctx(ctx),
     _params(move(params)) {}
@@ -39,8 +39,7 @@ void server::Websocket::run(request_type &&req) {
 void server::Websocket::accept(request_type &&req) {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
-        auto &socket = get<websocket::stream<ssl_stream<tcp::socket>>>(_socket);
-        socket.async_accept(
+        boost::get<ssl_socket>(_socket).async_accept(
             req,
             bind_executor(
                 _strand,
@@ -52,8 +51,7 @@ void server::Websocket::accept(request_type &&req) {
             )
         );
     } else {
-        auto &socket = get<websocket::stream<tcp::socket>>(_socket);
-        socket.async_accept(
+        boost::get<plain_socket>(_socket).async_accept(
             req,
             bind_executor(
                 _strand,
@@ -70,8 +68,7 @@ void server::Websocket::accept(request_type &&req) {
 void server::Websocket::read() {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
-        auto &socket = get<websocket::stream<ssl_stream<tcp::socket>>>(_socket);
-        socket.async_read(
+        boost::get<ssl_socket>(_socket).async_read(
             _buffer,
             bind_executor(
                 _strand,
@@ -84,8 +81,7 @@ void server::Websocket::read() {
             )
         );
     } else {
-        auto &socket = get<websocket::stream<tcp::socket>>(_socket);
-        socket.async_read(
+        boost::get<plain_socket>(_socket).async_read(
             _buffer,
             bind_executor(
                 _strand,
@@ -102,19 +98,13 @@ void server::Websocket::read() {
 
 void server::Websocket::timeout() {
     if (_secured) {
-        if (_eof) {
-            return;
-        }
-
-        _timer.expires_at(
-            chrono::time_point<chrono::steady_clock>::max()
-        );
+        if (_eof) return;
+        _timer.expires_at(chrono::time_point<chrono::steady_clock>::max());
 
         on_timer({});
         _eof = true;
         _timer.expires_after(chrono::seconds(15));
-        auto &socket = get<websocket::stream<ssl_stream<tcp::socket>>>(_socket);
-        socket.next_layer().async_shutdown(
+        boost::get<ssl_socket>(_socket).next_layer().async_shutdown(
             bind_executor(
                 _strand,
                 bind(
@@ -125,14 +115,10 @@ void server::Websocket::timeout() {
             )
         );
     } else {
-        if (_close) {
-            return;
-        }
-
+        if (_close) return;
         _close = true;
         _timer.expires_after(chrono::seconds(15));
-        auto &socket = get<websocket::stream<tcp::socket>>(_socket);
-        socket.async_close(
+        boost::get<plain_socket>(_socket).async_close(
             (const uint16_t) websocket::close_code::normal,
             bind_executor(
                 _strand,
@@ -170,9 +156,7 @@ void server::Websocket::on_timer(error_code code) {
 }
 
 void server::Websocket::on_accept(error_code code) {
-    if (code == operation_aborted) {
-        return;
-    }
+    if (code == operation_aborted) return;
 
     if (code) {
         cerr << "--- 10 ---" << endl;
@@ -185,9 +169,7 @@ void server::Websocket::on_accept(error_code code) {
 }
 
 void server::Websocket::on_conclude(error_code code) {
-    if (code == operation_aborted) {
-        return;
-    }
+    if (code == operation_aborted) return;
 
     if (code) {
         cerr << "--- 9 ---" << endl;
@@ -196,15 +178,9 @@ void server::Websocket::on_conclude(error_code code) {
 }
 
 void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
-    boost::ignore_unused(bytes_transferred);
-
-    if (code == operation_aborted) {
-        return;
-    }
-
-    if (code == websocket::error::closed) {
-        return;
-    }
+    ignore_unused(bytes_transferred);
+    if (code == operation_aborted) return;
+    if (code == websocket::error::closed) return;
 
     if (code) {
         cerr << "--- 7 ---" << endl;
@@ -212,7 +188,7 @@ void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
     }
 
     if (_secured) {
-        auto &socket = get<websocket::stream<ssl_stream<tcp::socket>>>(_socket);
+        auto &socket = boost::get<ssl_socket>(_socket);
         socket.text(socket.got_text());
         socket.async_write(
             _buffer.data(),
@@ -227,7 +203,7 @@ void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
             )
         );
     } else {
-        auto &socket = get<websocket::stream<tcp::socket>>(_socket);
+        auto &socket = boost::get<plain_socket>(_socket);
         socket.text(socket.got_text());
         socket.async_write(
             _buffer.data(),
@@ -245,10 +221,8 @@ void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
 }
 
 void server::Websocket::on_write(error_code code, size_t bytes_transferred) {
-    boost::ignore_unused(bytes_transferred);
-    if (code == operation_aborted) {
-        return;
-    }
+    ignore_unused(bytes_transferred);
+    if (code == operation_aborted) return;
 
     if (code) {
         cerr << "--- 6 ---" << endl;

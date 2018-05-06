@@ -45,7 +45,6 @@ namespace server {
     using boost::beast::string_view;
     using boost::beast::flat_buffer;
     using boost::beast::string_param;
-    using boost::beast::http::error::end_of_stream;
     using boost::asio::bind_executor;
     using boost::asio::steady_timer;
     using boost::asio::ssl::context;
@@ -55,13 +54,14 @@ namespace server {
     using boost::asio::strand;
     using boost::asio::error::operation_aborted;
     using boost::variant;
-    using boost::get;
     using boost::tribool;
 
     class Http : public enable_shared_from_this<Http> {
-        using Socket = variant<tcp::socket, ssl_stream<tcp::socket>>;
+        using plain_socket = tcp::socket;
+        using ssl_socket = SslStream<tcp::socket>;
         using request_type = request<string_body>;
         using response_type = response<string_body>;
+        using Socket = variant<plain_socket, ssl_socket>;
 
         class queue {
             enum {
@@ -108,8 +108,9 @@ namespace server {
 
                     void operator()() override {
                         if (_self._secured) {
+                            auto &sock = boost::get<ssl_socket>(_self._socket);
                             http::async_write(
-                                get<ssl_stream<tcp::socket>>(_self._socket),
+                                sock,
                                 _msg,
                                 bind_executor(
                                     _self._strand,
@@ -122,8 +123,9 @@ namespace server {
                                 )
                             );
                         } else {
+                            auto &sock = boost::get<plain_socket>(_self._socket);
                             http::async_write(
-                                get<tcp::socket>(_self._socket),
+                                sock,
                                 _msg,
                                 bind_executor(
                                     _self._strand,
