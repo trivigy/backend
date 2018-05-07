@@ -8,10 +8,7 @@ server::Http::Http(
     context &ctx,
     shared_ptr<Router> router
 ) : _strand(socket.get_executor().context().get_executor()),
-    _timer(
-        socket.get_executor().context(),
-        chrono::time_point<chrono::steady_clock>::max()
-    ),
+    _timer(socket.get_executor().context(), steady_time_point::max()),
     _socket(deduce_socket(move(socket), ctx, secured)),
     _buffer(move(buffer)),
     _secured(secured),
@@ -98,7 +95,7 @@ void server::Http::eof() {
 void server::Http::timeout() {
     if (_secured) {
         if (_eof) return;
-        _timer.expires_at(chrono::time_point<chrono::steady_clock>::max());
+        _timer.expires_at(steady_time_point::max());
         on_timer({});
         eof();
     } else {
@@ -190,7 +187,7 @@ void server::Http::on_read(error_code code) {
                     move(params)
                 )->run(move(_req));
             }
-            _timer.expires_at(chrono::time_point<chrono::steady_clock>::max());
+            _timer.expires_at(steady_time_point::max());
             return;
         } else {
             _queue(Response::bad_request(_req));

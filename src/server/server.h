@@ -5,6 +5,7 @@
 #include "server/options.h"
 #include "server/listener.h"
 #include "server/router.h"
+#include "server/helper.h"
 #include "server/http.h"
 #include "rpc/callers/members.h"
 #include "rpc/services/members.h"

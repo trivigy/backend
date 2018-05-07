@@ -9,7 +9,7 @@ server::Websocket::Websocket(
 ) : _strand(socket.next_layer().get_executor().context().get_executor()),
     _timer(
         socket.next_layer().get_executor().context(),
-        chrono::time_point<chrono::steady_clock>::max()
+        steady_time_point::max()
     ),
     _socket(ssl_socket(move(socket))),
     _secured(secured),
@@ -22,10 +22,7 @@ server::Websocket::Websocket(
     context &ctx,
     json &&params
 ) : _strand(socket.get_executor().context().get_executor()),
-    _timer(
-        socket.get_executor().context(),
-        chrono::time_point<chrono::steady_clock>::max()
-    ),
+    _timer(socket.get_executor().context(), steady_time_point::max()),
     _socket(plain_socket(move(socket))),
     _secured(secured),
     _ctx(ctx),
@@ -99,7 +96,7 @@ void server::Websocket::read() {
 void server::Websocket::timeout() {
     if (_secured) {
         if (_eof) return;
-        _timer.expires_at(chrono::time_point<chrono::steady_clock>::max());
+        _timer.expires_at(steady_time_point::max());
 
         on_timer({});
         _eof = true;

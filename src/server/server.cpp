@@ -6,7 +6,7 @@ server::exit_t server::exit; // NOLINT
 server::Peering::Peering(shared_ptr<Server> server) :
     _server(move(server)),
     _view(make_shared<View>()),
-    _timer(_ioc, chrono::time_point<chrono::steady_clock>::max()) {
+    _timer(_ioc, steady_time_point::max()) {
     auto cfg = _server->cfg();
 
     deque<Peer> buffer;
