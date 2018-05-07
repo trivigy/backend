@@ -105,8 +105,8 @@ void server::Frontend::start() {
 #endif //NDEBUG
 
     load_http_certificate(_ctx);
-    auto address = ip::make_address(_server->cfg()->network.http.host());
-    tcp::endpoint endpoint(address, _server->cfg()->network.http.port());
+    auto address = ip::make_address(_server->cfg()->network.frontend.host());
+    tcp::endpoint endpoint(address, _server->cfg()->network.frontend.port());
     make_shared<Listener>(_ioc, _ctx, endpoint, _router)->run();
 
     _handlers.reserve(_server->cfg()->network.threads);
