@@ -69,12 +69,21 @@ namespace server {
 
     class Upstream : public enable_shared_from_this<Upstream> {
     private:
+        io_context _ioc;
+        vector<thread> _handlers;
         shared_ptr<Server> _server;
+        steady_timer _timer_info;
+        steady_timer _timer_block_template;
 
     public:
         explicit Upstream(shared_ptr<Server> server);
 
         void start();
+
+    private:
+        void on_check_info(error_code code);
+
+        void on_check_block_template(error_code code);
     };
 
     class Frontend : public enable_shared_from_this<Frontend> {

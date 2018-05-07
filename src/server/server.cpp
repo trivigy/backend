@@ -32,9 +32,7 @@ void server::Peering::start() {
 
     _handlers.emplace_back([&] { _rpc->Wait(); });
     _handlers.emplace_back([&] { _ioc.run(); });
-
-    auto future = server::exit.peering.get_future();
-    future.wait();
+    server::exit.peering.get_future().wait();
     _rpc->Shutdown();
     _ioc.stop();
     for_each(_handlers.begin(), _handlers.end(), [](thread &t) { t.join(); });
@@ -80,10 +78,43 @@ void server::Peering::on_pulse(error_code code) {
 }
 
 server::Upstream::Upstream(shared_ptr<Server> server) :
-    _server(move(server)) {}
+    _server(move(server)),
+    _timer_info(_ioc, steady_time_point::max()),
+    _timer_block_template(_ioc, steady_time_point::max()){}
 
 void server::Upstream::start() {
+    on_check_info({});
+    on_check_block_template({});
 
+    _handlers.emplace_back([&] { _ioc.run(); });
+    server::exit.upstream.get_future().wait();
+    _ioc.stop();
+    for_each(_handlers.begin(), _handlers.end(), [](thread &t) { t.join(); });
+
+}
+
+void server::Upstream::on_check_info(error_code code) {
+    cerr << "Upstream::on_check_info()" << endl;
+    _timer_info.expires_after(chrono::seconds(1));
+    _timer_info.async_wait(
+        bind(
+            &Upstream::on_check_info,
+            shared_from_this(),
+            placeholders::_1
+        )
+    );
+}
+
+void server::Upstream::on_check_block_template(error_code code) {
+    cerr << "Upstream::on_check_block_template()" << endl;
+    _timer_block_template.expires_after(chrono::seconds(1));
+    _timer_block_template.async_wait(
+        bind(
+            &Upstream::on_check_block_template,
+            shared_from_this(),
+            placeholders::_1
+        )
+    );
 }
 
 server::Frontend::Frontend(shared_ptr<Server> server) :
