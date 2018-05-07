@@ -1,6 +1,6 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "OCUnusedMacroInspection"
-#define BOOST_TEST_MODULE test_view
+#define BOOST_TEST_MODULE test_endpoint
 
 #include <boost/test/unit_test.hpp>
 

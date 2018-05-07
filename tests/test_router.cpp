@@ -8,7 +8,7 @@
 
 #include "server/router.h"
 
-BOOST_AUTO_TEST_CASE(multi_dispatch_test) { // NOLINT
+BOOST_AUTO_TEST_CASE(multi_dispatch) { // NOLINT
     using boost::beast::http::request;
     using boost::beast::http::response;
     using boost::beast::http::status;
