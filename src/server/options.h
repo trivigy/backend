@@ -25,8 +25,8 @@ namespace server {
         const struct {
             const struct {
                 const Endpoint bind{"127.0.0.1", 8847};
-                const Endpoint http{"127.0.0.1", 8080};
                 const Endpoint upstream{"127.0.0.1", 18081};
+                const Endpoint frontend{"127.0.0.1", 8080};
                 const unsigned int threads = thread::hardware_concurrency();
             } network;
         } defaults;
@@ -37,7 +37,7 @@ namespace server {
             Endpoint bind;
             vector<Endpoint> joins;
             vector<Endpoint> upstreams;
-            Endpoint http;
+            Endpoint frontend;
 
             unsigned int threads;
         } network;
@@ -60,7 +60,7 @@ namespace server {
 
         void on_upstreams(vector<string> endpoints);
 
-        void on_http(string endpoint);
+        void on_frontend(string endpoint);
 
         void on_threads(int threads);
     };

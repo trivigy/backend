@@ -8,7 +8,7 @@ bool server::Options::parse(int argc, const char **argv) {
     string program_name = program_location().stem().string();
     string description =
         "Mining pool backend responsible for distributed miner orchestration.\n\n"
-        "Configurations for endpoints (such as bind, joins, upstreams, and http) "
+        "Configurations for endpoints (such as bind, joins, upstreams, and frontend) "
         "can be provided using {host}:{port} notation. (e.g. 172.20.0.2:8080, "
         "[::1]:8080, www.example.com:8888, etc.)";
     vector<po::options_description> descriptors;
@@ -36,15 +36,15 @@ bool server::Options::parse(int argc, const char **argv) {
                 ->default_value(vector<string>{}, string())
                 ->notifier(bind(&server::Options::on_upstreams, this, _1)),
             "designated cryptocurrency clients for connection through the listed addresses.")
-        ("http,h", po::value<string>()
-                ->default_value(defaults.network.http.netloc())
-                ->notifier(bind(&server::Options::on_http, this, _1)),
-            "address to which syncd listens for http connections.")
+        ("frontend,f", po::value<string>()
+                ->default_value(defaults.network.frontend.netloc())
+                ->notifier(bind(&server::Options::on_frontend, this, _1)),
+            "address to which syncd listens for frontend connections.")
         ("threads", po::value<unsigned int>(&network.threads)
                 ->multitoken()
                 ->default_value(defaults.network.threads)
                 ->notifier(bind(&server::Options::on_threads, this, _1)),
-            "number of threads that http context should allow to run concurrently.");
+            "number of threads that frontend context should allow to run concurrently.");
 
     vector<po::positional_options_description> positions;
     positions.emplace_back(po::positional_options_description());
@@ -134,7 +134,7 @@ bool server::Options::parse(int argc, const char **argv) {
                 {"bind", this->network.bind.netloc()},
                 {"joins", joins},
                 {"upstreams", upstreams},
-                {"http", this->network.http.netloc()}
+                {"frontend", this->network.frontend.netloc()}
             }
         },
         {"members",
@@ -191,12 +191,12 @@ void server::Options::on_upstreams(vector<string> endpoints) {
     }
 }
 
-void server::Options::on_http(string endpoint) {
+void server::Options::on_frontend(string endpoint) {
     try {
-        network.http = Endpoint(endpoint);
+        network.frontend = Endpoint(endpoint);
     } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
-        throw po::validation_error(kind, "http");
+        throw po::validation_error(kind, "frontend");
     }
 }
 
