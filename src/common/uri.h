@@ -25,29 +25,46 @@ namespace common {
         {"wss", 443}
     };
 
-    class Endpoint {
+    class Uri {
     private:
         string _scheme;
+        string _username;
+        string _password;
         string _host;
         uint16_t _port;
         host_t _type;
+        string _path;
+        string _query;
+        string _fragment;
 
     public:
-        Endpoint() : _port(0), _type(host_t::NONE) {};
+        Uri() : _port(0), _type(host_t::NONE) {};
 
-        Endpoint(const Endpoint &uri) = default;
+        Uri(const Uri &uri) = default;
 
-        explicit Endpoint(const string &source);
+        explicit Uri(const string &source);
 
-        Endpoint(const string &host, uint16_t port);
+        Uri(const string &host, uint16_t port);
 
-        Endpoint(const string &scheme, const string &host, uint16_t port);
+        Uri(const string &scheme, const string &host, uint16_t port);
 
         const string &scheme() const;
+
+        const string &username() const;
+
+        const string &password() const;
 
         const string &host() const;
 
         const uint16_t port() const;
+
+        const string &path() const;
+
+        const string &query() const;
+
+        const string &fragment() const;
+
+        const string path_ext() const;
 
         const string compose() const;
 
