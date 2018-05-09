@@ -22,10 +22,10 @@ namespace rpc {
 
         class MembersService final : public Members::Service {
         private:
-            shared_ptr<server::Server> _server;
+            server::Server &_server;
 
         public:
-            explicit MembersService(shared_ptr<server::Server> server);
+            explicit MembersService(server::Server &server);
 
             grpc::Status gossip(
                 grpc::ServerContext *context,

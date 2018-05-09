@@ -2,7 +2,7 @@
 #define SYNCAIDE_SERVER_OPTIONS_H
 
 #include "common/options.h"
-#include "common/endpoint.h"
+#include "common/uri.h"
 
 #include <nlohmann/json.hpp>
 #include <boost/filesystem.hpp>
@@ -17,27 +17,27 @@ namespace server {
     namespace cls = po::command_line_style;
     namespace fs = boost::filesystem;
     using boost::dll::program_location;
-    using common::Endpoint;
+    using common::Uri;
     using nlohmann::json;
 
     class Options final : common::Options {
     public:
         const struct {
             const struct {
-                const Endpoint bind{"127.0.0.1", 8847};
-                const Endpoint upstream{"127.0.0.1", 18081};
-                const Endpoint frontend{"127.0.0.1", 8080};
+                const Uri bind{"127.0.0.1", 8847};
+                const Uri upstream{"127.0.0.1", 18081};
+                const Uri frontend{"127.0.0.1", 8080};
                 const unsigned int threads = thread::hardware_concurrency();
             } network;
         } defaults;
 
 
         struct {
-            Endpoint advertise;
-            Endpoint bind;
-            vector<Endpoint> joins;
-            vector<Endpoint> upstreams;
-            Endpoint frontend;
+            Uri advertise;
+            Uri bind;
+            vector<Uri> joins;
+            vector<Uri> upstreams;
+            Uri frontend;
 
             unsigned int threads;
         } network;
@@ -52,15 +52,15 @@ namespace server {
         bool parse(int argc, const char **argv) override;
 
     private:
-        void on_advertise(string endpoint);
+        void on_advertise(string uri);
 
-        void on_bind(string endpoint);
+        void on_bind(string uri);
 
-        void on_joins(vector<string> endpoints);
+        void on_joins(vector<string> uris);
 
-        void on_upstreams(vector<string> endpoints);
+        void on_upstreams(vector<string> uris);
 
-        void on_frontend(string endpoint);
+        void on_frontend(string uri);
 
         void on_threads(int threads);
     };

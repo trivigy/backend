@@ -3,17 +3,17 @@
 
 server::exit_t server::exit; // NOLINT
 
-server::Peering::Peering(shared_ptr<Server> server) :
-    _server(move(server)),
+server::Peering::Peering(Server &server) :
+    _server(server),
     _view(make_shared<View>()),
     _timer(_ioc, steady_time_point::max()) {
-    auto cfg = _server->cfg();
+    auto cfg = _server.cfg();
 
     deque<Peer> buffer;
-    for (auto &join : cfg->network.joins) {
+    for (auto &join : cfg.network.joins) {
         buffer.emplace_back(Peer(join.netloc(), 0));
     }
-    _view->update(cfg->members.c, cfg->members.H, cfg->members.S, buffer);
+    _view->update(cfg.members.c, cfg.members.H, cfg.members.S, buffer);
 }
 
 void server::Peering::start() {
@@ -21,7 +21,7 @@ void server::Peering::start() {
     rpc::services::MembersService service(_server);
 
     builder.AddListeningPort(
-        _server->cfg()->network.bind.netloc(),
+        _server.cfg().network.bind.netloc(),
         grpc::InsecureServerCredentials()
     );
 
@@ -43,7 +43,7 @@ shared_ptr<View> server::Peering::view() {
 }
 
 void server::Peering::on_pulse(error_code code) {
-    auto cfg = _server->cfg();
+    auto cfg = _server.cfg();
     if (_view->empty()) {
         _timer.expires_after(chrono::seconds(1));
         _timer.async_wait(bind(&Peering::on_pulse, shared_from_this(), _1));
@@ -51,8 +51,8 @@ void server::Peering::on_pulse(error_code code) {
     }
 
     deque<Peer> buffer;
-    buffer = _view->select(cfg->members.c / 2 - 1, cfg->members.H);
-    buffer.emplace(buffer.begin(), Peer(cfg->network.advertise.netloc(), 0));
+    buffer = _view->select(cfg.members.c / 2 - 1, cfg.members.H);
+    buffer.emplace(buffer.begin(), Peer(cfg.network.advertise.netloc(), 0));
 
     auto peer = _view->random_peer();
     rpc::callers::MembersCaller caller(
@@ -64,8 +64,8 @@ void server::Peering::on_pulse(error_code code) {
     );
 
     grpc::Status status;
-    tie(status, buffer) = caller.gossip(buffer, cfg->network.advertise.netloc());
-    _view->update(cfg->members.c, cfg->members.H, cfg->members.S, buffer);
+    tie(status, buffer) = caller.gossip(buffer, cfg.network.advertise.netloc());
+    _view->update(cfg.members.c, cfg.members.H, cfg.members.S, buffer);
 
     if (!status.ok()) {
         json extra = {{"peer", peer.addr()}};
@@ -77,8 +77,8 @@ void server::Peering::on_pulse(error_code code) {
     _timer.async_wait(bind(&Peering::on_pulse, shared_from_this(), _1));
 }
 
-server::Upstream::Upstream(shared_ptr<Server> server) :
-    _server(move(server)),
+server::Upstream::Upstream(Server &server) :
+    _server(server),
     _timer_info(_ioc, steady_time_point::max()),
     _timer_block_template(_ioc, steady_time_point::max()){}
 
@@ -90,7 +90,6 @@ void server::Upstream::start() {
     server::exit.upstream.get_future().wait();
     _ioc.stop();
     for_each(_handlers.begin(), _handlers.end(), [](thread &t) { t.join(); });
-
 }
 
 void server::Upstream::on_check_info(error_code code) {
@@ -117,11 +116,11 @@ void server::Upstream::on_check_block_template(error_code code) {
     );
 }
 
-server::Frontend::Frontend(shared_ptr<Server> server) :
-    _server(move(server)),
+server::Frontend::Frontend(Server &server) :
+    _server(server),
     _router(make_shared<Router>()),
     _ctx(context{context::sslv23}),
-    _ioc(io_context{(int) _server->cfg()->network.threads}) {}
+    _ioc(io_context{(int) server.cfg().network.threads}) {}
 
 void server::Frontend::start() {
     _router->add(Http::health, "/health");
@@ -136,12 +135,12 @@ void server::Frontend::start() {
 #endif //NDEBUG
 
     load_http_certificate(_ctx);
-    auto address = ip::make_address(_server->cfg()->network.frontend.host());
-    tcp::endpoint endpoint(address, _server->cfg()->network.frontend.port());
+    auto address = ip::make_address(_server.cfg().network.frontend.host());
+    tcp::endpoint endpoint(address, _server.cfg().network.frontend.port());
     make_shared<Listener>(_ioc, _ctx, endpoint, _router)->run();
 
-    _handlers.reserve(_server->cfg()->network.threads);
-    for (auto i = _server->cfg()->network.threads; i > 0; --i) {
+    _handlers.reserve(_server.cfg().network.threads);
+    for (auto i = _server.cfg().network.threads; i > 0; --i) {
         _handlers.emplace_back([&] { _ioc.run(); });
     }
 
@@ -236,15 +235,21 @@ void server::Frontend::load_http_certificate(asio::ssl::context &ctx) {
     ctx.use_tmp_dh(boost::asio::buffer(dh.data(), dh.size()));
 }
 
-shared_ptr<server::Server> server::Server::create(shared_ptr<Options> options) {
-    auto server = shared_ptr<Server>(new Server(move(options)));
-    server->_peering = make_shared<Peering>(server);
-    server->_upstream = make_shared<Upstream>(server);
-    server->_frontend = make_shared<Frontend>(server);
-    return server;
-}
+server::Server::Server(Options &options) :
+    _cfg(options),
+    _peering(make_shared<Peering>(*this)),
+    _upstream(make_shared<Upstream>(*this)),
+    _frontend(make_shared<Frontend>(*this)) {}
 
-shared_ptr<server::Options> server::Server::cfg() {
+//shared_ptr<server::Server> server::Server::create(shared_ptr<Options> options) {
+//    auto server = shared_ptr<Server>(new Server(options));
+//    server->_peering = shared_ptr<Peering>(new Peering(server));
+//    server->_upstream = make_shared<Upstream>(server);
+//    server->_frontend = make_shared<Frontend>(server);
+//    return server;
+//}
+
+server::Options &server::Server::cfg() {
     return _cfg;
 }
 
@@ -271,6 +276,3 @@ shared_ptr<server::Upstream> server::Server::upstream() {
 shared_ptr<server::Frontend> server::Server::frontend() {
     return _frontend;
 }
-
-server::Server::Server(shared_ptr<Options> options) :
-    _cfg(move(options)) {}

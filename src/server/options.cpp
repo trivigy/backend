@@ -151,28 +151,28 @@ bool server::Options::parse(int argc, const char **argv) {
     return true;
 }
 
-void server::Options::on_advertise(string endpoint) {
+void server::Options::on_advertise(string uri) {
     try {
-        if (!endpoint.empty()) network.advertise = Endpoint(endpoint);
+        if (!uri.empty()) network.advertise = Uri(uri);
     } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "advertise");
     }
 }
 
-void server::Options::on_bind(string endpoint) {
+void server::Options::on_bind(string uri) {
     try {
-        network.bind = Endpoint(endpoint);
+        network.bind = Uri(uri);
     } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "bind");
     }
 }
 
-void server::Options::on_joins(vector<string> endpoints) {
+void server::Options::on_joins(vector<string> uris) {
     try {
-        for (auto &endpoint : endpoints) {
-            network.joins.emplace_back(Endpoint(endpoint));
+        for (auto &uri : uris) {
+            network.joins.emplace_back(Uri(uri));
         }
     } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
@@ -180,10 +180,10 @@ void server::Options::on_joins(vector<string> endpoints) {
     }
 }
 
-void server::Options::on_upstreams(vector<string> endpoints) {
+void server::Options::on_upstreams(vector<string> uris) {
     try {
-        for (auto &endpoint : endpoints) {
-            network.upstreams.emplace_back(Endpoint(endpoint));
+        for (auto &uri : uris) {
+            network.upstreams.emplace_back(Uri(uri));
         }
     } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
@@ -191,9 +191,9 @@ void server::Options::on_upstreams(vector<string> endpoints) {
     }
 }
 
-void server::Options::on_frontend(string endpoint) {
+void server::Options::on_frontend(string uri) {
     try {
-        network.frontend = Endpoint(endpoint);
+        network.frontend = Uri(uri);
     } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "frontend");
