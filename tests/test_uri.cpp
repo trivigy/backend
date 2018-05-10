@@ -101,6 +101,14 @@ BOOST_AUTO_TEST_CASE(verify_type_fqdn) { // NOLINT
     BOOST_TEST(u.is_fqdn());
 }
 
+BOOST_AUTO_TEST_CASE(verify_tls) { // NOLINT
+    Uri u1("https://www.example.com");
+    BOOST_TEST(u1.is_tls());
+    
+    Uri u2("wss://www.example.com");
+    BOOST_TEST(u2.is_tls());
+}
+
 BOOST_AUTO_TEST_CASE(print_compose_well_formed) { // NOLINT
     Uri u("scheme://www.example.com:8080/sample/path?query=11&query2#fragment");
     BOOST_TEST(u.compose() == "scheme://www.example.com:8080/sample/path?query=11&query2#fragment");

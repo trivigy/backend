@@ -177,3 +177,7 @@ bool common::Uri::is_ipv6() const {
 bool common::Uri::is_fqdn() const {
     return _type == host_t::FQDN;
 }
+
+bool common::Uri::is_tls() const {
+    return _scheme == "https" || _scheme == "wss";
+}

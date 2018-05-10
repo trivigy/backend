@@ -78,6 +78,8 @@ namespace common {
 
         bool is_fqdn() const;
 
+        bool is_tls() const;
+
     private:
         void _authority(const string &source);
     };
