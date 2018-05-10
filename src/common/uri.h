@@ -44,9 +44,61 @@ namespace common {
 
         explicit Uri(const string &source);
 
-        Uri(const string &host, uint16_t port);
+        Uri(
+            const string &host,
+            uint16_t port
+        );
 
-        Uri(const string &scheme, const string &host, uint16_t port);
+        Uri(
+            const string &host,
+            uint16_t port,
+            const string &path
+        );
+
+        Uri(
+            const string &host,
+            uint16_t port,
+            const string &path,
+            const string &query
+        );
+
+        Uri(
+            const string &host,
+            uint16_t port,
+            const string &path,
+            const string &query,
+            const string &fragment
+        );
+
+        Uri(
+            const string &scheme,
+            const string &host,
+            uint16_t port
+        );
+
+        Uri(
+            const string &scheme,
+            const string &host,
+            uint16_t port,
+            const string &path
+        );
+
+        Uri(
+            const string &scheme,
+            const string &host,
+            uint16_t port,
+            const string &path,
+            const string &query
+        );
+
+        Uri(
+            const string &scheme,
+            const string &host,
+            uint16_t port,
+            const string &path,
+            const string &query,
+            const string &fragment
+        );
 
         const string &scheme() const;
 

@@ -27,14 +27,66 @@ common::Uri::Uri(const string &source) : Uri() {
     throw invalid_argument("Failure parsing uri.");
 }
 
-common::Uri::Uri(const string &host, uint16_t port) :
-    Uri(host + ":" + to_string(port)) {}
+common::Uri::Uri(
+    const string &host,
+    uint16_t port
+) : Uri(host + ":" + to_string(port)) {}
+
+common::Uri::Uri(
+    const string &host,
+    uint16_t port,
+    const string &path
+) : Uri(host + ":" + to_string(port) + path) {}
+
+common::Uri::Uri(
+    const string &host,
+    uint16_t port,
+    const string &path,
+    const string &query
+) : Uri(host + ":" + to_string(port) + path + "?" + query) {}
+
+common::Uri::Uri(
+    const string &host,
+    uint16_t port,
+    const string &path,
+    const string &query,
+    const string &fragment
+) : Uri(host + ":" + to_string(port) + path + "?" + query + "#" + fragment) {}
 
 common::Uri::Uri(
     const string &scheme,
     const string &host,
     uint16_t port
 ) : Uri(scheme + "://" + host + ":" + to_string(port)) {}
+
+common::Uri::Uri(
+    const string &scheme,
+    const string &host,
+    uint16_t port,
+    const string &path
+) : Uri(scheme + "://" + host + ":" + to_string(port) + path) {}
+
+common::Uri::Uri(
+    const string &scheme,
+    const string &host,
+    uint16_t port,
+    const string &path,
+    const string &query
+) : Uri(scheme + "://" + host + ":" + to_string(port) + path + "?" + query) {}
+
+common::Uri::Uri(
+    const string &scheme,
+    const string &host,
+    uint16_t port,
+    const string &path,
+    const string &query,
+    const string &fragment
+) : Uri(scheme + "://" +
+        host + ":" +
+        to_string(port) +
+        path + "?" +
+        query + "#" +
+        fragment) {}
 
 const string &common::Uri::scheme() const {
     return _scheme;
