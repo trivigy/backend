@@ -8,7 +8,7 @@ bool server::Options::parse(int argc, const char **argv) {
     string program_name = program_location().stem().string();
     string description =
         "Mining pool backend responsible for distributed miner orchestration.\n\n"
-        "Configurations for endpoints (such as bind, joins, upstreams, and frontend) "
+        "Configurations for endpoints (such as bind, joins, upstream, and frontend) "
         "can be provided using {host}:{port} notation. (e.g. 172.20.0.2:8080, "
         "[::1]:8080, www.example.com:8888, etc.)";
     vector<po::options_description> descriptors;
@@ -31,11 +31,10 @@ bool server::Options::parse(int argc, const char **argv) {
                 ->default_value(vector<string>{}, string())
                 ->notifier(bind(&server::Options::on_joins, this, _1)),
             "connect to cluster through the listed addresses.")
-        ("upstreams,u", po::value<vector<string>>()
-                ->multitoken()
-                ->default_value(vector<string>{}, string())
-                ->notifier(bind(&server::Options::on_upstreams, this, _1)),
-            "designated cryptocurrency clients for connection through the listed addresses.")
+        ("upstream,u", po::value<string>()
+                ->default_value(defaults.network.upstream.netloc())
+                ->notifier(bind(&server::Options::on_upstream, this, _1)),
+            "designated cryptocurrency client for connection with on the listed address.")
         ("frontend,f", po::value<string>()
                 ->default_value(defaults.network.frontend.netloc())
                 ->notifier(bind(&server::Options::on_frontend, this, _1)),
@@ -121,11 +120,6 @@ bool server::Options::parse(int argc, const char **argv) {
         joins.emplace_back(join.netloc());
     }
 
-    auto upstreams = json::array();
-    for (auto &upstream : this->network.upstreams) {
-        upstreams.emplace_back(upstream.netloc());
-    }
-
     // @formatter:off
     json extra = {
         {"network",
@@ -133,7 +127,7 @@ bool server::Options::parse(int argc, const char **argv) {
                 {"advertise", this->network.advertise.netloc()},
                 {"bind", this->network.bind.netloc()},
                 {"joins", joins},
-                {"upstreams", upstreams},
+                {"upstream", this->network.upstream.netloc()},
                 {"frontend", this->network.frontend.netloc()}
             }
         },
@@ -180,14 +174,12 @@ void server::Options::on_joins(vector<string> uris) {
     }
 }
 
-void server::Options::on_upstreams(vector<string> uris) {
+void server::Options::on_upstream(string uri) {
     try {
-        for (auto &uri : uris) {
-            network.upstreams.emplace_back(Uri(uri));
-        }
+        network.upstream = Uri(uri);
     } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
-        throw po::validation_error(kind, "upstreams");
+        throw po::validation_error(kind, "upstream");
     }
 }
 

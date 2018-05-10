@@ -7,6 +7,7 @@
 #include "server/router.h"
 #include "server/helper.h"
 #include "server/http.h"
+#include "server/web/client.h"
 #include "rpc/callers/members.h"
 #include "rpc/services/members.h"
 #include "view.h"
@@ -38,6 +39,11 @@ namespace server {
     using boost::asio::ip::tcp;
     using boost::asio::io_context;
     using boost::asio::ssl::context;
+    using boost::beast::http::request;
+    using boost::beast::http::response;
+    using boost::beast::http::string_body;
+    using boost::beast::http::verb;
+    using boost::beast::http::field;
 
     extern struct exit_t {
         promise<void> peering;
@@ -81,9 +87,9 @@ namespace server {
         void start();
 
     private:
-        void on_check_info(error_code code);
+        void check_info(error_code code);
 
-        void on_check_block_template(error_code code);
+        void check_block_template(error_code code);
     };
 
     class Frontend : public enable_shared_from_this<Frontend> {

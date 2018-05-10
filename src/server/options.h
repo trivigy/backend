@@ -36,7 +36,7 @@ namespace server {
             Uri advertise;
             Uri bind;
             vector<Uri> joins;
-            vector<Uri> upstreams;
+            Uri upstream;
             Uri frontend;
 
             unsigned int threads;
@@ -58,7 +58,7 @@ namespace server {
 
         void on_joins(vector<string> uris);
 
-        void on_upstreams(vector<string> uris);
+        void on_upstream(string uri);
 
         void on_frontend(string uri);
 
