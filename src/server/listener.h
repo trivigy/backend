@@ -4,6 +4,7 @@
 #include "server/helper.h"
 #include "server/handoff.h"
 #include "server/router.h"
+#include "server/server.h"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/context.hpp>
@@ -18,19 +19,23 @@ namespace server {
     using boost::asio::io_context;
     using boost::asio::ssl::context;
 
+    class Server;
+
     class Listener : public enable_shared_from_this<Listener> {
     private:
         context &_ctx;
-        tcp::acceptor _acceptor;
+        Server &_server;
         tcp::socket _socket;
+        tcp::acceptor _acceptor;
         shared_ptr<Router> _router;
 
     public:
         Listener(
+            Server &server,
             io_context &ioc,
             context &ctx,
-            tcp::endpoint endp,
-            shared_ptr<Router> router
+            shared_ptr<Router> router,
+            tcp::endpoint &endp
         );
 
         void run();

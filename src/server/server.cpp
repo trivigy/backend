@@ -117,9 +117,9 @@ void server::Upstream::check_info(error_code code) {
 
     auto client = make_shared<web::Client>(_ioc);
     client->request(req, [this, client](auto &resp) {
-        cerr << "--- response ---" << endl;
-        cerr << resp << endl;
-        cerr << "--- end ---" << endl;
+//        cerr << "--- response ---" << endl;
+//        cerr << resp << endl;
+//        cerr << "--- end ---" << endl;
     });
 
     _timer_info.expires_after(chrono::seconds(1));
@@ -163,9 +163,9 @@ void server::Upstream::check_block_template(error_code code) {
 
     auto client = make_shared<web::Client>(_ioc);
     client->request(req, [this, client](auto &resp) {
-        cerr << "--- response ---" << endl;
-        cerr << resp << endl;
-        cerr << "--- end ---" << endl;
+//        cerr << "--- response ---" << endl;
+//        cerr << resp << endl;
+//        cerr << "--- end ---" << endl;
     });
 
     _timer_block_template.expires_after(chrono::seconds(1));
@@ -199,7 +199,7 @@ void server::Frontend::start() {
     load_http_certificate(_ctx);
     auto address = ip::make_address(_server.cfg().network.frontend.host());
     tcp::endpoint endpoint(address, _server.cfg().network.frontend.port());
-    make_shared<Listener>(_ioc, _ctx, endpoint, _router)->run();
+    make_shared<Listener>(_server, _ioc, _ctx, _router, endpoint)->run();
 
     _handlers.reserve(_server.cfg().network.threads);
     for (auto i = _server.cfg().network.threads; i > 0; --i) {

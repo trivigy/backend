@@ -2,11 +2,13 @@
 #include "server/listener.h"
 
 server::Listener::Listener(
+    Server &server,
     io_context &ioc,
     context &ctx,
-    tcp::endpoint endp,
-    shared_ptr<Router> router
-) : _ctx(ctx),
+    shared_ptr<Router> router,
+    tcp::endpoint &endp
+) : _server(server),
+    _ctx(ctx),
     _acceptor(ioc),
     _socket(ioc),
     _router(move(router)) {
@@ -46,7 +48,7 @@ void server::Listener::run() {
 
 void server::Listener::on_accept(error_code code) {
     if (code) log("accept", code);
-    make_shared<Handoff>(move(_socket), _ctx, _router)->run();
+    make_shared<Handoff>(_server, _ctx, _router, move(_socket))->run();
     _acceptor.async_accept(
         _socket,
         bind(

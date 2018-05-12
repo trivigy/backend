@@ -39,6 +39,7 @@ namespace server {
     using boost::asio::ip::tcp;
     using boost::asio::io_context;
     using boost::asio::ssl::context;
+    using boost::asio::steady_timer;
     using boost::beast::http::request;
     using boost::beast::http::response;
     using boost::beast::http::string_body;

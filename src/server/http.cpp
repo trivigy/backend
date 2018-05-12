@@ -2,19 +2,21 @@
 #include "server/http.h"
 
 server::Http::Http(
+    Server &server,
+    context &ctx,
+    shared_ptr<Router> router,
     tcp::socket socket,
     flat_buffer buffer,
-    tribool secured,
-    context &ctx,
-    shared_ptr<Router> router
-) : _strand(socket.get_executor().context().get_executor()),
+    tribool secured
+) : _server(server),
+    _ctx(ctx),
+    _router(move(router)),
+    _strand(socket.get_executor().context().get_executor()),
     _timer(socket.get_executor().context(), steady_time_point::max()),
     _socket(deduce_socket(move(socket), ctx, secured)),
     _buffer(move(buffer)),
     _secured(secured),
-    _queue(*this),
-    _ctx(ctx),
-    _router(move(router)) {}
+    _queue(*this) {}
 
 void server::Http::run() {
     on_timer({});
@@ -174,16 +176,18 @@ void server::Http::on_read(error_code code) {
         if (websocket::is_upgrade(_req)) {
             if (_secured) {
                 make_shared<Websocket>(
+                    _server,
+                    _ctx,
                     move(boost::get<ssl_socket>(_socket)),
                     _secured,
-                    _ctx,
                     move(params)
                 )->run(move(_req));
             } else {
                 make_shared<Websocket>(
+                    _server,
+                    _ctx,
                     move(boost::get<plain_socket>(_socket)),
                     _secured,
-                    _ctx,
                     move(params)
                 )->run(move(_req));
             }
@@ -233,10 +237,11 @@ server::Http::syncaide_js(request_type &req) {
             return resp;
         }
 
+        // TODO Needs to be changes to reflect actual agent options parsing
         json arguments = {
-            {"secure", true},
-            {"netloc", "localhost:8080"},
-            {"identity", "f64000f3-4dc9-4e22-b704-cdcf82c01038"}
+            {"url", "ws://127.0.0.1:8080/agent/f64000f3-4dc9-4e22-b704-cdcf82c01038"},
+            {"signature", "4e104ca8-a239-4c62-b6a1-ca6dc163b191"},
+            {"timestamp", "1526091820"}
         };
 
         json prepend = {

@@ -2,30 +2,34 @@
 #include "server/websocket.h"
 
 server::Websocket::Websocket(
+    Server &server,
+    context &ctx,
     ssl_stream<tcp::socket> socket,
     boost::tribool secured,
-    context &ctx,
     json &&params
-) : _strand(socket.next_layer().get_executor().context().get_executor()),
+) : _server(server),
+    _ctx(ctx),
+    _strand(socket.next_layer().get_executor().context().get_executor()),
     _timer(
         socket.next_layer().get_executor().context(),
         steady_time_point::max()
     ),
     _socket(ssl_socket(move(socket))),
     _secured(secured),
-    _ctx(ctx),
     _params(move(params)) {}
 
 server::Websocket::Websocket(
+    Server &server,
+    context &ctx,
     tcp::socket socket,
     tribool secured,
-    context &ctx,
     json &&params
-) : _strand(socket.get_executor().context().get_executor()),
+) : _server(server),
+    _ctx(ctx),
+    _strand(socket.get_executor().context().get_executor()),
     _timer(socket.get_executor().context(), steady_time_point::max()),
     _socket(plain_socket(move(socket))),
     _secured(secured),
-    _ctx(ctx),
     _params(move(params)) {}
 
 void server::Websocket::run(request_type &&req) {
@@ -183,6 +187,12 @@ void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
         cerr << "--- 7 ---" << endl;
         log("read", code);
     }
+
+    protos::Peer peer;
+    peer.ParseFromString(buffers_to_string(_buffer.data()));
+
+    cerr << "addr: " << peer.addr() << endl;
+    cerr << "age: " << peer.age() << endl;
 
     if (_secured) {
         auto &socket = boost::get<ssl_socket>(_socket);

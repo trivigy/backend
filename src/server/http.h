@@ -6,6 +6,7 @@
 #include "server/helper.h"
 #include "server/router.h"
 #include "server/ssl_stream.h"
+#include "server/server.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/file.hpp>
@@ -55,6 +56,8 @@ namespace server {
     using boost::asio::error::operation_aborted;
     using boost::variant;
     using boost::tribool;
+
+    class Server;
 
     class Http : public enable_shared_from_this<Http> {
         using plain_socket = tcp::socket;
@@ -149,6 +152,7 @@ namespace server {
         };
 
     private:
+        Server &_server;
         request_type _req;
         flat_buffer _buffer;
         steady_timer _timer;
@@ -164,11 +168,12 @@ namespace server {
 
     public:
         Http(
+            Server &server,
+            context &ctx,
+            shared_ptr<Router> router,
             tcp::socket socket,
             flat_buffer buffer,
-            tribool secured,
-            context &ctx,
-            shared_ptr<Router> router
+            tribool secured
         );
 
         void run();

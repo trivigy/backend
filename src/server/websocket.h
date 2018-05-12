@@ -3,6 +3,8 @@
 
 #include "server/helper.h"
 #include "server/ssl_stream.h"
+#include "protos/peer.pb.h"
+#include "server/server.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -27,6 +29,7 @@ namespace server {
     namespace websocket = boost::beast::websocket;
     using nlohmann::json;
     using boost::system::error_code;
+    using boost::beast::buffers_to_string;
     using boost::beast::http::request;
     using boost::beast::http::response;
     using boost::beast::http::string_body;
@@ -44,6 +47,8 @@ namespace server {
     using boost::variant;
     using boost::tribool;
 
+    class Server;
+
     class Websocket : public enable_shared_from_this<Websocket> {
         using plain_socket = websocket::stream<tcp::socket>;
         using ssl_socket = websocket::stream<ssl_stream<tcp::socket>>;
@@ -52,6 +57,7 @@ namespace server {
         using response_type = response<string_body>;
 
     private:
+        Server &_server;
         multi_buffer _buffer;
         steady_timer _timer;
         bool _close = false;
@@ -66,16 +72,18 @@ namespace server {
 
     public:
         explicit Websocket(
+            Server &server,
+            context &ctx,
             ssl_stream<tcp::socket> socket,
             tribool secured,
-            context &ctx,
             json &&params
         );
 
         explicit Websocket(
+            Server &server,
+            context &ctx,
             tcp::socket socket,
             tribool secured,
-            context &ctx,
             json &&params
         );
 

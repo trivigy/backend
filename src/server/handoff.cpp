@@ -1,13 +1,15 @@
 #include "server/handoff.h"
 
 server::Handoff::Handoff(
-    tcp::socket socket,
+    Server &server,
     context &ctx,
-    shared_ptr<Router> router
-) : _socket(move(socket)),
+    shared_ptr<Router> router,
+    tcp::socket socket
+) : _server(server),
     _ctx(ctx),
-    _strand(_socket.get_executor()),
-    _router(move(router)) {}
+    _router(move(router)),
+    _socket(move(socket)),
+    _strand(_socket.get_executor()) {}
 
 void server::Handoff::run() {
     async_detect_ssl(
@@ -28,10 +30,11 @@ void server::Handoff::run() {
 void server::Handoff::on_detect(error_code code, tribool secured) {
     if (code) log("detector/on_detect", code);
     make_shared<Http>(
+        _server,
+        _ctx,
+        _router,
         move(_socket),
         move(_buffer),
-        secured,
-        _ctx,
-        _router
+        secured
     )->run();
 }
