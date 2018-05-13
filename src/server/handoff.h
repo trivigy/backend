@@ -16,16 +16,16 @@ namespace server {
     private:
         context &_ctx;
         Server &_server;
+        Router &_router;
         tcp::socket _socket;
         strand<io_context::executor_type> _strand;
-        shared_ptr<Router> _router;
         flat_buffer _buffer;
 
     public:
         explicit Handoff(
             Server &server,
             context &ctx,
-            shared_ptr<Router> router,
+            Router &router,
             tcp::socket socket
         );
 

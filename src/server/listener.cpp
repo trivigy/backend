@@ -5,13 +5,13 @@ server::Listener::Listener(
     Server &server,
     io_context &ioc,
     context &ctx,
-    shared_ptr<Router> router,
+    Router &router,
     tcp::endpoint &endp
 ) : _server(server),
     _ctx(ctx),
     _acceptor(ioc),
     _socket(ioc),
-    _router(move(router)) {
+    _router(router) {
     error_code code;
 
     _acceptor.open(endp.protocol(), code);

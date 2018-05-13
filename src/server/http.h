@@ -158,7 +158,7 @@ namespace server {
         steady_timer _timer;
         bool _eof = false;
         context &_ctx;
-        shared_ptr<Router> _router;
+        Router &_router;
         queue _queue;
 
     protected:
@@ -170,7 +170,7 @@ namespace server {
         Http(
             Server &server,
             context &ctx,
-            shared_ptr<Router> router,
+            Router &router,
             tcp::socket socket,
             flat_buffer buffer,
             tribool secured

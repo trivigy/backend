@@ -4,13 +4,13 @@
 server::Http::Http(
     Server &server,
     context &ctx,
-    shared_ptr<Router> router,
+    Router &router,
     tcp::socket socket,
     flat_buffer buffer,
     tribool secured
 ) : _server(server),
     _ctx(ctx),
-    _router(move(router)),
+    _router(router),
     _strand(socket.get_executor().context().get_executor()),
     _timer(socket.get_executor().context(), steady_time_point::max()),
     _socket(deduce_socket(move(socket), ctx, secured)),
@@ -168,7 +168,7 @@ void server::Http::on_read(error_code code) {
     };
     LOG(info) << logging::add_value("Extra", extra.dump());
 
-    response_type resp = _router->dispatch(_req);
+    response_type resp = _router.dispatch(_req);
     if (resp.result() != status::switching_protocols) {
         _queue(move(resp));
     } else {

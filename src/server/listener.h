@@ -25,16 +25,16 @@ namespace server {
     private:
         context &_ctx;
         Server &_server;
+        Router &_router;
         tcp::socket _socket;
         tcp::acceptor _acceptor;
-        shared_ptr<Router> _router;
 
     public:
         Listener(
             Server &server,
             io_context &ioc,
             context &ctx,
-            shared_ptr<Router> router,
+            Router &router,
             tcp::endpoint &endp
         );
 

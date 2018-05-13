@@ -96,10 +96,10 @@ namespace server {
     class Frontend : public enable_shared_from_this<Frontend> {
     private:
         context _ctx;
+        Router _router;
         io_context _ioc;
         Server &_server;
         vector<thread> _handlers;
-        shared_ptr<Router> _router;
 
     public:
         explicit Frontend(Server &server);

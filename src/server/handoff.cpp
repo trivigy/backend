@@ -3,11 +3,11 @@
 server::Handoff::Handoff(
     Server &server,
     context &ctx,
-    shared_ptr<Router> router,
+    Router &router,
     tcp::socket socket
 ) : _server(server),
     _ctx(ctx),
-    _router(move(router)),
+    _router(router),
     _socket(move(socket)),
     _strand(_socket.get_executor()) {}
 

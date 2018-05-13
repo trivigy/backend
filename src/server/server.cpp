@@ -180,19 +180,18 @@ void server::Upstream::check_block_template(error_code code) {
 
 server::Frontend::Frontend(Server &server) :
     _server(server),
-    _router(make_shared<Router>()),
     _ctx(context{context::sslv23}),
     _ioc(io_context{(int) server.cfg().network.threads}) {}
 
 void server::Frontend::start() {
-    _router->add(Http::health, "/health");
-    _router->add(Http::syncaide_js, "/syncaide[.]js");
-    _router->add(Http::syncaide_wasm, "/syncaide[.]wasm");
-    _router->add(Http::agent_uid, "/agent/{}", params::string());
+    _router.add(Http::health, "/health");
+    _router.add(Http::syncaide_js, "/syncaide[.]js");
+    _router.add(Http::syncaide_wasm, "/syncaide[.]wasm");
+    _router.add(Http::agent_uid, "/agent/{}", params::string());
 
 #ifndef NDEBUG
 
-    _router->add(Http::syncaide_html, "/syncaide[.]html");
+    _router.add(Http::syncaide_html, "/syncaide[.]html");
 
 #endif //NDEBUG
 
