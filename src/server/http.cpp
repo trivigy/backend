@@ -18,6 +18,30 @@ server::Http::Http(
     _secured(secured),
     _queue(*this) {}
 
+void server::Http::queue(response_type &&resp) {
+    _queue(move(resp));
+}
+
+server::Server &server::Http::server() {
+    return _server;
+}
+
+server::Http::Socket &server::Http::socket() {
+    return _socket;
+}
+
+boost::asio::ssl::context &server::Http::ctx() {
+    return _ctx;
+}
+
+boost::asio::steady_timer &server::Http::timer() {
+    return _timer;
+}
+
+boost::tribool &server::Http::secured() {
+    return _secured;
+}
+
 void server::Http::run() {
     on_timer({});
     if (_secured) {
@@ -168,36 +192,8 @@ void server::Http::on_read(error_code code) {
     };
     LOG(info) << logging::add_value("Extra", extra.dump());
 
-    response_type resp = _router.dispatch(_req);
-    if (resp.result() != status::switching_protocols) {
-        _queue(move(resp));
-    } else {
-        auto params = json::parse(resp.body());
-        if (websocket::is_upgrade(_req)) {
-            if (_secured) {
-                make_shared<Websocket>(
-                    _server,
-                    _ctx,
-                    move(boost::get<ssl_socket>(_socket)),
-                    _secured,
-                    move(params)
-                )->run(move(_req));
-            } else {
-                make_shared<Websocket>(
-                    _server,
-                    _ctx,
-                    move(boost::get<plain_socket>(_socket)),
-                    _secured,
-                    move(params)
-                )->run(move(_req));
-            }
-            _timer.expires_at(steady_time_point::max());
-            return;
-        } else {
-            _queue(Response::bad_request(_req));
-        }
-    }
-
+    auto resp = _router.dispatch(*this, _req);
+    if (resp == (int) status::switching_protocols) return;
     if (!_queue.is_full()) read();
 }
 
@@ -213,32 +209,33 @@ void server::Http::on_shutdown(error_code code) {
     if (code) return log("shutdown", code);
 }
 
-server::Http::response_type
-server::Http::health(void *request) {
-    auto req = *((request_type *) request);
-    
-    response<string_body> resp(status::ok, req.version());
+int server::Http::health(void *server, void *request) {
+    auto srv = (Http *) server;
+    auto req = (request_type *) request;
+    response<string_body> resp(status::ok, req->version());
     resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
-    return resp;
+    srv->queue(move(resp));
+    return (int) status::ok;
 }
 
-server::Http::response_type
-server::Http::syncaide_js(void *request) {
-    auto req = *((request_type *) request);
-    
-    if (req.method() != verb::head && req.method() != verb::get) {
-        return Response::method_not_allowed(req);
+int server::Http::syncaide_js(void *server, void *request) {
+    auto srv = (Http *) server;
+    auto req = (request_type *) request;
+    if (req->method() != verb::head && req->method() != verb::get) {
+        srv->queue(Response::method_not_allowed(*req));
+        return (int) status::method_not_allowed;
     }
 
     auto search = resources.find("syncaide.js");
     if (search != resources.end()) {
-        response<string_body> resp(status::ok, req.version());
+        response<string_body> resp(status::ok, req->version());
         resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
         resp.set(field::content_type, string_param("application/javascript"));
-        if (req.method() == verb::head) {
+        if (req->method() == verb::head) {
             resp.content_length(search->second.size());
-            resp.keep_alive(req.keep_alive());
-            return resp;
+            resp.keep_alive(req->keep_alive());
+            srv->queue(move(resp));
+            return (int) status::ok;
         }
 
         // TODO Needs to be changes to reflect actual agent options parsing
@@ -256,83 +253,110 @@ server::Http::syncaide_js(void *request) {
         body.insert(0, fmt::format("var Module = {0};\n", prepend.dump()));
 
         resp.content_length(body.size());
-        resp.keep_alive(req.keep_alive());
+        resp.keep_alive(req->keep_alive());
         resp.body() = body;
         resp.prepare_payload();
-        return resp;
+        srv->queue(move(resp));
+        return (int) status::ok;
     }
 
-    return Response::internal_server_error(req);
+    srv->queue(Response::internal_server_error(*req));
+    return (int) status::internal_server_error;
 }
 
-server::Http::response_type
-server::Http::syncaide_wasm(void *request) {
-    auto req = *((request_type *) request);
-    
-    if (req.method() != verb::head && req.method() != verb::get) {
-        return Response::method_not_allowed(req);
+int server::Http::syncaide_wasm(void *server, void *request) {
+    auto srv = (Http *) server;
+    auto req = (request_type *) request;
+    if (req->method() != verb::head && req->method() != verb::get) {
+        srv->queue(Response::method_not_allowed(*req));
+        return (int) status::method_not_allowed;
     }
 
     auto search = resources.find("syncaide.wasm");
     if (search != resources.end()) {
-        response<string_body> resp(status::ok, req.version());
+        response<string_body> resp(status::ok, req->version());
         resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
         resp.set(field::content_type, string_param("application/wasm"));
-        if (req.method() == verb::head) {
+        if (req->method() == verb::head) {
             resp.content_length(search->second.size());
-            resp.keep_alive(req.keep_alive());
-            return resp;
+            resp.keep_alive(req->keep_alive());
+            srv->queue(move(resp));
+            return (int) status::ok;
         }
 
         resp.content_length(search->second.size());
-        resp.keep_alive(req.keep_alive());
+        resp.keep_alive(req->keep_alive());
         resp.body() = string(search->second.begin(), search->second.end());
         resp.prepare_payload();
-        return resp;
+        srv->queue(move(resp));
+        return (int) status::ok;
     }
 
-    return Response::internal_server_error(req);
+    srv->queue(Response::internal_server_error(*req));
+    return (int) status::internal_server_error;
 }
 
-server::Http::response_type
-server::Http::agent_uid(void *request, const string &uid) {
-    auto req = *((request_type *) request);
-    
-    json params = {{"uid", uid}};
-    response<string_body> resp(status::switching_protocols, req.version());
-    resp.body() = params.dump();
-    return resp;
+int server::Http::agent_uid(void *server, void *request, const string &uid) {
+    auto srv = (Http *) server;
+    auto req = (request_type *) request;
+    if (websocket::is_upgrade(*req)) {
+        if (srv->secured()) {
+            make_shared<Websocket>(
+                srv->server(),
+                srv->ctx(),
+                move(boost::get<ssl_socket>(srv->socket())),
+                srv->secured(),
+                uid
+            )->run(move(*req));
+        } else {
+            make_shared<Websocket>(
+                srv->server(),
+                srv->ctx(),
+                move(boost::get<plain_socket>(srv->socket())),
+                srv->secured(),
+                uid
+            )->run(move(*req));
+        }
+        srv->timer().expires_at(steady_time_point::max());
+        return (int) status::switching_protocols;
+    }
+
+    srv->queue(Response::bad_request(*req));
+    return (int) status::bad_request;
 }
 
 #ifndef NDEBUG
 
-server::Http::response_type
-server::Http::syncaide_html(void *request) {
-    auto req = *((request_type *) request);
-    
-    if (req.method() != verb::head && req.method() != verb::get) {
-        return Response::method_not_allowed(req);
+int server::Http::syncaide_html(void *server, void *request) {
+    auto srv = (Http *) server;
+    auto req = (request_type *) request;
+    if (req->method() != verb::head && req->method() != verb::get) {
+        srv->queue(Response::method_not_allowed(*req));
+        return (int) status::method_not_allowed;
     }
 
     auto search = resources.find("syncaide.html");
     if (search != resources.end()) {
-        response<string_body> resp(status::ok, req.version());
+        response<string_body> resp(status::ok, req->version());
         resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
         resp.set(field::content_type, string_param("text/html"));
-        if (req.method() == verb::head) {
+        if (req->method() == verb::head) {
             resp.content_length(search->second.size());
-            resp.keep_alive(req.keep_alive());
-            return resp;
+            resp.keep_alive(req->keep_alive());
+            srv->queue(move(resp));
+            return (int) status::ok;
         }
 
         resp.content_length(search->second.size());
-        resp.keep_alive(req.keep_alive());
+        resp.keep_alive(req->keep_alive());
         resp.body() = string(search->second.begin(), search->second.end());
         resp.prepare_payload();
-        return resp;
+        srv->queue(move(resp));
+        return (int) status::ok;
     }
 
-    return Response::internal_server_error(req);
+    srv->queue(Response::internal_server_error(*req));
+    return (int) status::internal_server_error;
 }
 
 #endif //NDEBUG

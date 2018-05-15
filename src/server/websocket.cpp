@@ -6,7 +6,7 @@ server::Websocket::Websocket(
     context &ctx,
     ssl_stream<tcp::socket> socket,
     boost::tribool secured,
-    json &&params
+    const string &uid
 ) : _server(server),
     _ctx(ctx),
     _strand(socket.next_layer().get_executor().context().get_executor()),
@@ -16,21 +16,21 @@ server::Websocket::Websocket(
     ),
     _socket(ssl_socket(move(socket))),
     _secured(secured),
-    _params(move(params)) {}
+    _uid(uid) {}
 
 server::Websocket::Websocket(
     Server &server,
     context &ctx,
     tcp::socket socket,
     tribool secured,
-    json &&params
+    const string &uid
 ) : _server(server),
     _ctx(ctx),
     _strand(socket.get_executor().context().get_executor()),
     _timer(socket.get_executor().context(), steady_time_point::max()),
     _socket(plain_socket(move(socket))),
     _secured(secured),
-    _params(move(params)) {}
+    _uid(uid) {}
 
 void server::Websocket::run(request_type &&req) {
     on_timer({});

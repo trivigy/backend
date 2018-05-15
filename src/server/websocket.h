@@ -63,7 +63,7 @@ namespace server {
         bool _close = false;
         bool _eof = false;
         context &_ctx;
-        json _params;
+        string _uid;
 
     protected:
         Socket _socket;
@@ -76,7 +76,7 @@ namespace server {
             context &ctx,
             ssl_stream<tcp::socket> socket,
             tribool secured,
-            json &&params
+            const string &uid
         );
 
         explicit Websocket(
@@ -84,7 +84,7 @@ namespace server {
             context &ctx,
             tcp::socket socket,
             tribool secured,
-            json &&params
+            const string &uid
         );
 
         void run(request<string_body> &&req);

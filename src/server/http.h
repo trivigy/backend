@@ -176,8 +176,21 @@ namespace server {
             tribool secured
         );
 
+        void queue(response_type &&resp);
+
+        Server &server();
+
+        Socket &socket();
+
+        context &ctx();
+
+        steady_timer &timer();
+
+        tribool &secured();
+
         void run();
 
+    protected:
         void read();
 
         void eof();
@@ -194,26 +207,27 @@ namespace server {
 
         void on_shutdown(error_code code);
 
-        static response_type health(void *request);
-
-        static response_type syncaide_js(void *request);
-
-        static response_type syncaide_wasm(void *request);
-
-        static response_type agent_uid(void *request, const string &uid);
-
-#ifndef NDEBUG
-
-        static response_type syncaide_html(void *requestrequest);
-
-#endif //NDEBUG
-
     private:
         static Socket deduce_socket(
             tcp::socket socket,
             context &ctx,
             tribool secured
         );
+
+    public:
+        static int health(void *server, void *request);
+
+        static int syncaide_js(void *server, void *request);
+
+        static int syncaide_wasm(void *server, void *request);
+
+        static int agent_uid(void *server, void *request, const string &uid);
+
+#ifndef NDEBUG
+
+        static int syncaide_html(void *server, void *request);
+
+#endif //NDEBUG
     };
 }
 
