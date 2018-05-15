@@ -12,8 +12,8 @@ void handler(int) {
 }
 
 int main(int argc, const char **argv) {
-    auto options = make_shared<server::Options>();
-    if (!options->parse(argc, argv)) {
+    server::Options options;
+    if (!options.parse(argc, argv)) {
         return EXIT_FAILURE;
     }
 
@@ -21,6 +21,6 @@ int main(int argc, const char **argv) {
     signal(SIGTERM, handler);
     signal(SIGQUIT, handler);
 
-    auto server = server::Server::create(options);
-    return server->start();
+    server::Server server(options);
+    return server.start();
 }

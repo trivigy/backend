@@ -1,11 +1,12 @@
 #ifndef SYNCAIDE_SERVER_HTTP_H
 #define SYNCAIDE_SERVER_HTTP_H
 
-#include "server/websocket.h"
+#include "server/miner.h"
 #include "server/response.h"
 #include "server/helper.h"
 #include "server/router.h"
 #include "server/ssl_stream.h"
+#include "server/server.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/file.hpp>
@@ -54,13 +55,16 @@ namespace server {
     using boost::asio::strand;
     using boost::asio::error::operation_aborted;
     using boost::variant;
-    using boost::get;
     using boost::tribool;
 
+    class Server;
+
     class Http : public enable_shared_from_this<Http> {
-        using Socket = variant<tcp::socket, ssl_stream<tcp::socket>>;
+        using plain_socket = tcp::socket;
+        using ssl_socket = ssl_stream<tcp::socket>;
         using request_type = request<string_body>;
         using response_type = response<string_body>;
+        using Socket = variant<plain_socket, ssl_socket>;
 
         class queue {
             enum {
@@ -107,9 +111,9 @@ namespace server {
 
                     void operator()() override {
                         if (_self._secured) {
+                            auto &s = boost::get<ssl_socket>(_self._socket);
                             http::async_write(
-                                get<ssl_stream<tcp::socket>>(_self._socket),
-                                _msg,
+                                s, _msg,
                                 bind_executor(
                                     _self._strand,
                                     bind(
@@ -121,9 +125,9 @@ namespace server {
                                 )
                             );
                         } else {
+                            auto &s = boost::get<plain_socket>(_self._socket);
                             http::async_write(
-                                get<tcp::socket>(_self._socket),
-                                _msg,
+                                s, _msg,
                                 bind_executor(
                                     _self._strand,
                                     bind(
@@ -139,9 +143,7 @@ namespace server {
                 };
 
                 _items.emplace_back(new work_impl(_self, move(msg)));
-                if (_items.size() == 1) {
-                    (*_items.front())();
-                }
+                if (_items.size() == 1) (*_items.front())();
             }
 
         private:
@@ -150,12 +152,13 @@ namespace server {
         };
 
     private:
+        Server &_server;
         request_type _req;
         flat_buffer _buffer;
         steady_timer _timer;
         bool _eof = false;
         context &_ctx;
-        shared_ptr<Router> _router;
+        Router &_router;
         queue _queue;
 
     protected:
@@ -165,15 +168,29 @@ namespace server {
 
     public:
         Http(
+            Server &server,
+            context &ctx,
+            Router &router,
             tcp::socket socket,
             flat_buffer buffer,
-            tribool secured,
-            context &ctx,
-            shared_ptr<Router> router
+            tribool secured
         );
+
+        void queue(response_type &&resp);
+
+        Server &server();
+
+        Socket &socket();
+
+        context &ctx();
+
+        steady_timer &timer();
+
+        tribool &secured();
 
         void run();
 
+    protected:
         void read();
 
         void eof();
@@ -190,26 +207,27 @@ namespace server {
 
         void on_shutdown(error_code code);
 
-        static response_type health(request_type &req);
-
-        static response_type syncaide_js(request_type &req);
-
-        static response_type syncaide_wasm(request_type &req);
-
-        static response_type agent_uid(request_type &req, const string &uid);
-
-#ifndef NDEBUG
-
-        static response_type syncaide_html(request_type &req);
-
-#endif //NDEBUG
-
     private:
         static Socket deduce_socket(
             tcp::socket socket,
             context &ctx,
             tribool secured
         );
+
+    public:
+        static int health(void *server, void *request);
+
+        static int syncaide_js(void *server, void *request);
+
+        static int syncaide_wasm(void *server, void *request);
+
+        static int agent_uid(void *server, void *request, const string &uid);
+
+#ifndef NDEBUG
+
+        static int syncaide_html(void *server, void *request);
+
+#endif //NDEBUG
     };
 }
 

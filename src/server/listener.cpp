@@ -2,14 +2,16 @@
 #include "server/listener.h"
 
 server::Listener::Listener(
+    Server &server,
     io_context &ioc,
     context &ctx,
-    tcp::endpoint endp,
-    shared_ptr<Router> router
-) : _ctx(ctx),
+    Router &router,
+    tcp::endpoint &endp
+) : _server(server),
+    _ctx(ctx),
     _acceptor(ioc),
     _socket(ioc),
-    _router(move(router)) {
+    _router(router) {
     error_code code;
 
     _acceptor.open(endp.protocol(), code);
@@ -33,13 +35,7 @@ server::Listener::Listener(
 }
 
 void server::Listener::run() {
-    if (!_acceptor.is_open()) {
-        return;
-    }
-    accept();
-}
-
-void server::Listener::accept() {
+    if (!_acceptor.is_open()) return;
     _acceptor.async_accept(
         _socket,
         bind(
@@ -51,10 +47,14 @@ void server::Listener::accept() {
 }
 
 void server::Listener::on_accept(error_code code) {
-    if (code) {
-        log("accept", code);
-    } else {
-        make_shared<Detector>(move(_socket), _ctx, _router)->run();
-    }
-    accept();
+    if (code) log("accept", code);
+    make_shared<Handoff>(_server, _ctx, _router, move(_socket))->run();
+    _acceptor.async_accept(
+        _socket,
+        bind(
+            &Listener::on_accept,
+            shared_from_this(),
+            std::placeholders::_1
+        )
+    );
 }

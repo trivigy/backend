@@ -5,14 +5,14 @@ class AgentConan(ConanFile):
     name = "agent"
     version = "0.0.2"
     folder = name.lower()
-    url = "https://gitlab.com/syncaide/agent"
+    url = "https://github.com/syncaide/agent"
     description = "Distributed web-assembly based mining agent"
     license = "https://gitlab.com/syncaide/agent/blob/master/LICENSE"
     settings = "os", "compiler", "build_type", "arch"
     generators = "cmake"
 
     def source(self):
-        self.run("git clone git@gitlab.com:syncaide/agent.git")
+        self.run("git clone git@github.com:syncaide/agent.git")
         self.run("git checkout -b v{0} origin/v{0}".format(self.version), cwd=self.folder)
 
     def build(self):

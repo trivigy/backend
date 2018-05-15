@@ -12,7 +12,6 @@ using namespace std;
 
 namespace server {
     using boost::beast::http::status;
-    using boost::beast::http::request;
     using boost::beast::http::response;
     using boost::beast::http::string_body;
 
@@ -42,35 +41,30 @@ namespace server {
     class Rule {
     private:
         regex _regex;
-        function<
-            response<string_body>(
-                std::smatch &match,
-                boost::beast::http::request<string_body> &req
-            )
-        > _fn;
+        function<int(std::smatch &match, void *server, void *req)> _fn;
 
     public:
         template<typename Fn, typename Tuple>
         Rule(Fn &&fn, const string &pattern, Tuple) :
             _regex(pattern),
-            _fn([&fn](smatch &match, request<string_body> &req) {
+            _fn([&fn](smatch &match, void *server, void *req) {
                 Tuple params;
                 auto it = ++match.begin();
                 tuple_for_each(params, [&it](auto &v) {
                     istringstream iss(*it++);
                     iss >> v;
                 });
-                return apply(fn, move(tuple_cat(tie(req), params)));
+                return apply(fn, tuple_cat(tie(server), tie(req), params));
             }) {}
 
-        response<string_body> dispatch(request<string_body> &req) const {
-            const string &route = req.target().to_string();
-
+        template<typename Server, typename Request>
+        int dispatch(Server &server, Request &req) const {
             smatch match;
-            if (!regex_match(route.begin(), route.end(), match, _regex)) {
-                return response<string_body>(status::unknown, req.version());
+            const string &route = req.target().to_string();
+            if (regex_match(route.begin(), route.end(), match, _regex)) {
+                return _fn(match, &server, &req);
             }
-            return _fn(match, req);
+            return 0;
         }
     };
 
@@ -88,24 +82,23 @@ namespace server {
             );
         }
 
-        response<string_body> dispatch(request<string_body> &req) const {
-            vector<response<string_body>> resps;
+        template<typename Server, typename Request>
+        int dispatch(Server &server, Request &req) const {
+            vector<int> resps;
             for_each(_rules.begin(), _rules.end(),
-                [&resps, &req](const Rule &rule) {
-                    resps.emplace_back(rule.dispatch(req));
+                [&resps, &server, &req](const Rule &rule) {
+                    resps.emplace_back(rule.dispatch(server, req));
                 }
             );
 
-            auto const it = find_if(resps.begin(), resps.end(),
-                [](auto &resp) {
-                    return resp.result() != status::unknown;
-                }
+            const auto it = find_if(resps.begin(), resps.end(),
+                [](auto &resp) { return resp != 0; }
             );
 
             if (it != resps.end()) {
                 return *it;
             }
-            return Response::not_found(req);
+            return 404;
         }
     };
 

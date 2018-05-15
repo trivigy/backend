@@ -3,6 +3,8 @@
 
 #include "server/helper.h"
 #include "server/ssl_stream.h"
+#include "protos/peer.pb.h"
+#include "server/server.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -27,6 +29,7 @@ namespace server {
     namespace websocket = boost::beast::websocket;
     using nlohmann::json;
     using boost::system::error_code;
+    using boost::beast::buffers_to_string;
     using boost::beast::http::request;
     using boost::beast::http::response;
     using boost::beast::http::string_body;
@@ -40,25 +43,27 @@ namespace server {
     using boost::asio::ip::tcp;
     using boost::asio::strand;
     using boost::asio::error::operation_aborted;
+    using boost::ignore_unused;
     using boost::variant;
-    using boost::get;
     using boost::tribool;
 
-    class Websocket : public enable_shared_from_this<Websocket> {
-        using Socket = variant<
-            websocket::stream<tcp::socket>,
-            websocket::stream<ssl_stream<tcp::socket>>
-        >;
+    class Server;
+
+    class Miner : public enable_shared_from_this<Miner> {
+        using plain_socket = websocket::stream<tcp::socket>;
+        using ssl_socket = websocket::stream<ssl_stream<tcp::socket>>;
+        using Socket = variant<plain_socket, ssl_socket>;
         using request_type = request<string_body>;
         using response_type = response<string_body>;
 
     private:
+        Server &_server;
         multi_buffer _buffer;
         steady_timer _timer;
         bool _close = false;
         bool _eof = false;
         context &_ctx;
-        json _params;
+        string _uid;
 
     protected:
         Socket _socket;
@@ -66,37 +71,41 @@ namespace server {
         tribool _secured;
 
     public:
-        explicit Websocket(
+        explicit Miner(
+            Server &server,
+            context &ctx,
             ssl_stream<tcp::socket> socket,
             tribool secured,
-            context &ctx,
-            json &&params
+            const string &uid
         );
 
-        explicit Websocket(
+        explicit Miner(
+            Server &server,
+            context &ctx,
             tcp::socket socket,
             tribool secured,
-            context &ctx,
-            json &&params
+            const string &uid
         );
 
         void run(request<string_body> &&req);
 
+    private:
+
         void accept(request<string_body> &&req);
-
-        void read();
-
-        void timeout();
-
-        void on_timer(error_code code);
 
         void on_accept(error_code code);
 
-        void on_conclude(error_code code);
+        void read();
 
         void on_read(error_code code, size_t bytes_transferred);
 
         void on_write(error_code code, size_t bytes_transferred);
+
+        void on_timer(error_code code);
+
+        void timeout();
+
+        void on_conclude(error_code code);
     };
 }
 
