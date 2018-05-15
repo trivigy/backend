@@ -214,14 +214,18 @@ void server::Http::on_shutdown(error_code code) {
 }
 
 server::Http::response_type
-server::Http::health(request_type &req) {
+server::Http::health(void *request) {
+    auto req = *((request_type *) request);
+    
     response<string_body> resp(status::ok, req.version());
     resp.set(field::server, string_param(BOOST_BEAST_VERSION_STRING));
     return resp;
 }
 
 server::Http::response_type
-server::Http::syncaide_js(request_type &req) {
+server::Http::syncaide_js(void *request) {
+    auto req = *((request_type *) request);
+    
     if (req.method() != verb::head && req.method() != verb::get) {
         return Response::method_not_allowed(req);
     }
@@ -262,7 +266,9 @@ server::Http::syncaide_js(request_type &req) {
 }
 
 server::Http::response_type
-server::Http::syncaide_wasm(request_type &req) {
+server::Http::syncaide_wasm(void *request) {
+    auto req = *((request_type *) request);
+    
     if (req.method() != verb::head && req.method() != verb::get) {
         return Response::method_not_allowed(req);
     }
@@ -289,7 +295,9 @@ server::Http::syncaide_wasm(request_type &req) {
 }
 
 server::Http::response_type
-server::Http::agent_uid(request_type &req, const string &uid) {
+server::Http::agent_uid(void *request, const string &uid) {
+    auto req = *((request_type *) request);
+    
     json params = {{"uid", uid}};
     response<string_body> resp(status::switching_protocols, req.version());
     resp.body() = params.dump();
@@ -299,7 +307,9 @@ server::Http::agent_uid(request_type &req, const string &uid) {
 #ifndef NDEBUG
 
 server::Http::response_type
-server::Http::syncaide_html(request_type &req) {
+server::Http::syncaide_html(void *request) {
+    auto req = *((request_type *) request);
+    
     if (req.method() != verb::head && req.method() != verb::get) {
         return Response::method_not_allowed(req);
     }

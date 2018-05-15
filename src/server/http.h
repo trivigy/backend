@@ -194,17 +194,17 @@ namespace server {
 
         void on_shutdown(error_code code);
 
-        static response_type health(request_type &req);
+        static response_type health(void *request);
 
-        static response_type syncaide_js(request_type &req);
+        static response_type syncaide_js(void *request);
 
-        static response_type syncaide_wasm(request_type &req);
+        static response_type syncaide_wasm(void *request);
 
-        static response_type agent_uid(request_type &req, const string &uid);
+        static response_type agent_uid(void *request, const string &uid);
 
 #ifndef NDEBUG
 
-        static response_type syncaide_html(request_type &req);
+        static response_type syncaide_html(void *requestrequest);
 
 #endif //NDEBUG
 

@@ -12,7 +12,6 @@ using namespace std;
 
 namespace server {
     using boost::beast::http::status;
-    using boost::beast::http::request;
     using boost::beast::http::response;
     using boost::beast::http::string_body;
 
@@ -42,18 +41,13 @@ namespace server {
     class Rule {
     private:
         regex _regex;
-        function<
-            response<string_body>(
-                std::smatch &match,
-                boost::beast::http::request<string_body> &req
-            )
-        > _fn;
+        function<response<string_body>(std::smatch &match, void *req)> _fn;
 
     public:
         template<typename Fn, typename Tuple>
         Rule(Fn &&fn, const string &pattern, Tuple) :
             _regex(pattern),
-            _fn([&fn](smatch &match, request<string_body> &req) {
+            _fn([&fn](smatch &match, void *req) {
                 Tuple params;
                 auto it = ++match.begin();
                 tuple_for_each(params, [&it](auto &v) {
@@ -63,14 +57,14 @@ namespace server {
                 return apply(fn, move(tuple_cat(tie(req), params)));
             }) {}
 
-        response<string_body> dispatch(request<string_body> &req) const {
-            const string &route = req.target().to_string();
-
+        template<typename Request>
+        response<string_body> dispatch(Request &req) const {
             smatch match;
+            const string &route = req.target().to_string();
             if (!regex_match(route.begin(), route.end(), match, _regex)) {
                 return response<string_body>(status::unknown, req.version());
             }
-            return _fn(match, req);
+            return _fn(match, &req);
         }
     };
 
@@ -88,7 +82,8 @@ namespace server {
             );
         }
 
-        response<string_body> dispatch(request<string_body> &req) const {
+        template<typename Request>
+        response<string_body> dispatch(Request &req) const {
             vector<response<string_body>> resps;
             for_each(_rules.begin(), _rules.end(),
                 [&resps, &req](const Rule &rule) {
