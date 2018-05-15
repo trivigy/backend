@@ -153,28 +153,6 @@ add_test(NAME test_peer
     WORKING_DIRECTORY ${CMAKE_TESTS_OUTPUT_DIRECTORY}
     COMMAND ${CMAKE_TESTS_OUTPUT_DIRECTORY}/test_peer)
 
-#-- test_router -----------------------------------------------------------
-file(GLOB SYNCAIDED_WOMAIN
-    src/server/*.cpp
-    src/rpc/*.cpp
-    src/rpc/callers/*.cpp
-    src/rpc/services/*.cpp)
-add_executable(test_router
-    tests/test_router.cpp
-    src/server/response.cpp
-    src/server/router.h)
-target_link_libraries(test_router PUBLIC
-    boost_unit_test_framework
-    boost_system
-    pthread
-    fmt)
-set_target_properties(test_router PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_TESTS_OUTPUT_DIRECTORY}
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_TESTS_OUTPUT_DIRECTORY})
-add_test(NAME test_router
-    WORKING_DIRECTORY ${CMAKE_TESTS_OUTPUT_DIRECTORY}
-    COMMAND ${CMAKE_TESTS_OUTPUT_DIRECTORY}/test_router)
-
 #-- test_uri ---------------------------------------------------------
 add_executable(test_uri
     tests/test_uri.cpp
