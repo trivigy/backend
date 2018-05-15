@@ -209,6 +209,18 @@ void server::Http::on_shutdown(error_code code) {
     if (code) return log("shutdown", code);
 }
 
+server::Http::Socket server::Http::deduce_socket(
+    tcp::socket socket,
+    context &ctx,
+    tribool secured
+) {
+    if (secured) {
+        return ssl_socket(move(socket), ctx);
+    } else {
+        return plain_socket(move(socket));
+    }
+}
+
 int server::Http::health(void *server, void *request) {
     auto srv = (Http *) server;
     auto req = (request_type *) request;
@@ -301,7 +313,7 @@ int server::Http::agent_uid(void *server, void *request, const string &uid) {
     auto req = (request_type *) request;
     if (websocket::is_upgrade(*req)) {
         if (srv->secured()) {
-            make_shared<Websocket>(
+            make_shared<Miner>(
                 srv->server(),
                 srv->ctx(),
                 move(boost::get<ssl_socket>(srv->socket())),
@@ -309,7 +321,7 @@ int server::Http::agent_uid(void *server, void *request, const string &uid) {
                 uid
             )->run(move(*req));
         } else {
-            make_shared<Websocket>(
+            make_shared<Miner>(
                 srv->server(),
                 srv->ctx(),
                 move(boost::get<plain_socket>(srv->socket())),
@@ -360,16 +372,3 @@ int server::Http::syncaide_html(void *server, void *request) {
 }
 
 #endif //NDEBUG
-
-
-server::Http::Socket server::Http::deduce_socket(
-    tcp::socket socket,
-    context &ctx,
-    tribool secured
-) {
-    if (secured) {
-        return ssl_socket(move(socket), ctx);
-    } else {
-        return plain_socket(move(socket));
-    }
-}

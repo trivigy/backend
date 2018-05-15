@@ -1,7 +1,7 @@
 #ifndef SYNCAIDE_SERVER_HTTP_H
 #define SYNCAIDE_SERVER_HTTP_H
 
-#include "server/websocket.h"
+#include "server/miner.h"
 #include "server/response.h"
 #include "server/helper.h"
 #include "server/router.h"

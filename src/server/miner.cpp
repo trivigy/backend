@@ -1,7 +1,7 @@
 #include "logging.h"
-#include "server/websocket.h"
+#include "server/miner.h"
 
-server::Websocket::Websocket(
+server::Miner::Miner(
     Server &server,
     context &ctx,
     ssl_stream<tcp::socket> socket,
@@ -18,7 +18,7 @@ server::Websocket::Websocket(
     _secured(secured),
     _uid(uid) {}
 
-server::Websocket::Websocket(
+server::Miner::Miner(
     Server &server,
     context &ctx,
     tcp::socket socket,
@@ -32,12 +32,12 @@ server::Websocket::Websocket(
     _secured(secured),
     _uid(uid) {}
 
-void server::Websocket::run(request_type &&req) {
+void server::Miner::run(request_type &&req) {
     on_timer({});
     accept(move(req));
 }
 
-void server::Websocket::accept(request_type &&req) {
+void server::Miner::accept(request_type &&req) {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
         boost::get<ssl_socket>(_socket).async_accept(
@@ -45,7 +45,7 @@ void server::Websocket::accept(request_type &&req) {
             bind_executor(
                 _strand,
                 bind(
-                    &Websocket::on_accept,
+                    &Miner::on_accept,
                     shared_from_this(),
                     placeholders::_1
                 )
@@ -57,7 +57,7 @@ void server::Websocket::accept(request_type &&req) {
             bind_executor(
                 _strand,
                 bind(
-                    &Websocket::on_accept,
+                    &Miner::on_accept,
                     shared_from_this(),
                     placeholders::_1
                 )
@@ -66,7 +66,13 @@ void server::Websocket::accept(request_type &&req) {
     }
 }
 
-void server::Websocket::read() {
+void server::Miner::on_accept(error_code code) {
+    if (code == operation_aborted) return;
+    if (code) return log("accept", code);
+    read();
+}
+
+void server::Miner::read() {
     _timer.expires_after(chrono::seconds(15));
     if (_secured) {
         boost::get<ssl_socket>(_socket).async_read(
@@ -74,7 +80,7 @@ void server::Websocket::read() {
             bind_executor(
                 _strand,
                 bind(
-                    &Websocket::on_read,
+                    &Miner::on_read,
                     shared_from_this(),
                     placeholders::_1,
                     placeholders::_2
@@ -87,7 +93,7 @@ void server::Websocket::read() {
             bind_executor(
                 _strand,
                 bind(
-                    &Websocket::on_read,
+                    &Miner::on_read,
                     shared_from_this(),
                     placeholders::_1,
                     placeholders::_2
@@ -97,88 +103,7 @@ void server::Websocket::read() {
     }
 }
 
-void server::Websocket::timeout() {
-    if (_secured) {
-        if (_eof) return;
-        _timer.expires_at(steady_time_point::max());
-
-        on_timer({});
-        _eof = true;
-        _timer.expires_after(chrono::seconds(15));
-        boost::get<ssl_socket>(_socket).next_layer().async_shutdown(
-            bind_executor(
-                _strand,
-                bind(
-                    &Websocket::on_conclude,
-                    shared_from_this(),
-                    placeholders::_1
-                )
-            )
-        );
-    } else {
-        if (_close) return;
-        _close = true;
-        _timer.expires_after(chrono::seconds(15));
-        boost::get<plain_socket>(_socket).async_close(
-            (const uint16_t) websocket::close_code::normal,
-            bind_executor(
-                _strand,
-                bind(
-                    &Websocket::on_conclude,
-                    shared_from_this(),
-                    placeholders::_1
-                )
-            )
-        );
-    }
-}
-
-void server::Websocket::on_timer(error_code code) {
-    if (code && code != operation_aborted) {
-        cerr << "--- 11 ---" << endl;
-        return log("timer", code);
-    }
-
-    if (_timer.expiry() <= chrono::steady_clock::now()) {
-        cerr << "--- 16 ---" << endl;
-        timeout();
-    }
-
-    _timer.async_wait(
-        bind_executor(
-            _strand,
-            bind(
-                &Websocket::on_timer,
-                shared_from_this(),
-                placeholders::_1
-            )
-        )
-    );
-}
-
-void server::Websocket::on_accept(error_code code) {
-    if (code == operation_aborted) return;
-
-    if (code) {
-        cerr << "--- 10 ---" << endl;
-        return log("accept", code);
-    }
-
-    cerr << "--- 18 ---" << endl;
-
-    read();
-}
-
-void server::Websocket::on_conclude(error_code code) {
-    if (code == operation_aborted) return;
-
-    if (code) {
-        cerr << "--- 9 ---" << endl;
-        return log("shutdown", code);
-    }
-}
-
-void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
+void server::Miner::on_read(error_code code, size_t bytes_transferred) {
     ignore_unused(bytes_transferred);
     if (code == operation_aborted) return;
     if (code == websocket::error::closed) return;
@@ -202,7 +127,7 @@ void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
             bind_executor(
                 _strand,
                 bind(
-                    &Websocket::on_write,
+                    &Miner::on_write,
                     shared_from_this(),
                     placeholders::_1,
                     placeholders::_2
@@ -217,7 +142,7 @@ void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
             bind_executor(
                 _strand,
                 bind(
-                    &Websocket::on_write,
+                    &Miner::on_write,
                     shared_from_this(),
                     placeholders::_1,
                     placeholders::_2
@@ -227,15 +152,78 @@ void server::Websocket::on_read(error_code code, size_t bytes_transferred) {
     }
 }
 
-void server::Websocket::on_write(error_code code, size_t bytes_transferred) {
+void server::Miner::on_write(error_code code, size_t bytes_transferred) {
     ignore_unused(bytes_transferred);
+    if (code == operation_aborted) return;
+    if (code) return log("write", code);
+    _buffer.consume(_buffer.size());
+    read();
+}
+
+void server::Miner::on_timer(error_code code) {
+    if (code && code != operation_aborted) {
+        cerr << "--- 11 ---" << endl;
+        return log("timer", code);
+    }
+
+    if (_timer.expiry() <= chrono::steady_clock::now()) {
+        cerr << "--- 16 ---" << endl;
+        timeout();
+    }
+
+    _timer.async_wait(
+        bind_executor(
+            _strand,
+            bind(
+                &Miner::on_timer,
+                shared_from_this(),
+                placeholders::_1
+            )
+        )
+    );
+}
+
+void server::Miner::timeout() {
+    if (_secured) {
+        if (_eof) return;
+        _timer.expires_at(steady_time_point::max());
+
+        on_timer({});
+        _eof = true;
+        _timer.expires_after(chrono::seconds(15));
+        boost::get<ssl_socket>(_socket).next_layer().async_shutdown(
+            bind_executor(
+                _strand,
+                bind(
+                    &Miner::on_conclude,
+                    shared_from_this(),
+                    placeholders::_1
+                )
+            )
+        );
+    } else {
+        if (_close) return;
+        _close = true;
+        _timer.expires_after(chrono::seconds(15));
+        boost::get<plain_socket>(_socket).async_close(
+            (const uint16_t) websocket::close_code::normal,
+            bind_executor(
+                _strand,
+                bind(
+                    &Miner::on_conclude,
+                    shared_from_this(),
+                    placeholders::_1
+                )
+            )
+        );
+    }
+}
+
+void server::Miner::on_conclude(error_code code) {
     if (code == operation_aborted) return;
 
     if (code) {
-        cerr << "--- 6 ---" << endl;
-        return log("write", code);
+        cerr << "--- 9 ---" << endl;
+        return log("shutdown", code);
     }
-
-    _buffer.consume(_buffer.size());
-    read();
 }

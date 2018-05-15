@@ -49,7 +49,7 @@ namespace server {
 
     class Server;
 
-    class Websocket : public enable_shared_from_this<Websocket> {
+    class Miner : public enable_shared_from_this<Miner> {
         using plain_socket = websocket::stream<tcp::socket>;
         using ssl_socket = websocket::stream<ssl_stream<tcp::socket>>;
         using Socket = variant<plain_socket, ssl_socket>;
@@ -71,7 +71,7 @@ namespace server {
         tribool _secured;
 
     public:
-        explicit Websocket(
+        explicit Miner(
             Server &server,
             context &ctx,
             ssl_stream<tcp::socket> socket,
@@ -79,7 +79,7 @@ namespace server {
             const string &uid
         );
 
-        explicit Websocket(
+        explicit Miner(
             Server &server,
             context &ctx,
             tcp::socket socket,
@@ -89,21 +89,23 @@ namespace server {
 
         void run(request<string_body> &&req);
 
+    private:
+
         void accept(request<string_body> &&req);
-
-        void read();
-
-        void timeout();
-
-        void on_timer(error_code code);
 
         void on_accept(error_code code);
 
-        void on_conclude(error_code code);
+        void read();
 
         void on_read(error_code code, size_t bytes_transferred);
 
         void on_write(error_code code, size_t bytes_transferred);
+
+        void on_timer(error_code code);
+
+        void timeout();
+
+        void on_conclude(error_code code);
     };
 }
 
