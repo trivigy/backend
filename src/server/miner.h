@@ -14,6 +14,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/asio/strand.hpp>
+#include <boost/asio/buffer.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/logic/tribool.hpp>
 #include <boost/variant.hpp>
@@ -42,6 +43,8 @@ namespace server {
     using boost::asio::io_context;
     using boost::asio::ip::tcp;
     using boost::asio::strand;
+    using boost::asio::const_buffer;
+    using boost::asio::const_buffers_1;
     using boost::asio::error::operation_aborted;
     using boost::ignore_unused;
     using boost::variant;
@@ -98,6 +101,8 @@ namespace server {
         void read();
 
         void on_read(error_code code, size_t bytes_transferred);
+
+        void write(const BOOST_ASIO_CONST_BUFFER &buffer);
 
         void on_write(error_code code, size_t bytes_transferred);
 

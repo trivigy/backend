@@ -107,23 +107,25 @@ void server::Miner::on_read(error_code code, size_t bytes_transferred) {
     ignore_unused(bytes_transferred);
     if (code == operation_aborted) return;
     if (code == websocket::error::closed) return;
+    if (code) log("read", code);
 
-    if (code) {
-        cerr << "--- 7 ---" << endl;
-        log("read", code);
-    }
+    protos::Peer incoming;
+    incoming.ParseFromString(buffers_to_string(_buffer.data()));
+    cerr << "addr: " << incoming.addr() << endl;
+    cerr << "age: " << incoming.age() << endl;
+    _buffer.consume(_buffer.size());
 
-    protos::Peer peer;
-    peer.ParseFromString(buffers_to_string(_buffer.data()));
+    protos::Peer outgoing;
+    outgoing.set_addr("2.2.2.2");
+    outgoing.set_age(22);
+    write(buffer(outgoing.SerializeAsString()));
+}
 
-    cerr << "addr: " << peer.addr() << endl;
-    cerr << "age: " << peer.age() << endl;
-
+void server::Miner::write(const BOOST_ASIO_CONST_BUFFER &buffer) {
     if (_secured) {
         auto &socket = boost::get<ssl_socket>(_socket);
-        socket.text(socket.got_text());
         socket.async_write(
-            _buffer.data(),
+            buffer,
             bind_executor(
                 _strand,
                 bind(
@@ -136,9 +138,8 @@ void server::Miner::on_read(error_code code, size_t bytes_transferred) {
         );
     } else {
         auto &socket = boost::get<plain_socket>(_socket);
-        socket.text(socket.got_text());
         socket.async_write(
-            _buffer.data(),
+            buffer,
             bind_executor(
                 _strand,
                 bind(
@@ -156,21 +157,12 @@ void server::Miner::on_write(error_code code, size_t bytes_transferred) {
     ignore_unused(bytes_transferred);
     if (code == operation_aborted) return;
     if (code) return log("write", code);
-    _buffer.consume(_buffer.size());
     read();
 }
 
 void server::Miner::on_timer(error_code code) {
-    if (code && code != operation_aborted) {
-        cerr << "--- 11 ---" << endl;
-        return log("timer", code);
-    }
-
-    if (_timer.expiry() <= chrono::steady_clock::now()) {
-        cerr << "--- 16 ---" << endl;
-        timeout();
-    }
-
+    if (code && code != operation_aborted) return log("timer", code);
+    if (_timer.expiry() <= chrono::steady_clock::now()) timeout();
     _timer.async_wait(
         bind_executor(
             _strand,
@@ -221,9 +213,5 @@ void server::Miner::timeout() {
 
 void server::Miner::on_conclude(error_code code) {
     if (code == operation_aborted) return;
-
-    if (code) {
-        cerr << "--- 9 ---" << endl;
-        return log("shutdown", code);
-    }
+    if (code) return log("shutdown", code);
 }
