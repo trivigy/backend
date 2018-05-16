@@ -115,10 +115,12 @@ void server::Miner::on_read(error_code code, size_t bytes_transferred) {
     cerr << "age: " << incoming.age() << endl;
     _buffer.consume(_buffer.size());
 
-    protos::Peer outgoing;
-    outgoing.set_addr("2.2.2.2");
-    outgoing.set_age(22);
-    write(buffer(outgoing.SerializeAsString()));
+//    _server.frontend()->miner(_uid);
+
+//    protos::Peer outgoing;
+//    outgoing.set_addr("2.2.2.2");
+//    outgoing.set_age(22);
+//    write(buffer(outgoing.SerializeAsString()));
 }
 
 void server::Miner::write(const BOOST_ASIO_CONST_BUFFER &buffer) {

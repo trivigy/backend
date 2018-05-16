@@ -4,6 +4,7 @@
 #include "peer.h"
 #include "rpc/helper.h"
 #include "server/server.h"
+#include "server/peering.h"
 #include "protos/members.grpc.pb.h"
 
 #include <string>
