@@ -33,7 +33,9 @@ find_package(GRPC REQUIRED)
 set(PROTO_DEST ${CMAKE_CURRENT_BINARY_DIR}/protos)
 file(MAKE_DIRECTORY ${PROTO_DEST})
 
-file(GLOB PROTO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/protos/*.proto)
+file(GLOB PROTO_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/protos/*.proto
+    ${CONAN_AGENT_ROOT}/protos/*.proto)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_DEST} ${PROTO_FILES})
 grpc_generate_cpp(GRPC_SRCS GRPC_HDRS ${PROTO_DEST} ${PROTO_FILES})
 

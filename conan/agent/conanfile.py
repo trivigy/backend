@@ -1,4 +1,4 @@
-from conans import ConanFile
+from conans import ConanFile, tools
 
 
 class AgentConan(ConanFile):
@@ -9,11 +9,21 @@ class AgentConan(ConanFile):
     description = "Distributed web-assembly based mining agent"
     license = "https://gitlab.com/syncaide/agent/blob/master/LICENSE"
     settings = "os", "compiler", "build_type", "arch"
+    options = {"source": "ANY"}
+    default_options = "source="
     generators = "cmake"
 
     def source(self):
-        self.run("git clone git@github.com:syncaide/agent.git")
-        self.run("git checkout -b v{0} origin/v{0}".format(self.version), cwd=self.folder)
+        if len(self.options.source.value) != 0:
+            self.run("cp -R {} .".format(self.options.source.value))
+            self.run("make clean", cwd=self.folder)
+        else:
+            self.run("git clone git@github.com:syncaide/agent.git")
+            # self.run("git checkout tags/v{0}".format(self.version), cwd=self.folder)
+            self.run("git checkout -b v{0} origin/v{0}".format(self.version), cwd=self.folder)
+
+        for file in tools.relative_dirs("{}/src/protos".format(self.folder)):
+            tools.replace_in_file("{}/src/protos/{}".format(self.folder, file), "option optimize_for = LITE_RUNTIME;", "")
 
     def build(self):
         self.run("make conan", cwd=self.folder)
@@ -23,3 +33,4 @@ class AgentConan(ConanFile):
         self.copy("*.html", "bin", "{}/build/{}/bin".format(self.folder, self.settings.build_type))
         self.copy("*.js", "bin", "{}/build/{}/bin".format(self.folder, self.settings.build_type))
         self.copy("*.wasm", "bin", "{}/build/{}/bin".format(self.folder, self.settings.build_type))
+        self.copy("*.proto", "protos", "{}/src/protos".format(self.folder))
