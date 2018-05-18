@@ -31,7 +31,6 @@ namespace server {
             } network;
         } defaults;
 
-
         struct {
             Uri advertise;
             Uri bind;

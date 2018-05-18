@@ -7,6 +7,7 @@
 #include "server/router.h"
 #include "server/ssl_stream.h"
 #include "server/server.h"
+#include "common/uri.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/file.hpp>
@@ -18,13 +19,22 @@
 #include <boost/asio/strand.hpp>
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/steady_timer.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <boost/logic/tribool.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/variant.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 #include <nlohmann/json.hpp>
 #include <fmt/format.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/hex.h>
+#include <cryptopp/filters.h>
 #include <functional>
 #include <string>
+#include <chrono>
 
 using namespace std;
 extern map<string, vector<unsigned char>> resources;
@@ -36,6 +46,9 @@ namespace server {
     namespace websocket = boost::beast::websocket;
     namespace fs = boost::filesystem;
     using nlohmann::json;
+    using chrono::seconds;
+    using chrono::system_clock;
+    using chrono::duration_cast;
     using boost::system::error_code;
     using boost::beast::http::request;
     using boost::beast::http::response;
@@ -54,8 +67,13 @@ namespace server {
     using boost::asio::ip::address;
     using boost::asio::strand;
     using boost::asio::error::operation_aborted;
+    using boost::uuids::random_generator;
+    using boost::uuids::uuid;
+    using boost::lexical_cast;
     using boost::variant;
     using boost::tribool;
+    using boost::algorithm::to_lower_copy;
+    using common::Uri;
 
     class Server;
 

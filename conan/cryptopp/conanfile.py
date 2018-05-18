@@ -32,7 +32,7 @@ class CryptoppConan(ConanFile):
                 self.run('make test check', cwd=self.folder)
 
     def package(self):
-        self.copy(pattern="*.h", dst="include/cryptopp", src=".")
+        self.copy(pattern="*.h", dst="include", src=".")
         self.copy(pattern="*.so", dst="lib", src=".", keep_path=False)
         self.copy(pattern="*.a", dst="lib", src=".", keep_path=False)
 

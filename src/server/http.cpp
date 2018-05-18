@@ -250,18 +250,35 @@ int server::Http::syncaide_js(void *server, void *request) {
             return (int) status::ok;
         }
 
-        // TODO Needs to be changes to reflect actual agent options parsing
-        json arguments = {
-            {"url", "ws://127.0.0.1:8080/agent/f64000f3-4dc9-4e22-b704-cdcf82c01038"},
-            {"signature", "4e104ca8-a239-4c62-b6a1-ca6dc163b191"},
-            {"timestamp", "1526091820"}
-        };
-
-        json prepend = {
-            {"arguments", {arguments.dump()}}
-        };
-
         string body(search->second.begin(), search->second.end());
+
+        string digest;
+        CryptoPP::SHA256 sha256;
+        CryptoPP::StringSource ss(
+            body, true,
+            new CryptoPP::HashFilter(
+                sha256,
+                new CryptoPP::HexEncoder(
+                    new CryptoPP::StringSink(digest)
+                )
+            )
+        );
+
+        uuid uid = random_generator{}();
+        auto epoch = duration_cast<seconds>(
+            system_clock::now().time_since_epoch()
+        ).count();
+
+        string parameters(json{
+            {"id", to_string(uid)},
+            {"url", Uri("ws", "127.0.0.1", 8080).compose()},
+            {"digest", to_lower_copy(digest)},
+            {"epoch", epoch}
+        }.dump());
+
+        // TODO generate ecdsa signature from the arguments dump
+
+        json prepend = {{"arguments", {"signature", parameters}}};
         body.insert(0, fmt::format("var Module = {0};\n", prepend.dump()));
 
         resp.content_length(body.size());
