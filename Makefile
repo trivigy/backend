@@ -4,6 +4,7 @@ list:
 
 conan:
 	conan export conan/agent syncaide/stable
+	conan export conan/cryptopp syncaide/stable
 	conan export conan/fifo_map syncaide/stable
 	conan export conan/fmt syncaide/stable
 	conan export conan/gRPC syncaide/stable

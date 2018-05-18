@@ -134,7 +134,8 @@ set(SYNCAIDE_IMPORT_LIBS
     dl
     z
     gcov
-    fmt)
+    fmt
+    cryptopp)
 
 target_link_libraries(syncaide PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 target_link_libraries(syncaided PUBLIC ${SYNCAIDE_IMPORT_LIBS})
