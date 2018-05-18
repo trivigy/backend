@@ -22,9 +22,6 @@ class AgentConan(ConanFile):
             # self.run("git checkout tags/v{0}".format(self.version), cwd=self.folder)
             self.run("git checkout -b v{0} origin/v{0}".format(self.version), cwd=self.folder)
 
-        for file in tools.relative_dirs("{}/src/protos".format(self.folder)):
-            tools.replace_in_file("{}/src/protos/{}".format(self.folder, file), "option optimize_for = LITE_RUNTIME;", "")
-
     def build(self):
         self.run("make conan", cwd=self.folder)
         self.run("make build CMAKE_BUILD_TYPE={}".format(self.settings.build_type), cwd=self.folder)
@@ -33,4 +30,7 @@ class AgentConan(ConanFile):
         self.copy("*.html", "bin", "{}/build/{}/bin".format(self.folder, self.settings.build_type))
         self.copy("*.js", "bin", "{}/build/{}/bin".format(self.folder, self.settings.build_type))
         self.copy("*.wasm", "bin", "{}/build/{}/bin".format(self.folder, self.settings.build_type))
+
         self.copy("*.proto", "protos", "{}/src/protos".format(self.folder))
+        for file in tools.relative_dirs("{}/src/protos".format(self.folder)):
+            tools.replace_in_file("{}/src/protos/{}".format(self.folder, file), "option optimize_for = LITE_RUNTIME;", "")
