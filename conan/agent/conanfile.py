@@ -19,8 +19,7 @@ class AgentConan(ConanFile):
             self.run("make clean", cwd=self.folder)
         else:
             self.run("git clone git@github.com:syncaide/agent.git")
-            # self.run("git checkout tags/v{0}".format(self.version), cwd=self.folder)
-            self.run("git checkout -b v{0} origin/v{0}".format(self.version), cwd=self.folder)
+            self.run("git checkout tags/v{0}".format(self.version), cwd=self.folder)
 
     def build(self):
         self.run("make conan", cwd=self.folder)
