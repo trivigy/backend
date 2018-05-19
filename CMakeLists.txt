@@ -84,6 +84,7 @@ file(GLOB SYNCAIDE_SRCS
 file(GLOB SYNCAIDED_SRCS
     src/syncaided.cpp
     src/server/*.cpp
+    src/server/web/*.cpp
     src/rpc/*.cpp
     src/rpc/callers/*.cpp
     src/rpc/services/*.cpp)
