@@ -3,7 +3,7 @@
 
 #include "server/helper.h"
 #include "server/ssl_stream.h"
-#include "protos/peer.pb.h"
+#include "protos/message.pb.h"
 #include "server/server.h"
 
 #include <boost/beast/core.hpp>
@@ -89,6 +89,8 @@ namespace server {
             tribool secured,
             const string &uid
         );
+
+        const string &uid();
 
         void run(request<string_body> &&req);
 

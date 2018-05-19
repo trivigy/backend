@@ -2,6 +2,7 @@
 #include "server/frontend.h"
 
 server::Frontend::Frontend(Server &server) :
+    miners(*this),
     _server(server),
     _ctx(context{context::sslv23}),
     _ioc(io_context{(int) server.cfg().network.threads}) {}
@@ -118,3 +119,29 @@ void server::Frontend::load_http_certificate(context &ctx) {
 
     ctx.use_tmp_dh(boost::asio::buffer(dh.data(), dh.size()));
 }
+
+vector<string> server::Frontend::Miners::list() {
+    vector<string> uids;
+    shared_lock<shared_mutex> lock(_mutex);
+    for (auto const&[key, val] : _miners) {
+        uids.emplace_back(val->uid());
+    }
+    return uids;
+}
+
+bool server::Frontend::Miners::add(
+    const string &uid,
+    shared_ptr<Miner> miner
+) {
+    unique_lock<shared_mutex> lock(_mutex);
+    return _miners.insert(make_pair(uid, miner)).second;
+}
+
+//shared_ptr<server::Miner> server::Frontend::miner(const string &uid) {
+//    return shared_ptr<Miner>();
+//}
+//
+//bool server::Frontend::miner(const string &uid, shared_ptr<Miner> miner) {
+//    cerr << boolalpha << (miner.get() == nullptr) << endl;
+//    return false;
+//}

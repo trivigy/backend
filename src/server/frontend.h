@@ -3,11 +3,13 @@
 
 #include "server/router.h"
 #include "server/http.h"
-#include "server/server.h"
 #include "server/listener.h"
+#include "server/miner.h"
 
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/io_context.hpp>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
 
 using namespace std;
@@ -17,16 +19,36 @@ namespace server {
     using boost::asio::ssl::context;
     using boost::asio::io_context;
 
+    class Miner;
+
     class Server;
 
     class Frontend : public enable_shared_from_this<Frontend> {
+        class Miners {
+        private:
+            Frontend &_self;
+            mutable shared_mutex _mutex;
+            map<string, shared_ptr<Miner>> _miners;
+
+        public:
+            explicit Miners(Frontend &self) : _self(self) {}
+
+            vector<string> list();
+
+            bool add(const string &uid, shared_ptr<Miner> miner);
+
+//            shared_ptr<Miner> pop(const string &uid);
+        };
+
+    public:
+        Miners miners;
+
     private:
         context _ctx;
         Router _router;
         io_context _ioc;
         Server &_server;
         vector<thread> _handlers;
-//        map<string, shared_ptr<Miner>> _miners;
 
     public:
         explicit Frontend(Server &server);

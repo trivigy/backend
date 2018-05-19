@@ -32,6 +32,10 @@ server::Miner::Miner(
     _secured(secured),
     _uid(uid) {}
 
+const string &server::Miner::uid() {
+    return _uid;
+}
+
 void server::Miner::run(request_type &&req) {
     on_timer({});
     accept(move(req));
@@ -109,13 +113,34 @@ void server::Miner::on_read(error_code code, size_t bytes_transferred) {
     if (code == websocket::error::closed) return;
     if (code) log("read", code);
 
-    protos::Peer incoming;
-    incoming.ParseFromString(buffers_to_string(_buffer.data()));
-    cerr << "addr: " << incoming.addr() << endl;
-    cerr << "age: " << incoming.age() << endl;
+    protos::Message msg;
+    msg.ParseFromString(buffers_to_string(_buffer.data()));
     _buffer.consume(_buffer.size());
 
-//    _server.frontend()->miner(_uid);
+    cerr << "id: " << msg.id() << endl;
+
+    switch (msg.type()) {
+        case protos::MessageType::LOGIN:
+            cerr << "protos::MessageType::LOGIN" << endl;
+            break;
+        case protos::MessageType::TEMPLATE:
+            cerr << "protos::MessageType::TEMPLATE" << endl;
+            break;
+        case protos::MessageType::SUBMIT:
+            cerr << "protos::MessageType::SUBMIT" << endl;
+            break;
+        case protos::MessageType::REPLY:
+            cerr << "protos::MessageType::REPLY" << endl;
+            break;
+        default:
+            break;
+    }
+
+    _server.frontend()->miners.add(_uid, shared_from_this());
+
+    json uids(_server.frontend()->miners.list());
+
+    cerr << "uids.dump(): " << uids.dump() << endl;
 
 //    protos::Peer outgoing;
 //    outgoing.set_addr("2.2.2.2");

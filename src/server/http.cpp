@@ -265,20 +265,21 @@ int server::Http::syncaide_js(void *server, void *request) {
         );
 
         uuid uid = random_generator{}();
-        auto epoch = duration_cast<seconds>(
+        string path = fmt::format("/agent/{}", to_string(uid));
+        long epoch = duration_cast<seconds>(
             system_clock::now().time_since_epoch()
         ).count();
 
-        string parameters(json{
+        string arguments(json{
             {"id", to_string(uid)},
-            {"url", Uri("ws", "127.0.0.1", 8080).compose()},
+            {"addr", Uri("ws", "127.0.0.1", 8080, path).compose()},
             {"digest", to_lower_copy(digest)},
             {"epoch", epoch}
         }.dump());
 
         // TODO generate ecdsa signature from the arguments dump
 
-        json prepend = {{"arguments", {"signature", parameters}}};
+        json prepend = {{"arguments", {"signature", arguments}}};
         body.insert(0, fmt::format("var Module = {0};\n", prepend.dump()));
 
         resp.content_length(body.size());
