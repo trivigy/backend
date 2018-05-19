@@ -94,6 +94,8 @@ namespace server {
 
         void run(request<string_body> &&req);
 
+        void write(const BOOST_ASIO_CONST_BUFFER &buffer);
+
     private:
 
         void accept(request<string_body> &&req);
@@ -104,8 +106,6 @@ namespace server {
 
         void on_read(error_code code, size_t bytes_transferred);
 
-        void write(const BOOST_ASIO_CONST_BUFFER &buffer);
-
         void on_write(error_code code, size_t bytes_transferred);
 
         void on_timer(error_code code);
@@ -113,6 +113,9 @@ namespace server {
         void timeout();
 
         void on_conclude(error_code code);
+
+    private:
+        void login(protos::Message &msg);
     };
 }
 

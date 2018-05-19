@@ -121,7 +121,7 @@ void server::Miner::on_read(error_code code, size_t bytes_transferred) {
 
     switch (msg.type()) {
         case protos::MessageType::LOGIN:
-            cerr << "protos::MessageType::LOGIN" << endl;
+            login(msg);
             break;
         case protos::MessageType::TEMPLATE:
             cerr << "protos::MessageType::TEMPLATE" << endl;
@@ -241,4 +241,11 @@ void server::Miner::timeout() {
 void server::Miner::on_conclude(error_code code) {
     if (code == operation_aborted) return;
     if (code) return log("shutdown", code);
+}
+
+void server::Miner::login(protos::Message &msg) {
+    cerr << "protos::MessageType::LOGIN" << endl;
+    const auto &body = msg.login();
+    cerr << "signature: " << body.signature() << endl;
+    cerr << "digest: " << body.digest() << endl;
 }

@@ -72,7 +72,7 @@ namespace server {
     using boost::lexical_cast;
     using boost::variant;
     using boost::tribool;
-    using boost::algorithm::to_lower_copy;
+    using boost::algorithm::to_lower;
     using common::Uri;
 
     class Server;

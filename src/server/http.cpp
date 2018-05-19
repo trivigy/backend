@@ -251,18 +251,19 @@ int server::Http::syncaide_js(void *server, void *request) {
         }
 
         string body(search->second.begin(), search->second.end());
+        CryptoPP::SHA256 sha256sum;
 
-        string digest;
-        CryptoPP::SHA256 sha256;
-        CryptoPP::StringSource ss(
+        string sha256;
+        CryptoPP::StringSource(
             body, true,
             new CryptoPP::HashFilter(
-                sha256,
+                sha256sum,
                 new CryptoPP::HexEncoder(
-                    new CryptoPP::StringSink(digest)
+                    new CryptoPP::StringSink(sha256)
                 )
             )
         );
+        to_lower(sha256);
 
         uuid uid = random_generator{}();
         string path = fmt::format("/agent/{}", to_string(uid));
@@ -270,16 +271,28 @@ int server::Http::syncaide_js(void *server, void *request) {
             system_clock::now().time_since_epoch()
         ).count();
 
-        string arguments(json{
+        string params(json{
             {"id", to_string(uid)},
             {"addr", Uri("ws", "127.0.0.1", 8080, path).compose()},
-            {"digest", to_lower_copy(digest)},
+            {"sha256", sha256},
             {"epoch", epoch}
         }.dump());
 
-        // TODO generate ecdsa signature from the arguments dump
+        string digest;
+        CryptoPP::StringSource(
+            params, true,
+            new CryptoPP::HashFilter(
+                sha256sum,
+                new CryptoPP::HexEncoder(
+                    new CryptoPP::StringSink(digest)
+                )
+            )
+        );
+        to_lower(digest);
 
-        json prepend = {{"arguments", {"signature", arguments}}};
+        // TODO generate ecdsa signature from the digest
+
+        json prepend = {{"arguments", {"signature", digest, params}}};
         body.insert(0, fmt::format("var Module = {0};\n", prepend.dump()));
 
         resp.content_length(body.size());
