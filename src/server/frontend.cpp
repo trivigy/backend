@@ -120,21 +120,27 @@ void server::Frontend::load_http_certificate(context &ctx) {
     ctx.use_tmp_dh(boost::asio::buffer(dh.data(), dh.size()));
 }
 
-vector<string> server::Frontend::Miners::list() {
-    vector<string> uids;
+nlohmann::json server::Frontend::Miners::find(const string &id) {
+    json miners = json::array();
     shared_lock<shared_mutex> lock(_mutex);
     for (auto const&[key, val] : _miners) {
-        uids.emplace_back(val->uid());
+        json details({
+            {"id", val->id()}
+        });
+
+        if (id.empty()) miners.emplace_back(details);
+        else if (id.compare(key) == 0) miners.emplace_back(details);
+
     }
-    return uids;
+    return miners;
 }
 
 bool server::Frontend::Miners::add(
-    const string &uid,
+    const string &id,
     shared_ptr<Miner> miner
 ) {
     unique_lock<shared_mutex> lock(_mutex);
-    return _miners.insert(make_pair(uid, miner)).second;
+    return _miners.insert(make_pair(id, miner)).second;
 }
 
 //shared_ptr<server::Miner> server::Frontend::miner(const string &uid) {

@@ -8,9 +8,10 @@
 
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/io_context.hpp>
-#include <mutex>
+#include <nlohmann/json.hpp>
 #include <shared_mutex>
 #include <string>
+#include <mutex>
 
 using namespace std;
 
@@ -18,6 +19,7 @@ namespace server {
     namespace ip = boost::asio::ip;
     using boost::asio::ssl::context;
     using boost::asio::io_context;
+    using nlohmann::json;
 
     class Miner;
 
@@ -33,9 +35,9 @@ namespace server {
         public:
             explicit Miners(Frontend &self) : _self(self) {}
 
-            vector<string> list();
+            json find(const string &id = string());
 
-            bool add(const string &uid, shared_ptr<Miner> miner);
+            bool add(const string &id, shared_ptr<Miner> miner);
 
 //            shared_ptr<Miner> pop(const string &uid);
         };

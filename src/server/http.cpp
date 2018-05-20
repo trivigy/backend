@@ -253,17 +253,17 @@ int server::Http::syncaide_js(void *server, void *request) {
         string body(search->second.begin(), search->second.end());
         CryptoPP::SHA256 sha256sum;
 
-        string sha256;
+        string code_digest;
         CryptoPP::StringSource(
             body, true,
             new CryptoPP::HashFilter(
                 sha256sum,
                 new CryptoPP::HexEncoder(
-                    new CryptoPP::StringSink(sha256)
+                    new CryptoPP::StringSink(code_digest)
                 )
             )
         );
-        to_lower(sha256);
+        to_lower(code_digest);
 
         uuid uid = random_generator{}();
         string path = fmt::format("/agent/{}", to_string(uid));
@@ -271,28 +271,28 @@ int server::Http::syncaide_js(void *server, void *request) {
             system_clock::now().time_since_epoch()
         ).count();
 
-        string params(json{
+        string parameters(json{
             {"id", to_string(uid)},
             {"addr", Uri("ws", "127.0.0.1", 8080, path).compose()},
-            {"sha256", sha256},
+            {"digest", code_digest},
             {"epoch", epoch}
         }.dump());
 
-        string digest;
+        string parameters_digest;
         CryptoPP::StringSource(
-            params, true,
+            parameters, true,
             new CryptoPP::HashFilter(
                 sha256sum,
                 new CryptoPP::HexEncoder(
-                    new CryptoPP::StringSink(digest)
+                    new CryptoPP::StringSink(parameters_digest)
                 )
             )
         );
-        to_lower(digest);
+        to_lower(parameters_digest);
 
-        // TODO generate ecdsa signature from the digest
+        // TODO generate ecdsa signature from parameters_digest
 
-        json prepend = {{"arguments", {"signature", digest, params}}};
+        json prepend = {{"arguments", {"signature", parameters}}};
         body.insert(0, fmt::format("var Module = {0};\n", prepend.dump()));
 
         resp.content_length(body.size());

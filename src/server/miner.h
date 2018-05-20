@@ -66,7 +66,7 @@ namespace server {
         bool _close = false;
         bool _eof = false;
         context &_ctx;
-        string _uid;
+        string _id;
 
     protected:
         Socket _socket;
@@ -79,7 +79,7 @@ namespace server {
             context &ctx,
             ssl_stream<tcp::socket> socket,
             tribool secured,
-            const string &uid
+            const string &id
         );
 
         explicit Miner(
@@ -87,10 +87,10 @@ namespace server {
             context &ctx,
             tcp::socket socket,
             tribool secured,
-            const string &uid
+            const string &id
         );
 
-        const string &uid();
+        const string &id();
 
         void run(request<string_body> &&req);
 
