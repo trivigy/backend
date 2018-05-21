@@ -368,7 +368,9 @@ bool client::Options::parse(int argc, const char **argv) {
             description = "This is how it works.";
             descriptors.emplace_back(po::options_description("Find Options"));
             descriptors.back().add_options()
-                ("help", "show this help message and exit.");
+                ("help", "show this help message and exit.")
+                ("id", po::value<string>(&miners.find.id),
+                    "searches for a specific miner designated by the provided id");
 
             positions.emplace_back(po::positional_options_description());
 
