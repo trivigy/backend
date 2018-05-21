@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package protos.miners;
+
+service Miners {
+    rpc find(FindRequest) returns (FindResponse) {}
+}
+
+message FindRequest {
+    repeated string peers = 1;
+}
+
+message FindResponse {
+    repeated string peers = 1;
+}

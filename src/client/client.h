@@ -3,6 +3,7 @@
 
 #include "client/options.h"
 #include "rpc/callers/members.h"
+#include "rpc/callers/miners.h"
 
 #include <nlohmann/json.hpp>
 #include <boost/format.hpp>
@@ -19,22 +20,41 @@ namespace client {
     using json = nlohmann::json;
 
     class Client {
+        class Members {
+        private:
+            Client &_self;
+
+        public:
+            explicit Members(Client &self) : _self(self) {}
+
+            int list();
+
+            int status();
+        };
+
+        class Miners {
+        private:
+            Client &_self;
+
+        public:
+            explicit Miners(Client &self) : _self(self) {}
+
+            int find();
+        };
+
+    public:
+        Members members;
+        Miners miners;
+
     private:
-        Options *_cfg;
+        Options &_cfg;
 
     public:
         explicit Client(Options &options);
 
-        Options *cfg();
+        Options &cfg();
 
         int start();
-
-    private:
-        int members_gossip();
-
-        int members_list();
-
-        int members_status();
     };
 }
 

@@ -10,8 +10,8 @@ bool client::Options::parse(int argc, const char **argv) {
     descriptors.emplace_back(po::options_description("Options"));
     descriptors.back().add_options()
         ("help", "show this help message and exit")
-        ("host,h", po::value<string>(&network.host)
-                ->default_value(defaults.network.host)
+        ("host,h", po::value<string>()
+                ->default_value(defaults.network.host.netloc())
                 ->notifier(bind(&client::Options::on_host, this, _1)),
             "connect to node at the specified hostname (e.g. 172.20.0.2:8847, [::1]:8847, etc.)")
         ("cmd", po::value<string>(&cmd)->default_value(""));
@@ -23,7 +23,8 @@ bool client::Options::parse(int argc, const char **argv) {
     vector<po::options_description> commands;
     commands.emplace_back(po::options_description("Commands"));
     commands.back().add_options()
-        ("members", "members command");
+        ("members", "members commands")
+        ("miners", "miners commands");
 
     vector<po::variables_map> maps;
     maps.emplace_back(po::variables_map());
@@ -148,68 +149,7 @@ bool client::Options::parse(int argc, const char **argv) {
 
         cmd.clear();
         cmd = maps.back()["cmd"].as<string>();
-        if (cmd == "gossip") {
-            program_name += " " + cmd;
-            description = "This is how it works.";
-            descriptors.emplace_back(po::options_description("Gossip Options"));
-            descriptors.back().add_options()
-                ("help", "show this help message and exit.");
-
-            positions.emplace_back(po::positional_options_description());
-
-            options.emplace_back(vector<string>());
-            while (it != parsed.options.end()) {
-                auto begin = it->original_tokens.begin();
-                auto end = it->original_tokens.end();
-                copy(begin, end, back_inserter(options.back()));
-                it++;
-            }
-
-            maps.emplace_back(po::variables_map());
-            try {
-                po::store(
-                    po::command_line_parser(options.back())
-                        .options(descriptors.back())
-                        .positional(positions.back())
-                        .run(),
-                    maps.back()
-                );
-            } catch (exception &e) {
-                cerr << "\033[1;91m"
-                     << "error: " << e.what()
-                     << "\033[0m" << endl;
-                cout << usage(
-                    program_name,
-                    description,
-                    descriptors,
-                    positions,
-                    maps
-                ) << endl;
-                return false;
-            }
-
-            if (maps.back().count("help")) {
-                cout << usage(
-                    program_name,
-                    description,
-                    descriptors,
-                    positions,
-                    maps
-                ) << endl;
-                return false;
-            }
-
-            for (auto &vm : maps) {
-                try {
-                    po::notify(vm);
-                } catch (exception &e) {
-                    cerr << "error: " << e.what() << endl;
-                    return false;
-                }
-            }
-
-            return true;
-        } else if (cmd == "list") {
+        if (cmd == "list") {
             program_name += " " + cmd;
             description = "This is how it works.";
             descriptors.emplace_back(po::options_description("List Options"));
@@ -359,6 +299,159 @@ bool client::Options::parse(int argc, const char **argv) {
             ) << endl;
             return false;
         }
+    } else if (cmd == "miners") {
+        program_name += " " + cmd;
+        description = "This is how it works.";
+        descriptors.emplace_back(po::options_description("Members Options"));
+        descriptors.back().add_options()
+            ("help", "show this help message and exit.")
+            ("cmd", po::value<string>(&miners.cmd)->default_value(""));
+
+        positions.emplace_back(po::positional_options_description());
+        positions.back().add("cmd", 1).add("args", -1);
+
+        commands.emplace_back(po::options_description("Commands"));
+        commands.back().add_options()
+            ("find", "find command");
+
+        options.emplace_back(vector<string>());
+        while (it != parsed.options.end()) {
+            auto begin = it->original_tokens.begin();
+            auto end = it->original_tokens.end();
+            copy(begin, end, back_inserter(options.back()));
+            if (it->position_key != -1) {
+                it++;
+                break;
+            }
+            it++;
+        }
+
+        maps.emplace_back(po::variables_map());
+        try {
+            po::store(
+                po::command_line_parser(options.back())
+                    .options(descriptors.back())
+                    .positional(positions.back())
+                    .allow_unregistered()
+                    .run(),
+                maps.back()
+            );
+        } catch (exception &e) {
+            cerr << "\033[1;91m" << "error: " << e.what() << "\033[0m" << endl;
+            cout << usage(
+                program_name,
+                description,
+                descriptors,
+                positions,
+                maps,
+                commands.back()
+            ) << endl;
+            return false;
+        }
+
+        if (maps.back().count("help")) {
+            cout << usage(
+                program_name,
+                description,
+                descriptors,
+                positions,
+                maps,
+                commands.back()
+            ) << endl;
+            return false;
+        }
+
+        cmd.clear();
+        cmd = maps.back()["cmd"].as<string>();
+        if (cmd == "find") {
+            program_name += " " + cmd;
+            description = "This is how it works.";
+            descriptors.emplace_back(po::options_description("Find Options"));
+            descriptors.back().add_options()
+                ("help", "show this help message and exit.");
+
+            positions.emplace_back(po::positional_options_description());
+
+            options.emplace_back(vector<string>());
+            while (it != parsed.options.end()) {
+                auto begin = it->original_tokens.begin();
+                auto end = it->original_tokens.end();
+                copy(begin, end, back_inserter(options.back()));
+                it++;
+            }
+
+            maps.emplace_back(po::variables_map());
+            try {
+                po::store(
+                    po::command_line_parser(options.back())
+                        .options(descriptors.back())
+                        .positional(positions.back())
+                        .run(),
+                    maps.back()
+                );
+            } catch (exception &e) {
+                cerr << "\033[1;91m"
+                     << "error: " << e.what()
+                     << "\033[0m" << endl;
+                cout << usage(
+                    program_name,
+                    description,
+                    descriptors,
+                    positions,
+                    maps
+                ) << endl;
+                return false;
+            }
+
+            if (maps.back().count("help")) {
+                cout << usage(
+                    program_name,
+                    description,
+                    descriptors,
+                    positions,
+                    maps
+                ) << endl;
+                return false;
+            }
+
+            for (auto &vm : maps) {
+                try {
+                    po::notify(vm);
+                } catch (exception &e) {
+                    cerr << "error: " << e.what() << endl;
+                    return false;
+                }
+            }
+
+            return true;
+        } else if (cmd.empty()) {
+            cerr << "\033[1;91m"
+                 << "error: unspecified command"
+                 << "\033[0m" << endl;
+            cout << usage(
+                program_name,
+                description,
+                descriptors,
+                positions,
+                maps,
+                commands.back()
+            ) << endl;
+            return false;
+        } else {
+            using boost::format;
+            cerr << "\033[1;91m"
+                 << format("error: unrecognised command '%1%'") % cmd
+                 << "\033[0m" << endl;
+            cout << usage(
+                program_name,
+                description,
+                descriptors,
+                positions,
+                maps,
+                commands.back()
+            ) << endl;
+            return false;
+        }
     } else if (cmd.empty()) {
         cerr << "\033[1;91m"
              << "error: unspecified command"
@@ -400,9 +493,10 @@ bool client::Options::parse(int argc, const char **argv) {
     return true;
 }
 
-void client::Options::on_host(string host) {
-    const string unix = "unix:";
-    if (!host.compare(0, unix.size(), unix)) {
+void client::Options::on_host(string uri) {
+    try {
+        network.host = Uri(uri);
+    } catch (const exception &e) {
         auto kind = po::validation_error::invalid_option_value;
         throw po::validation_error(kind, "host");
     }

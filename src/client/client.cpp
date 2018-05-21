@@ -1,55 +1,30 @@
 #include "logging.h"
 #include "client/client.h"
 
-client::Client::Client(client::Options &options) : _cfg(&options) {}
 
-client::Options *client::Client::cfg() {
+client::Client::Client(client::Options &options) :
+    members(*this),
+    miners(*this),
+    _cfg(options) {}
+
+client::Options &client::Client::cfg() {
     return _cfg;
 }
 
 int client::Client::start() {
-    if (_cfg->cmd == "members") {
-        if (_cfg->members.cmd == "gossip") {
-            return members_gossip();
-        } else if (_cfg->members.cmd == "list") {
-            return members_list();
-        } else if (_cfg->members.cmd == "status") {
-            return members_status();
-        }
+    if (_cfg.cmd == "members") {
+        if (_cfg.members.cmd == "list") return members.list();
+        else if (_cfg.members.cmd == "status") return members.status();
+    } else if (_cfg.cmd == "miners") {
+        if (_cfg.miners.cmd == "find") return miners.find();
     }
     return EXIT_FAILURE;
 }
 
-int client::Client::members_gossip() {
+int client::Client::Members::list() {
     rpc::callers::MembersCaller caller(
         grpc::CreateCustomChannel(
-            _cfg->network.host,
-            grpc::InsecureChannelCredentials(),
-            grpc::ChannelArguments()
-        )
-    );
-
-    grpc::Status status;
-    deque<Peer> buffer;
-    tie(status, buffer) = caller.gossip();
-
-    if (status.ok()) {
-        auto results = json::array();
-        for (auto &each : buffer) {
-            results.push_back(each.addr());
-        }
-        cout << results.dump() << endl;
-    } else {
-        LOG(error) << status.error_message();
-    }
-
-    return status.error_code();
-}
-
-int client::Client::members_list() {
-    rpc::callers::MembersCaller caller(
-        grpc::CreateCustomChannel(
-            _cfg->network.host,
+            _self.cfg().network.host.netloc(),
             grpc::InsecureChannelCredentials(),
             grpc::ChannelArguments()
         )
@@ -72,16 +47,36 @@ int client::Client::members_list() {
     return status.error_code();
 }
 
-int client::Client::members_status() {
+int client::Client::Members::status() {
     rpc::callers::MembersCaller caller(
         grpc::CreateCustomChannel(
-            _cfg->network.host,
+            _self.cfg().network.host.netloc(),
             grpc::InsecureChannelCredentials(),
             grpc::ChannelArguments()
         )
     );
 
     auto[status, buffer] = caller.status("world");
+    if (status.ok()) {
+        json result = {{"message", buffer.value()}};
+        cout << result.dump() << endl;
+    } else {
+        LOG(error) << status.error_message();
+    }
+
+    return status.error_code();
+}
+
+int client::Client::Miners::find() {
+    rpc::callers::MinersCaller caller(
+        grpc::CreateCustomChannel(
+            _self.cfg().network.host.netloc(),
+            grpc::InsecureChannelCredentials(),
+            grpc::ChannelArguments()
+        )
+    );
+
+    auto[status, buffer] = caller.find("world");
     if (status.ok()) {
         json result = {{"message", buffer.value()}};
         cout << result.dump() << endl;
