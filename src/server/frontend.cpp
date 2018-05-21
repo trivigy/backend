@@ -129,7 +129,7 @@ nlohmann::json server::Frontend::Miners::find(const string &id) {
         });
 
         if (id.empty()) miners.emplace_back(details);
-        else if (id.compare(key) == 0) miners.emplace_back(details);
+        else if (id == key) miners.emplace_back(details);
 
     }
     return miners;
