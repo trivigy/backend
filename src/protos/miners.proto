@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "miner.proto";
 
 package protos.miners;
 
@@ -7,9 +8,9 @@ service Miners {
 }
 
 message FindRequest {
-    repeated string peers = 1;
+    string id = 1;
 }
 
 message FindResponse {
-    repeated string peers = 1;
+    repeated Miner miners = 1;
 }

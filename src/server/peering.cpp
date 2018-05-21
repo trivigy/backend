@@ -16,14 +16,16 @@ server::Peering::Peering(Server &server) :
 
 void server::Peering::start() {
     grpc::ServerBuilder builder;
-    rpc::services::MembersService service(_server);
+    rpc::services::MembersService members(_server);
+    rpc::services::MinersService miners(_server);
 
     builder.AddListeningPort(
         _server.cfg().network.bind.netloc(),
         grpc::InsecureServerCredentials()
     );
 
-    builder.RegisterService((Members::Service *) (&service));
+    builder.RegisterService(&members);
+    builder.RegisterService(&miners);
     _rpc = builder.BuildAndStart();
 
     on_pulse({});

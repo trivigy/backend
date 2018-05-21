@@ -1,11 +1,10 @@
 #ifndef SYNCAIDE_RPC_SERVICES_MEMBERS_H
 #define SYNCAIDE_RPC_SERVICES_MEMBERS_H
 
-#include "peer.h"
-#include "rpc/helper.h"
-#include "server/server.h"
-#include "server/peering.h"
 #include "protos/members.grpc.pb.h"
+#include "server/peering.h"
+#include "rpc/helper.h"
+#include "peer.h"
 
 #include <string>
 #include <tuple>

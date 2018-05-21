@@ -4,6 +4,7 @@
 #include "protos/miners.grpc.pb.h"
 #include "rpc/helper.h"
 
+#include <nlohmann/json.hpp>
 #include <string>
 
 using namespace std;
@@ -11,6 +12,8 @@ using namespace protos::miners;
 
 namespace rpc {
     namespace callers {
+        using nlohmann::json;
+
         class MinersCaller {
         private:
             unique_ptr<Miners::Stub> stub;
@@ -20,7 +23,7 @@ namespace rpc {
                 const shared_ptr<grpc::ChannelInterface> &channel
             ) : stub(Miners::NewStub(channel)) {}
 
-            response<string> find(const string &id);
+            response<json> find(const string &id);
         };
     }
 }

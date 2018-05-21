@@ -33,9 +33,9 @@ namespace server {
             map<string, shared_ptr<Miner>> _miners;
 
         public:
-            explicit Miners(Frontend &self) : _self(self) {}
+            explicit Miners(Frontend &self) : _self(self), _miners() {}
 
-            json find(const string &id = string());
+            vector<shared_ptr<Miner>> find(const string &id = string());
 
             bool add(const string &id, shared_ptr<Miner> miner);
 

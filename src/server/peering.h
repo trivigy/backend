@@ -3,6 +3,7 @@
 
 #include "rpc/callers/members.h"
 #include "rpc/services/members.h"
+#include "rpc/services/miners.h"
 #include "server/helper.h"
 #include "server/server.h"
 #include "view.h"

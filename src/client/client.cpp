@@ -76,10 +76,9 @@ int client::Client::Miners::find() {
         )
     );
 
-    auto[status, buffer] = caller.find("world");
+    auto[status, buffer] = caller.find(_self.cfg().miners.find.id);
     if (status.ok()) {
-        json result = {{"message", buffer.value()}};
-        cout << result.dump() << endl;
+        cout << buffer.value().dump() << endl;
     } else {
         LOG(error) << status.error_message();
     }

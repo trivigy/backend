@@ -258,5 +258,5 @@ void server::Miner::login(protos::Message &msg) {
 
     _server.frontend()->miners.add(_id, shared_from_this());
 
-    cerr << "miners: " << _server.frontend()->miners.find().dump() << endl;
+//    cerr << "miners: " << _server.frontend()->miners.find().dump() << endl;
 }

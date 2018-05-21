@@ -1,23 +1,25 @@
 #include "logging.h"
 #include "rpc/callers/miners.h"
 
-rpc::response<string>
+rpc::response<nlohmann::json>
 rpc::callers::MinersCaller::find(const string &id) {
     grpc::ClientContext context;
     FindRequest request;
     FindResponse response;
 
+    request.set_id(id);
     grpc::Status status = stub->find(&context, request, &response);
-    if (status.ok()) {
-//        deque<Peer> result;
-//        auto peers = response.peers();
-//        auto it = peers.begin();
-//        while (it != peers.end()) {
-//            result.emplace_back(Peer(it->addr(), it->age()));
-//            it++;
-//        }
-//        return {status, result};
-    }
 
-    return {status, nullopt};
+    json result = json::array();
+    if (status.ok()) {
+        auto miners = response.miners();
+        auto it = miners.begin();
+        while (it != miners.end()) {
+            result.emplace_back(json({
+                {"id", it->id()}
+            }));
+            it++;
+        }
+    }
+    return {status, result};
 }

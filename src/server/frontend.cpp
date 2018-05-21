@@ -120,16 +120,13 @@ void server::Frontend::load_http_certificate(context &ctx) {
     ctx.use_tmp_dh(boost::asio::buffer(dh.data(), dh.size()));
 }
 
-nlohmann::json server::Frontend::Miners::find(const string &id) {
-    json miners = json::array();
+vector<shared_ptr<server::Miner>>
+server::Frontend::Miners::find(const string &id) {
+    vector<shared_ptr<Miner>> miners;
     shared_lock<shared_mutex> lock(_mutex);
     for (auto const&[key, val] : _miners) {
-        json details({
-            {"id", val->id()}
-        });
-
-        if (id.empty()) miners.emplace_back(details);
-        else if (id == key) miners.emplace_back(details);
+        if (id.empty()) miners.emplace_back(val);
+        else if (id == key) miners.emplace_back(val);
 
     }
     return miners;
