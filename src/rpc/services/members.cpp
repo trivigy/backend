@@ -51,15 +51,3 @@ grpc::Status rpc::services::MembersService::list(
 
     return grpc::Status::OK;
 }
-
-grpc::Status rpc::services::MembersService::status(
-    grpc::ServerContext *context,
-    const StatusRequest *request,
-    StatusResponse *response
-) {
-    log("/members/status", context->peer());
-
-    std::string prefix("Hello ");
-    response->set_message(prefix + request->message());
-    return grpc::Status::OK;
-}

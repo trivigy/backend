@@ -38,12 +38,6 @@ namespace rpc {
                 const ListRequest *request,
                 ListResponse *response
             ) override;
-
-            grpc::Status status(
-                grpc::ServerContext *context,
-                const StatusRequest *request,
-                StatusResponse *response
-            ) override;
         };
     }
 }

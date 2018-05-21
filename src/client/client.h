@@ -28,8 +28,6 @@ namespace client {
             explicit Members(Client &self) : _self(self) {}
 
             int list();
-
-            int status();
         };
 
         class Miners {

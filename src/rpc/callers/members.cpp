@@ -27,42 +27,28 @@ rpc::callers::MembersCaller::gossip(
             it++;
         }
     }
-
     return {status, result};
 }
 
-rpc::response<deque<Peer>>
+rpc::response<nlohmann::json>
 rpc::callers::MembersCaller::list() {
     grpc::ClientContext context;
     ListRequest request;
     ListResponse response;
 
     grpc::Status status = stub->list(&context, request, &response);
+
+    json result = json::array();
     if (status.ok()) {
-        deque<Peer> result;
         auto peers = response.peers();
         auto it = peers.begin();
         while (it != peers.end()) {
-            result.emplace_back(Peer(it->addr(), it->age()));
+            result.emplace_back(json({
+                {"addr", it->addr()},
+                {"age", it->age()}
+            }));
             it++;
         }
-        return {status, result};
     }
-
-    return {status, nullopt};
-}
-
-rpc::response<string>
-rpc::callers::MembersCaller::status(const std::string &message) {
-    grpc::ClientContext context;
-    StatusRequest request;
-    StatusResponse response;
-
-    request.set_message(message);
-    grpc::Status status = stub->status(&context, request, &response);
-    if (status.ok()) {
-        return {status, response.message()};
-    }
-
-    return {status, nullopt};
+    return {status, result};
 }

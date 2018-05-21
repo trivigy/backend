@@ -210,67 +210,6 @@ bool client::Options::parse(int argc, const char **argv) {
             }
 
             return true;
-        } else if (cmd == "status") {
-            program_name += " " + cmd;
-            description = "This is how it works.";
-            descriptors.emplace_back(po::options_description("Status Options"));
-            descriptors.back().add_options()
-                ("help", "show this help message and exit.");
-
-            positions.emplace_back(po::positional_options_description());
-
-            options.emplace_back(vector<string>());
-            while (it != parsed.options.end()) {
-                auto begin = it->original_tokens.begin();
-                auto end = it->original_tokens.end();
-                copy(begin, end, back_inserter(options.back()));
-                it++;
-            }
-
-            maps.emplace_back(po::variables_map());
-            try {
-                po::store(
-                    po::command_line_parser(options.back())
-                        .options(descriptors.back())
-                        .positional(positions.back())
-                        .run(),
-                    maps.back()
-                );
-            } catch (exception &e) {
-                cerr << "\033[1;91m"
-                     << "error: " << e.what()
-                     << "\033[0m" << endl;
-                cout << usage(
-                    program_name,
-                    description,
-                    descriptors,
-                    positions,
-                    maps
-                ) << endl;
-                return false;
-            }
-
-            if (maps.back().count("help")) {
-                cout << usage(
-                    program_name,
-                    description,
-                    descriptors,
-                    positions,
-                    maps
-                ) << endl;
-                return false;
-            }
-
-            for (auto &vm : maps) {
-                try {
-                    po::notify(vm);
-                } catch (exception &e) {
-                    cerr << "error: " << e.what() << endl;
-                    return false;
-                }
-            }
-
-            return true;
         } else if (cmd.empty()) {
             cerr << "\033[1;91m"
                  << "error: unspecified command"

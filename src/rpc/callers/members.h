@@ -28,9 +28,7 @@ namespace rpc {
                 const string &remove = string()
             );
 
-            response<deque<Peer>> list();
-
-            response<string> status(const string &message);
+            response<json> list();
         };
     }
 }
