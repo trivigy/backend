@@ -44,6 +44,8 @@ void server::Upstream::check_info(error_code code) {
 //        cerr << "--- response ---" << endl;
 //        cerr << resp << endl;
 //        cerr << "--- end ---" << endl;
+    }, [this, client](const auto &msg, auto code) {
+//        cerr << "--- failure: check_info ---" << endl;
     });
 
     _timer_info.expires_after(chrono::seconds(1));
@@ -90,6 +92,8 @@ void server::Upstream::check_block_template(error_code code) {
 //        cerr << "--- response ---" << endl;
 //        cerr << resp << endl;
 //        cerr << "--- end ---" << endl;
+    }, [this, client](const auto &msg, auto code) {
+//        cerr << "--- failure: check_block_template ---" << endl;
     });
 
     _timer_block_template.expires_after(chrono::seconds(1));

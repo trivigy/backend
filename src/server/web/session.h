@@ -2,7 +2,6 @@
 #define SYNCAIDE_SERVER_SESSION_H
 
 #include "server/ssl_stream.h"
-#include "server/helper.h"
 #include "common/uri.h"
 
 #include <boost/beast/core.hpp>
@@ -25,6 +24,7 @@ namespace server {
         namespace ssl = boost::asio::ssl;
         namespace http = boost::beast::http;
         using boost::system::error_code;
+        using boost::system::errc::not_connected;
         using boost::beast::http::request;
         using boost::beast::http::response;
         using boost::beast::http::string_body;
@@ -52,31 +52,36 @@ namespace server {
             response_type _res;
             flat_buffer _buffer;
             tcp::resolver _resolver;
-            function<void(response_type &)> _fn;
+            function<void(response_type &)> _success;
+            function<void(const string &, error_code)> _failure;
 
         public:
-            template<typename Fn>
+            template<typename Success, typename Failure>
             explicit Session(
                 io_context &ioc,
                 ssl::context &ctx,
                 request_type &req,
-                Fn &&fn
+                Success &&success,
+                Failure &&failure
             ) : _resolver(ioc),
                 _socket(ssl_socket(plain_socket(ioc), ctx)),
                 _secured(true),
                 _req(req),
-                _fn(fn) {}
+                _success(success),
+                _failure(failure) {}
 
-            template<typename Fn>
+            template<typename Success, typename Failure>
             explicit Session(
                 io_context &ioc,
                 request_type &req,
-                Fn &&fn
+                Success &&success,
+                Failure &&failure
             ) : _resolver(ioc),
                 _socket(plain_socket(ioc)),
                 _secured(false),
                 _req(req),
-                _fn(fn) {}
+                _success(success),
+                _failure(failure) {}
 
             void run(Uri &uri);
 

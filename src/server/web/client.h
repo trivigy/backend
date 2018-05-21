@@ -1,9 +1,8 @@
 #ifndef SYNCAIDE_SERVER_WEB_H
 #define SYNCAIDE_SERVER_WEB_H
 
-#include "server/helper.h"
-#include "common/uri.h"
 #include "server/web/session.h"
+#include "common/uri.h"
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -33,8 +32,8 @@ namespace server {
                 _ioc(ioc),
                 _ctx(ssl::context::sslv23_client) {};
 
-            template<typename Request, typename Fn>
-            void request(Request &req, Fn &&fn) {
+            template<typename Request, typename Success, typename Failure>
+            void request(Request &req, Success &&success, Failure &&failure) {
                 Uri uri(string(req.target()));
                 req.target(uri.path_ext());
                 if (uri.is_tls())
@@ -42,13 +41,15 @@ namespace server {
                         _ioc,
                         _ctx,
                         req,
-                        forward<Fn>(fn)
+                        forward<Success>(success),
+                        forward<Failure>(failure)
                     )->run(uri);
                 else
                     make_shared<Session>(
                         _ioc,
                         req,
-                        forward<Fn>(fn)
+                        forward<Success>(success),
+                        forward<Failure>(failure)
                     )->run(uri);
             };
         };
