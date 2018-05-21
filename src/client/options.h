@@ -34,7 +34,7 @@ namespace client {
         struct {
             struct {
                 string id;
-            } find;
+            } list;
 
             string cmd;
         } miners;

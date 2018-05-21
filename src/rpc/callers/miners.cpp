@@ -2,13 +2,13 @@
 #include "rpc/callers/miners.h"
 
 rpc::response<nlohmann::json>
-rpc::callers::MinersCaller::find(const string &id) {
+rpc::callers::MinersCaller::list(const string &id) {
     grpc::ClientContext context;
-    FindRequest request;
-    FindResponse response;
+    ListRequest request;
+    ListResponse response;
 
     request.set_id(id);
-    grpc::Status status = stub->find(&context, request, &response);
+    grpc::Status status = stub->list(&context, request, &response);
 
     json result = json::array();
     if (status.ok()) {

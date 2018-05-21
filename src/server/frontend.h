@@ -35,7 +35,7 @@ namespace server {
         public:
             explicit Miners(Frontend &self) : _self(self), _miners() {}
 
-            vector<shared_ptr<Miner>> find(const string &id = string());
+            vector<shared_ptr<Miner>> list(const string &id = string());
 
             bool add(const string &id, shared_ptr<Miner> miner);
 

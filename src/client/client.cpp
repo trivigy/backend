@@ -15,7 +15,7 @@ int client::Client::start() {
     if (_cfg.cmd == "members") {
         if (_cfg.members.cmd == "list") return members.list();
     } else if (_cfg.cmd == "miners") {
-        if (_cfg.miners.cmd == "find") return miners.find();
+        if (_cfg.miners.cmd == "list") return miners.list();
     }
     return EXIT_FAILURE;
 }
@@ -39,7 +39,7 @@ int client::Client::Members::list() {
     return status.error_code();
 }
 
-int client::Client::Miners::find() {
+int client::Client::Miners::list() {
     rpc::callers::MinersCaller caller(
         grpc::CreateCustomChannel(
             _self.cfg().network.host.netloc(),
@@ -48,7 +48,7 @@ int client::Client::Miners::find() {
         )
     );
 
-    auto[status, buffer] = caller.find(_self.cfg().miners.find.id);
+    auto[status, buffer] = caller.list(_self.cfg().miners.list.id);
     if (status.ok()) {
         cout << buffer.value().dump() << endl;
     } else {

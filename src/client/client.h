@@ -37,7 +37,7 @@ namespace client {
         public:
             explicit Miners(Client &self) : _self(self) {}
 
-            int find();
+            int list();
         };
 
     public:

@@ -6,8 +6,8 @@ rpc::services::MembersService::MembersService(server::Server &server) :
 
 grpc::Status rpc::services::MembersService::gossip(
     grpc::ServerContext *context,
-    const GossipRequest *request,
-    GossipResponse *response
+    const members::GossipRequest *request,
+    members::GossipResponse *response
 ) {
     log("/members/gossip", context->peer());
 
@@ -36,8 +36,8 @@ grpc::Status rpc::services::MembersService::gossip(
 
 grpc::Status rpc::services::MembersService::list(
     grpc::ServerContext *context,
-    const ListRequest *request,
-    ListResponse *response
+    const members::ListRequest *request,
+    members::ListResponse *response
 ) {
     log("/members/list", context->peer());
 

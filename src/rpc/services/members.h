@@ -10,7 +10,6 @@
 #include <tuple>
 
 using namespace std;
-using namespace protos::members;
 
 namespace server {
     class Server;
@@ -18,9 +17,10 @@ namespace server {
 
 namespace rpc {
     namespace services {
+        namespace members = protos::members;
         using namespace boost::algorithm;
 
-        class MembersService final : public Members::Service {
+        class MembersService final : public members::Members::Service {
         private:
             server::Server &_server;
 
@@ -29,14 +29,14 @@ namespace rpc {
 
             grpc::Status gossip(
                 grpc::ServerContext *context,
-                const GossipRequest *request,
-                GossipResponse *response
+                const members::GossipRequest *request,
+                members::GossipResponse *response
             ) override;
 
             grpc::Status list(
                 grpc::ServerContext *context,
-                const ListRequest *request,
-                ListResponse *response
+                const members::ListRequest *request,
+                members::ListResponse *response
             ) override;
         };
     }

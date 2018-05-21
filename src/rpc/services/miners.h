@@ -9,7 +9,6 @@
 #include <tuple>
 
 using namespace std;
-using namespace protos::miners;
 
 namespace server {
     class Server;
@@ -17,17 +16,19 @@ namespace server {
 
 namespace rpc {
     namespace services {
-        class MinersService final : public Miners::Service {
+        namespace miners = protos::miners;
+
+        class MinersService final : public miners::Miners::Service {
         private:
             server::Server &_server;
 
         public:
             explicit MinersService(server::Server &server);
 
-            grpc::Status find(
+            grpc::Status list(
                 grpc::ServerContext *context,
-                const FindRequest *request,
-                FindResponse *response
+                const miners::ListRequest *request,
+                miners::ListResponse *response
             ) override;
         };
     }

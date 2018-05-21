@@ -4,13 +4,13 @@ import "miner.proto";
 package protos.miners;
 
 service Miners {
-    rpc find(FindRequest) returns (FindResponse) {}
+    rpc list(ListRequest) returns (ListResponse) {}
 }
 
-message FindRequest {
+message ListRequest {
     string id = 1;
 }
 
-message FindResponse {
+message ListResponse {
     repeated Miner miners = 1;
 }

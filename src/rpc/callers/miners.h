@@ -23,7 +23,7 @@ namespace rpc {
                 const shared_ptr<grpc::ChannelInterface> &channel
             ) : stub(Miners::NewStub(channel)) {}
 
-            response<json> find(const string &id);
+            response<json> list(const string &id);
         };
     }
 }

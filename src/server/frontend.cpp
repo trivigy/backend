@@ -121,7 +121,7 @@ void server::Frontend::load_http_certificate(context &ctx) {
 }
 
 vector<shared_ptr<server::Miner>>
-server::Frontend::Miners::find(const string &id) {
+server::Frontend::Miners::list(const string &id) {
     vector<shared_ptr<Miner>> miners;
     shared_lock<shared_mutex> lock(_mutex);
     for (auto const&[key, val] : _miners) {

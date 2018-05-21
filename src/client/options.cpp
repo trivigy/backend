@@ -251,7 +251,7 @@ bool client::Options::parse(int argc, const char **argv) {
 
         commands.emplace_back(po::options_description("Commands"));
         commands.back().add_options()
-            ("find", "find command");
+            ("list", "list command");
 
         options.emplace_back(vector<string>());
         while (it != parsed.options.end()) {
@@ -302,14 +302,14 @@ bool client::Options::parse(int argc, const char **argv) {
 
         cmd.clear();
         cmd = maps.back()["cmd"].as<string>();
-        if (cmd == "find") {
+        if (cmd == "list") {
             program_name += " " + cmd;
             description = "This is how it works.";
-            descriptors.emplace_back(po::options_description("Find Options"));
+            descriptors.emplace_back(po::options_description("List Options"));
             descriptors.back().add_options()
                 ("help", "show this help message and exit.")
-                ("id", po::value<string>(&miners.find.id),
-                    "searches for a specific miner designated by the provided id");
+                ("id", po::value<string>(&miners.list.id),
+                    "list the specific registered miner designated by the provided id");
 
             positions.emplace_back(po::positional_options_description());
 
