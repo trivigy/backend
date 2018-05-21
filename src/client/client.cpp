@@ -55,19 +55,14 @@ int client::Client::members_list() {
         )
     );
 
-    grpc::Status status;
-    deque<Peer> buffer;
-    tie(status, buffer) = caller.list();
-
+    auto[status, buffer] = caller.list();
     if (status.ok()) {
         auto view = json::array();
-        for (auto &each : buffer) {
-            view.push_back(json(
-                {
-                    {"addr", each.addr()},
-                    {"age",  to_string(each.age())}
-                }
-            ));
+        for (auto &each : buffer.value()) {
+            view.push_back(json({
+                {"addr", each.addr()},
+                {"age", to_string(each.age())}
+            }));
             cout << view.dump() << endl;
         }
     } else {
@@ -86,13 +81,9 @@ int client::Client::members_status() {
         )
     );
 
-    string message("world");
-    grpc::Status status;
-    string reply;
-    tie(status, reply) = caller.status(message);
-
+    auto[status, buffer] = caller.status("world");
     if (status.ok()) {
-        json result = {{"message", reply}};
+        json result = {{"message", buffer.value()}};
         cout << result.dump() << endl;
     } else {
         LOG(error) << status.error_message();

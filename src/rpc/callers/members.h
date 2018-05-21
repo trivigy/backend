@@ -1,11 +1,10 @@
 #ifndef SYNCAIDE_RPC_CALLERS_MEMBERS_H
 #define SYNCAIDE_RPC_CALLERS_MEMBERS_H
 
-#include "peer.h"
-#include "rpc/helper.h"
 #include "protos/members.grpc.pb.h"
+#include "rpc/helper.h"
+#include "peer.h"
 
-#include <grpc++/grpc++.h>
 #include <string>
 #include <tuple>
 #include <deque>
@@ -24,14 +23,14 @@ namespace rpc {
                 const shared_ptr<grpc::ChannelInterface> &channel
             ) : stub(Members::NewStub(channel)) {}
 
-            tuple<grpc::Status, deque<Peer>> gossip(
+            response<deque<Peer>> gossip(
                 const deque<Peer> &buffer = deque<Peer>(),
                 const string &remove = string()
             );
 
-            tuple<grpc::Status, deque<Peer>> list();
+            response<deque<Peer>> list();
 
-            tuple<grpc::Status, string> status(const string &message);
+            response<string> status(const string &message);
         };
     }
 }

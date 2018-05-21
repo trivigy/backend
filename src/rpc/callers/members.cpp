@@ -1,7 +1,7 @@
 #include "logging.h"
 #include "rpc/callers/members.h"
 
-tuple<grpc::Status, deque<Peer>>
+rpc::response<deque<Peer>>
 rpc::callers::MembersCaller::gossip(
     const deque<Peer> &buffer,
     const string &remove
@@ -31,38 +31,38 @@ rpc::callers::MembersCaller::gossip(
     return {status, result};
 }
 
-tuple<grpc::Status, deque<Peer>>
+rpc::response<deque<Peer>>
 rpc::callers::MembersCaller::list() {
     grpc::ClientContext context;
     ListRequest request;
     ListResponse response;
 
-    deque<Peer> result;
     grpc::Status status = stub->list(&context, request, &response);
     if (status.ok()) {
+        deque<Peer> result;
         auto peers = response.peers();
         auto it = peers.begin();
         while (it != peers.end()) {
             result.emplace_back(Peer(it->addr(), it->age()));
             it++;
         }
+        return {status, result};
     }
 
-    return {status, result};
+    return {status, nullopt};
 }
 
-tuple<grpc::Status, string>
+rpc::response<string>
 rpc::callers::MembersCaller::status(const std::string &message) {
     grpc::ClientContext context;
     StatusRequest request;
     StatusResponse response;
 
-    string result;
     request.set_message(message);
     grpc::Status status = stub->status(&context, request, &response);
     if (status.ok()) {
-        result = response.message();
+        return {status, response.message()};
     }
 
-    return {status, result};
+    return {status, nullopt};
 }

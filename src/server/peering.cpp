@@ -48,9 +48,8 @@ void server::Peering::on_pulse(error_code code) {
         return;
     }
 
-    deque<Peer> buffer;
-    buffer = _view->select(cfg.members.c / 2 - 1, cfg.members.H);
-    buffer.emplace(buffer.begin(), Peer(cfg.network.advertise.netloc(), 0));
+    deque<Peer> push = _view->select(cfg.members.c / 2 - 1, cfg.members.H);
+    push.emplace(push.begin(), Peer(cfg.network.advertise.netloc(), 0));
 
     auto peer = _view->random_peer();
     rpc::callers::MembersCaller caller(
@@ -61,9 +60,8 @@ void server::Peering::on_pulse(error_code code) {
         )
     );
 
-    grpc::Status status;
-    tie(status, buffer) = caller.gossip(buffer, cfg.network.advertise.netloc());
-    _view->update(cfg.members.c, cfg.members.H, cfg.members.S, buffer);
+    auto[status, pull] = caller.gossip(push, cfg.network.advertise.netloc());
+    _view->update(cfg.members.c, cfg.members.H, cfg.members.S, pull.value());
 
     if (!status.ok()) {
         json extra = {{"peer", peer.addr()}};
