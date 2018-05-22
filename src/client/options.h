@@ -29,7 +29,7 @@ namespace client {
 
         struct {
             string cmd;
-        } members;
+        } peers;
 
         struct {
             struct {

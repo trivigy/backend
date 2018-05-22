@@ -2,7 +2,7 @@
 #define SYNCAIDE_CLIENT_H
 
 #include "client/options.h"
-#include "rpc/callers/members.h"
+#include "rpc/callers/peers.h"
 #include "rpc/callers/miners.h"
 
 #include <nlohmann/json.hpp>
@@ -20,12 +20,12 @@ namespace client {
     using json = nlohmann::json;
 
     class Client {
-        class Members {
+        class Peers {
         private:
             Client &_self;
 
         public:
-            explicit Members(Client &self) : _self(self) {}
+            explicit Peers(Client &self) : _self(self) {}
 
             int list();
         };
@@ -41,7 +41,7 @@ namespace client {
         };
 
     public:
-        Members members;
+        Peers peers;
         Miners miners;
 
     private:

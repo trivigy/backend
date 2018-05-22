@@ -11,12 +11,12 @@ server::Peering::Peering(Server &server) :
     for (auto &join : cfg.network.joins) {
         buffer.emplace_back(Peer(join.netloc(), 0));
     }
-    _view->update(cfg.members.c, cfg.members.H, cfg.members.S, buffer);
+    _view->update(cfg.peers.c, cfg.peers.H, cfg.peers.S, buffer);
 }
 
 void server::Peering::start() {
     grpc::ServerBuilder builder;
-    rpc::services::MembersService members(_server);
+    rpc::services::PeersService peers(_server);
     rpc::services::MinersService miners(_server);
 
     builder.AddListeningPort(
@@ -24,7 +24,7 @@ void server::Peering::start() {
         grpc::InsecureServerCredentials()
     );
 
-    builder.RegisterService(&members);
+    builder.RegisterService(&peers);
     builder.RegisterService(&miners);
     _rpc = builder.BuildAndStart();
 
@@ -50,11 +50,11 @@ void server::Peering::on_pulse(error_code code) {
         return;
     }
 
-    deque<Peer> push = _view->select(cfg.members.c / 2 - 1, cfg.members.H);
+    deque<Peer> push = _view->select(cfg.peers.c / 2 - 1, cfg.peers.H);
     push.emplace(push.begin(), Peer(cfg.network.advertise.netloc(), 0));
 
     auto peer = _view->random_peer();
-    rpc::callers::MembersCaller caller(
+    rpc::callers::PeersCaller caller(
         grpc::CreateCustomChannel(
             peer.addr(),
             grpc::InsecureChannelCredentials(),
@@ -63,7 +63,7 @@ void server::Peering::on_pulse(error_code code) {
     );
 
     auto[status, pull] = caller.gossip(push, cfg.network.advertise.netloc());
-    _view->update(cfg.members.c, cfg.members.H, cfg.members.S, pull.value());
+    _view->update(cfg.peers.c, cfg.peers.H, cfg.peers.S, pull.value());
 
     if (!status.ok()) {
         json extra = {{"peer", peer.addr()}};

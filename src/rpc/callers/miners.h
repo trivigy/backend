@@ -8,20 +8,20 @@
 #include <string>
 
 using namespace std;
-using namespace protos::miners;
 
 namespace rpc {
     namespace callers {
+        namespace miners = protos::miners;
         using nlohmann::json;
 
         class MinersCaller {
         private:
-            unique_ptr<Miners::Stub> stub;
+            unique_ptr<miners::Miners::Stub> stub;
 
         public:
             explicit MinersCaller(
                 const shared_ptr<grpc::ChannelInterface> &channel
-            ) : stub(Miners::NewStub(channel)) {}
+            ) : stub(miners::Miners::NewStub(channel)) {}
 
             response<json> list(const string &id);
         };

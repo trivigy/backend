@@ -4,8 +4,8 @@
 rpc::response<nlohmann::json>
 rpc::callers::MinersCaller::list(const string &id) {
     grpc::ClientContext context;
-    ListRequest request;
-    ListResponse response;
+    miners::ListRequest request;
+    miners::ListResponse response;
 
     request.set_id(id);
     grpc::Status status = stub->list(&context, request, &response);

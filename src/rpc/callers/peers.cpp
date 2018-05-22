@@ -1,14 +1,14 @@
 #include "logging.h"
-#include "rpc/callers/members.h"
+#include "rpc/callers/peers.h"
 
 rpc::response<deque<Peer>>
-rpc::callers::MembersCaller::gossip(
+rpc::callers::PeersCaller::gossip(
     const deque<Peer> &buffer,
     const string &remove
 ) {
     grpc::ClientContext context;
-    GossipRequest request;
-    GossipResponse response;
+    peers::GossipRequest request;
+    peers::GossipResponse response;
 
     for (const auto &each : buffer) {
         request.add_peers(each.addr());
@@ -31,10 +31,10 @@ rpc::callers::MembersCaller::gossip(
 }
 
 rpc::response<nlohmann::json>
-rpc::callers::MembersCaller::list() {
+rpc::callers::PeersCaller::list() {
     grpc::ClientContext context;
-    ListRequest request;
-    ListResponse response;
+    peers::ListRequest request;
+    peers::ListResponse response;
 
     grpc::Status status = stub->list(&context, request, &response);
 

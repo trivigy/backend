@@ -23,7 +23,7 @@ bool client::Options::parse(int argc, const char **argv) {
     vector<po::options_description> commands;
     commands.emplace_back(po::options_description("Commands"));
     commands.back().add_options()
-        ("members", "members commands")
+        ("peers", "peers commands")
         ("miners", "miners commands");
 
     vector<po::variables_map> maps;
@@ -83,22 +83,20 @@ bool client::Options::parse(int argc, const char **argv) {
     }
 
     string cmd = maps.back()["cmd"].as<string>();
-    if (cmd == "members") {
+    if (cmd == "peers") {
         program_name += " " + cmd;
         description = "This is how it works.";
-        descriptors.emplace_back(po::options_description("Members Options"));
+        descriptors.emplace_back(po::options_description("Peers Options"));
         descriptors.back().add_options()
             ("help", "show this help message and exit.")
-            ("cmd", po::value<string>(&members.cmd)->default_value(""));
+            ("cmd", po::value<string>(&peers.cmd)->default_value(""));
 
         positions.emplace_back(po::positional_options_description());
         positions.back().add("cmd", 1).add("args", -1);
 
         commands.emplace_back(po::options_description("Commands"));
         commands.back().add_options()
-            ("gossip", "gossip command")
-            ("list", "list command")
-            ("status", "status command");
+            ("list", "list command");
 
         options.emplace_back(vector<string>());
         while (it != parsed.options.end()) {
@@ -241,7 +239,7 @@ bool client::Options::parse(int argc, const char **argv) {
     } else if (cmd == "miners") {
         program_name += " " + cmd;
         description = "This is how it works.";
-        descriptors.emplace_back(po::options_description("Members Options"));
+        descriptors.emplace_back(po::options_description("Miners Options"));
         descriptors.back().add_options()
             ("help", "show this help message and exit.")
             ("cmd", po::value<string>(&miners.cmd)->default_value(""));

@@ -1,7 +1,7 @@
-#ifndef SYNCAIDE_RPC_CALLERS_MEMBERS_H
-#define SYNCAIDE_RPC_CALLERS_MEMBERS_H
+#ifndef SYNCAIDE_RPC_CALLERS_PEERS_H
+#define SYNCAIDE_RPC_CALLERS_PEERS_H
 
-#include "protos/members.grpc.pb.h"
+#include "protos/peers.grpc.pb.h"
 #include "rpc/helper.h"
 #include "peer.h"
 
@@ -10,18 +10,19 @@
 #include <deque>
 
 using namespace std;
-using namespace protos::members;
 
 namespace rpc {
     namespace callers {
-        class MembersCaller {
+        namespace peers = protos::peers;
+
+        class PeersCaller {
         private:
-            unique_ptr<Members::Stub> stub;
+            unique_ptr<peers::Peers::Stub> stub;
 
         public:
-            explicit MembersCaller(
+            explicit PeersCaller(
                 const shared_ptr<grpc::ChannelInterface> &channel
-            ) : stub(Members::NewStub(channel)) {}
+            ) : stub(peers::Peers::NewStub(channel)) {}
 
             response<deque<Peer>> gossip(
                 const deque<Peer> &buffer = deque<Peer>(),
@@ -33,4 +34,4 @@ namespace rpc {
     }
 }
 
-#endif //SYNCAIDE_RPC_CALLERS_MEMBERS_H
+#endif //SYNCAIDE_RPC_CALLERS_PEERS_H

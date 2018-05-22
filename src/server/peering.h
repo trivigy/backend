@@ -1,8 +1,8 @@
 #ifndef SYNCAIDE_SERVER_PEERING_H
 #define SYNCAIDE_SERVER_PEERING_H
 
-#include "rpc/callers/members.h"
-#include "rpc/services/members.h"
+#include "rpc/callers/peers.h"
+#include "rpc/services/peers.h"
 #include "rpc/services/miners.h"
 #include "server/helper.h"
 #include "server/server.h"

@@ -1,9 +1,9 @@
 syntax = "proto3";
 import "peer.proto";
 
-package protos.members;
+package protos.peers;
 
-service Members {
+service Peers {
     rpc gossip(GossipRequest) returns (GossipResponse) {}
     rpc list(ListRequest) returns (ListResponse) {}
 }

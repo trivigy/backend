@@ -3,7 +3,7 @@
 
 
 client::Client::Client(client::Options &options) :
-    members(*this),
+    peers(*this),
     miners(*this),
     _cfg(options) {}
 
@@ -12,16 +12,16 @@ client::Options &client::Client::cfg() {
 }
 
 int client::Client::start() {
-    if (_cfg.cmd == "members") {
-        if (_cfg.members.cmd == "list") return members.list();
+    if (_cfg.cmd == "peers") {
+        if (_cfg.peers.cmd == "list") return peers.list();
     } else if (_cfg.cmd == "miners") {
         if (_cfg.miners.cmd == "list") return miners.list();
     }
     return EXIT_FAILURE;
 }
 
-int client::Client::Members::list() {
-    rpc::callers::MembersCaller caller(
+int client::Client::Peers::list() {
+    rpc::callers::PeersCaller caller(
         grpc::CreateCustomChannel(
             _self.cfg().network.host.netloc(),
             grpc::InsecureChannelCredentials(),
