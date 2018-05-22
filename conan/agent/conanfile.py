@@ -3,7 +3,7 @@ from conans import ConanFile, tools
 
 class AgentConan(ConanFile):
     name = "agent"
-    version = "0.0.2"
+    version = "0.0.3"
     folder = name.lower()
     url = "https://github.com/syncaide/agent"
     description = "Distributed web-assembly based mining agent"
