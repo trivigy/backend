@@ -8,13 +8,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 if (NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
     file(DOWNLOAD
-        "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.8/conan.cmake"
-        "${CMAKE_BINARY_DIR}/conan.cmake"
-        EXPECTED_MD5 58bc519cadc890b5c33235defadc1176)
+        "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.11/conan.cmake"
+        "${CMAKE_BINARY_DIR}/conan.cmake")
 endif ()
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-project(backend VERSION 0.0.2)
+project(backend VERSION 0.0.4)
 conan_cmake_run(
     CONANFILE conanfile.txt
     BASIC_SETUP CMAKE_TARGETS
@@ -34,9 +33,12 @@ find_package(GRPC REQUIRED)
 set(PROTO_DEST ${CMAKE_CURRENT_BINARY_DIR}/protos)
 file(MAKE_DIRECTORY ${PROTO_DEST})
 
-file(GLOB PROTO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/protos/*.proto)
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_DEST} ${PROTO_FILES})
-grpc_generate_cpp(GRPC_SRCS GRPC_HDRS ${PROTO_DEST} ${PROTO_FILES})
+set(PROTOBUF_GENERATE_CPP_APPEND_PATH ON)
+set(GRPC_GENERATE_CPP_APPEND_PATH ON)
+file(GLOB AGENT_PROTO_FILES ${CONAN_AGENT_ROOT}/protos/*.proto)
+file(GLOB BACKEND_PROTO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/protos/*.proto)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${PROTO_DEST} ${BACKEND_PROTO_FILES} ${AGENT_PROTO_FILES})
+grpc_generate_cpp(GRPC_SRCS GRPC_HDRS ${PROTO_DEST} ${BACKEND_PROTO_FILES})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -82,6 +84,7 @@ file(GLOB SYNCAIDE_SRCS
 file(GLOB SYNCAIDED_SRCS
     src/syncaided.cpp
     src/server/*.cpp
+    src/server/web/*.cpp
     src/rpc/*.cpp
     src/rpc/callers/*.cpp
     src/rpc/services/*.cpp)
@@ -132,7 +135,8 @@ set(SYNCAIDE_IMPORT_LIBS
     dl
     z
     gcov
-    fmt)
+    fmt
+    cryptopp)
 
 target_link_libraries(syncaide PUBLIC ${SYNCAIDE_IMPORT_LIBS})
 target_link_libraries(syncaided PUBLIC ${SYNCAIDE_IMPORT_LIBS})

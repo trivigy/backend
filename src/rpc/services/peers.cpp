@@ -1,15 +1,15 @@
 #include "logging.h"
-#include "rpc/services/members.h"
+#include "rpc/services/peers.h"
 
-rpc::services::MembersService::MembersService(server::Server &server) :
+rpc::services::PeersService::PeersService(server::Server &server) :
     _server(server) {}
 
-grpc::Status rpc::services::MembersService::gossip(
+grpc::Status rpc::services::PeersService::gossip(
     grpc::ServerContext *context,
-    const GossipRequest *request,
-    GossipResponse *response
+    const peers::GossipRequest *request,
+    peers::GossipResponse *response
 ) {
-    log("/members/gossip", context->peer());
+    log("/peers/gossip", context->peer());
 
     deque<Peer> buffer;
     auto cfg = _server.cfg();
@@ -24,22 +24,22 @@ grpc::Status rpc::services::MembersService::gossip(
     }
 
     auto view = _server.peering()->view();
-    deque<Peer> result = view->select(cfg.members.c / 2 - 1, cfg.members.H);
+    deque<Peer> result = view->select(cfg.peers.c / 2 - 1, cfg.peers.H);
     result.emplace(result.begin(), Peer(cfg.network.advertise.netloc(), 0));
     for (const auto &each : result) {
         response->add_peers(each.addr());
     }
 
-    view->update(cfg.members.c, cfg.members.H, cfg.members.S, buffer);
+    view->update(cfg.peers.c, cfg.peers.H, cfg.peers.S, buffer);
     return grpc::Status::OK;
 }
 
-grpc::Status rpc::services::MembersService::list(
+grpc::Status rpc::services::PeersService::list(
     grpc::ServerContext *context,
-    const ListRequest *request,
-    ListResponse *response
+    const peers::ListRequest *request,
+    peers::ListResponse *response
 ) {
-    log("/members/list", context->peer());
+    log("/peers/list", context->peer());
 
     auto view = _server.peering()->view();
     deque<Peer> snap = view->snapshot();
@@ -49,17 +49,5 @@ grpc::Status rpc::services::MembersService::list(
         peer->set_age(each.age());
     }
 
-    return grpc::Status::OK;
-}
-
-grpc::Status rpc::services::MembersService::status(
-    grpc::ServerContext *context,
-    const StatusRequest *request,
-    StatusResponse *response
-) {
-    log("/members/status", context->peer());
-
-    std::string prefix("Hello ");
-    response->set_message(prefix + request->message());
     return grpc::Status::OK;
 }

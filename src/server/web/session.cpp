@@ -10,7 +10,7 @@ void server::web::Session::run(Uri &uri) {
                 static_cast<int>(::ERR_get_error()),
                 boost::asio::error::get_ssl_category()
             };
-            log("shutdown", code);
+            _failure("shutdown", code);
             return;
         }
     }
@@ -31,7 +31,7 @@ void server::web::Session::on_resolve(
     error_code code,
     tcp::resolver::results_type results
 ) {
-    if (code) return log("resolve", code);
+    if (code) return _failure("resolve", code);
     if (_secured) {
         async_connect(
             boost::get<ssl_socket>(_socket).next_layer(),
@@ -56,7 +56,7 @@ void server::web::Session::on_resolve(
 }
 
 void server::web::Session::on_connect(error_code code) {
-    if (code) return log("connect", code);
+    if (code) return _failure("connect", code);
     if (_secured) {
         boost::get<ssl_socket>(_socket).async_handshake(
             ssl::stream_base::client,
@@ -81,7 +81,7 @@ void server::web::Session::on_connect(error_code code) {
 }
 
 void server::web::Session::on_handshake(error_code code) {
-    if (code) return log("handshake", code);
+    if (code) return _failure("handshake", code);
     http::async_write(
         boost::get<ssl_socket>(_socket),
         _req,
@@ -96,7 +96,7 @@ void server::web::Session::on_handshake(error_code code) {
 
 void server::web::Session::on_write(error_code code, size_t bytes_transferred) {
     ignore_unused(bytes_transferred);
-    if (code) return log("write", code);
+    if (code) return _failure("write", code);
     if (_secured) {
         http::async_read(
             boost::get<ssl_socket>(_socket),
@@ -126,9 +126,9 @@ void server::web::Session::on_write(error_code code, size_t bytes_transferred) {
 
 void server::web::Session::on_read(error_code code, size_t bytes_transferred) {
     ignore_unused(bytes_transferred);
-    if (code) return log("read", code);
+    if (code) return _failure("read", code);
 
-    _fn(_res);
+    _success(_res);
 
     if (_secured) {
         boost::get<ssl_socket>(_socket).async_shutdown(
@@ -144,13 +144,11 @@ void server::web::Session::on_read(error_code code, size_t bytes_transferred) {
             code
         );
 
-        if (code && code != boost::system::errc::not_connected) {
-            return log("shutdown", code);
-        }
+        if (code && code != not_connected) return _failure("shutdown", code);
     }
 }
 
 void server::web::Session::on_shutdown(error_code code) {
     if (code == eof) code.assign(0, code.category());
-    if (code) return log("shutdown", code);
+    if (code) return _failure("shutdown", code);
 }

@@ -2,7 +2,8 @@
 #define SYNCAIDE_CLIENT_H
 
 #include "client/options.h"
-#include "rpc/callers/members.h"
+#include "rpc/callers/peers.h"
+#include "rpc/callers/miners.h"
 
 #include <nlohmann/json.hpp>
 #include <boost/format.hpp>
@@ -19,22 +20,39 @@ namespace client {
     using json = nlohmann::json;
 
     class Client {
+        class Peers {
+        private:
+            Client &_self;
+
+        public:
+            explicit Peers(Client &self) : _self(self) {}
+
+            int list();
+        };
+
+        class Miners {
+        private:
+            Client &_self;
+
+        public:
+            explicit Miners(Client &self) : _self(self) {}
+
+            int list();
+        };
+
+    public:
+        Peers peers;
+        Miners miners;
+
     private:
-        Options *_cfg;
+        Options &_cfg;
 
     public:
         explicit Client(Options &options);
 
-        Options *cfg();
+        Options &cfg();
 
         int start();
-
-    private:
-        int members_gossip();
-
-        int members_list();
-
-        int members_status();
     };
 }
 

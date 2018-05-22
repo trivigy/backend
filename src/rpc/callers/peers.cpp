@@ -1,14 +1,14 @@
 #include "logging.h"
-#include "rpc/callers/members.h"
+#include "rpc/callers/peers.h"
 
-tuple<grpc::Status, deque<Peer>>
-rpc::callers::MembersCaller::gossip(
+rpc::response<deque<Peer>>
+rpc::callers::PeersCaller::gossip(
     const deque<Peer> &buffer,
     const string &remove
 ) {
     grpc::ClientContext context;
-    GossipRequest request;
-    GossipResponse response;
+    peers::GossipRequest request;
+    peers::GossipResponse response;
 
     for (const auto &each : buffer) {
         request.add_peers(each.addr());
@@ -27,42 +27,28 @@ rpc::callers::MembersCaller::gossip(
             it++;
         }
     }
-
     return {status, result};
 }
 
-tuple<grpc::Status, deque<Peer>>
-rpc::callers::MembersCaller::list() {
+rpc::response<nlohmann::json>
+rpc::callers::PeersCaller::list() {
     grpc::ClientContext context;
-    ListRequest request;
-    ListResponse response;
+    peers::ListRequest request;
+    peers::ListResponse response;
 
-    deque<Peer> result;
     grpc::Status status = stub->list(&context, request, &response);
+
+    json result = json::array();
     if (status.ok()) {
         auto peers = response.peers();
         auto it = peers.begin();
         while (it != peers.end()) {
-            result.emplace_back(Peer(it->addr(), it->age()));
+            result.emplace_back(json({
+                {"addr", it->addr()},
+                {"age", it->age()}
+            }));
             it++;
         }
     }
-
-    return {status, result};
-}
-
-tuple<grpc::Status, string>
-rpc::callers::MembersCaller::status(const std::string &message) {
-    grpc::ClientContext context;
-    StatusRequest request;
-    StatusResponse response;
-
-    string result;
-    request.set_message(message);
-    grpc::Status status = stub->status(&context, request, &response);
-    if (status.ok()) {
-        result = response.message();
-    }
-
     return {status, result};
 }

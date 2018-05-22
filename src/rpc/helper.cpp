@@ -1,8 +1,8 @@
 #include "logging.h"
 #include "rpc/helper.h"
 
-void rpc::log(const string &call, const string &peer) {
-    json result = {{"call", call}};
+void rpc::log(const string &msg, const string &peer, const json &details) {
+    json result = {{"message", msg}};
     string scheme, netloc = peer;
     const auto pos = peer.find_first_of(':');
     if (string::npos != pos) {
@@ -10,9 +10,8 @@ void rpc::log(const string &call, const string &peer) {
         netloc = peer.substr(pos + 1);
     }
 
-    const string unix = "unix";
-    if (scheme.compare(0, unix.size(), unix)) {
-        result["addr"] = netloc;
-    }
-    LOG(debug) << logging::add_value("Extra", result.dump());
+    if (scheme != "unix") result["addr"] = netloc;
+    else result["addr"] = "unix:socket";
+    if (!details.empty()) result["details"] = details;
+    LOG(info) << logging::add_value("Extra", result.dump());
 }

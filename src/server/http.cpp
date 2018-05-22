@@ -250,18 +250,49 @@ int server::Http::syncaide_js(void *server, void *request) {
             return (int) status::ok;
         }
 
-        // TODO Needs to be changes to reflect actual agent options parsing
-        json arguments = {
-            {"url", "ws://127.0.0.1:8080/agent/f64000f3-4dc9-4e22-b704-cdcf82c01038"},
-            {"signature", "4e104ca8-a239-4c62-b6a1-ca6dc163b191"},
-            {"timestamp", "1526091820"}
-        };
-
-        json prepend = {
-            {"arguments", {arguments.dump()}}
-        };
-
         string body(search->second.begin(), search->second.end());
+        CryptoPP::SHA256 sha256sum;
+
+        string code_digest;
+        CryptoPP::StringSource(
+            body, true,
+            new CryptoPP::HashFilter(
+                sha256sum,
+                new CryptoPP::HexEncoder(
+                    new CryptoPP::StringSink(code_digest)
+                )
+            )
+        );
+        to_lower(code_digest);
+
+        uuid uid = random_generator{}();
+        string path = fmt::format("/agent/{}", to_string(uid));
+        long epoch = duration_cast<seconds>(
+            system_clock::now().time_since_epoch()
+        ).count();
+
+        string parameters(json{
+            {"id", to_string(uid)},
+            {"addr", Uri("ws", "127.0.0.1", 8080, path).compose()},
+            {"digest", code_digest},
+            {"epoch", epoch}
+        }.dump());
+
+        string parameters_digest;
+        CryptoPP::StringSource(
+            parameters, true,
+            new CryptoPP::HashFilter(
+                sha256sum,
+                new CryptoPP::HexEncoder(
+                    new CryptoPP::StringSink(parameters_digest)
+                )
+            )
+        );
+        to_lower(parameters_digest);
+
+        // TODO generate ecdsa signature from parameters_digest
+
+        json prepend = {{"arguments", {"signature", parameters}}};
         body.insert(0, fmt::format("var Module = {0};\n", prepend.dump()));
 
         resp.content_length(body.size());

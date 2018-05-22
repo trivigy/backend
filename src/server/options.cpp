@@ -131,11 +131,11 @@ bool server::Options::parse(int argc, const char **argv) {
                 {"frontend", this->network.frontend.netloc()}
             }
         },
-        {"members",
+        {"peers",
             {
-                {"c", this->members.c},
-                {"H", this->members.H},
-                {"S", this->members.S}
+                {"c", this->peers.c},
+                {"H", this->peers.H},
+                {"S", this->peers.S}
             }
         }
     };

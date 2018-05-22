@@ -10,7 +10,7 @@
 class F : public View {
 };
 
-BOOST_FIXTURE_TEST_CASE(remove_duplicates, F) { // NOLINT
+BOOST_FIXTURE_TEST_CASE(test_remove_duplicates, F) { // NOLINT
     deque<Peer> buffer{
         Peer(string("a"), 0),
         Peer(string("a"), 3),
@@ -44,7 +44,7 @@ BOOST_FIXTURE_TEST_CASE(remove_duplicates, F) { // NOLINT
 
 }
 
-BOOST_FIXTURE_TEST_CASE(remove_old, F) { // NOLINT
+BOOST_FIXTURE_TEST_CASE(test_remove_old, F) { // NOLINT
     deque<Peer> buffer{
         Peer(string("a"), 0),
         Peer(string("a"), 3),
@@ -77,7 +77,7 @@ BOOST_FIXTURE_TEST_CASE(remove_old, F) { // NOLINT
     );
 }
 
-BOOST_FIXTURE_TEST_CASE(remove_head, F) { // NOLINT
+BOOST_FIXTURE_TEST_CASE(test_remove_head, F) { // NOLINT
     deque<Peer> buffer{
         Peer(string("a"), 0),
         Peer(string("a"), 3),
@@ -108,7 +108,7 @@ BOOST_FIXTURE_TEST_CASE(remove_head, F) { // NOLINT
     );
 }
 
-BOOST_FIXTURE_TEST_CASE(remove_random, F) { // NOLINT
+BOOST_FIXTURE_TEST_CASE(test_remove_random, F) { // NOLINT
     deque<Peer> buffer{
         Peer(string("a"), 0),
         Peer(string("a"), 3),
@@ -128,7 +128,7 @@ BOOST_FIXTURE_TEST_CASE(remove_random, F) { // NOLINT
     BOOST_CHECK_EQUAL(snap.size(), size());
 }
 
-BOOST_FIXTURE_TEST_CASE(remove_update, F) { // NOLINT
+BOOST_FIXTURE_TEST_CASE(test_remove_update, F) { // NOLINT
     deque<Peer> buffer{
         Peer(string("a"), 0),
         Peer(string("a"), 3),

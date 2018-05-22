@@ -1,0 +1,16 @@
+syntax = "proto3";
+import "miner.proto";
+
+package protos.miners;
+
+service Miners {
+    rpc list(ListRequest) returns (ListResponse) {}
+}
+
+message ListRequest {
+    string id = 1;
+}
+
+message ListResponse {
+    repeated Miner miners = 1;
+}

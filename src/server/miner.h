@@ -3,7 +3,7 @@
 
 #include "server/helper.h"
 #include "server/ssl_stream.h"
-#include "protos/peer.pb.h"
+#include "protos/message.pb.h"
 #include "server/server.h"
 
 #include <boost/beast/core.hpp>
@@ -14,6 +14,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/asio/strand.hpp>
+#include <boost/asio/buffer.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/logic/tribool.hpp>
 #include <boost/variant.hpp>
@@ -42,6 +43,8 @@ namespace server {
     using boost::asio::io_context;
     using boost::asio::ip::tcp;
     using boost::asio::strand;
+    using boost::asio::const_buffer;
+    using boost::asio::const_buffers_1;
     using boost::asio::error::operation_aborted;
     using boost::ignore_unused;
     using boost::variant;
@@ -63,7 +66,7 @@ namespace server {
         bool _close = false;
         bool _eof = false;
         context &_ctx;
-        string _uid;
+        string _id;
 
     protected:
         Socket _socket;
@@ -76,7 +79,7 @@ namespace server {
             context &ctx,
             ssl_stream<tcp::socket> socket,
             tribool secured,
-            const string &uid
+            const string &id
         );
 
         explicit Miner(
@@ -84,10 +87,14 @@ namespace server {
             context &ctx,
             tcp::socket socket,
             tribool secured,
-            const string &uid
+            const string &id
         );
 
+        const string &id();
+
         void run(request<string_body> &&req);
+
+        void write(const BOOST_ASIO_CONST_BUFFER &buffer);
 
     private:
 
@@ -106,6 +113,9 @@ namespace server {
         void timeout();
 
         void on_conclude(error_code code);
+
+    private:
+        void login(protos::Message &msg);
     };
 }
 
