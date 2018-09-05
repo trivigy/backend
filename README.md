@@ -1,4 +1,6 @@
-# SyncAide
+# Syncaide
+
+!!! THIS PROJECT IS INCOMPLETE AND IS NOW ABANDONED !!!
 
 ### Build Application
 Before you begin make sure to run the following command line in order
